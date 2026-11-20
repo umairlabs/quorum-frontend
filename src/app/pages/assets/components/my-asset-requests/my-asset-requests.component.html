@@ -1,0 +1,395 @@
+<div class="space-y-4" (click)="closeMenu()">
+
+  <div class="flex items-center justify-between">
+    <h3 class="text-title-md font-title-md text-on-surface">My Asset Requests</h3>
+  </div>
+
+  <div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm">
+
+    @if (loading()) {
+      <div class="p-8 text-center text-on-surface-variant">
+        <span class="material-symbols-outlined animate-spin text-3xl text-primary">sync</span>
+        <p class="mt-2 text-body-md">Loading your requests...</p>
+      </div>
+
+    } @else if (!requests() || requests().length === 0) {
+      <div class="p-12 text-center space-y-3">
+        <div class="w-16 h-16 rounded-full bg-surface-container-high flex items-center justify-center mx-auto text-on-surface-variant">
+          <span class="material-symbols-outlined text-3xl">assignment_add</span>
+        </div>
+        <h4 class="text-title-md font-title-md text-on-surface">No asset requests found.</h4>
+        <p class="text-body-md text-on-surface-variant max-w-sm mx-auto">
+          Need new hardware or equipment? Click below to submit an asset request to your management team.
+        </p>
+        <button
+          type="button"
+          (click)="openRequestModal.emit()"
+          class="h-9 px-4 rounded-lg font-label-md text-label-md bg-primary text-on-primary hover:bg-primary/90 transition-colors inline-flex items-center gap-2">
+          <span class="material-symbols-outlined text-[18px]">add</span>
+          Request New Asset
+        </button>
+      </div>
+
+    } @else {
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="border-b border-outline-variant/60 bg-surface-container-low text-label-md font-label-md text-on-surface-variant">
+              <th class="py-3 px-4">Request #</th>
+              <th class="py-3 px-4">Requested Asset</th>
+              <th class="py-3 px-4">Category</th>
+              <th class="py-3 px-4">Reason</th>
+              <th class="py-3 px-4">Priority</th>
+              <th class="py-3 px-4">Date</th>
+              <th class="py-3 px-4">Status</th>
+              <th class="py-3 px-4 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-outline-variant/40 text-body-md text-on-surface">
+            @for (req of requests(); track req.id) {
+              <tr class="hover:bg-surface-container-low/50 transition-colors">
+
+                <td class="py-3 px-4 font-mono font-medium text-primary whitespace-nowrap">
+                  {{ req.displayId || req.display_id || req.requestNumber || req.request_number || ('REQ-' + req.id?.slice(0,4)) }}
+                </td>
+
+                <td class="py-3 px-4 font-semibold text-on-surface">
+                  {{ req.requestedAsset || req.requested_asset }}
+                </td>
+
+                <td class="py-3 px-4 text-on-surface-variant">
+                  {{ req.categoryName || req.category_name }}
+                </td>
+
+                <td class="py-3 px-4 text-on-surface-variant max-w-xs truncate" [title]="req.reason">
+                  {{ req.reason }}
+                </td>
+
+                <td class="py-3 px-4 font-medium" [class]="getPriorityBadgeClass(req.priority)">
+                  {{ req.priority }}
+                </td>
+
+                <td class="py-3 px-4 text-on-surface-variant whitespace-nowrap">
+                  {{ (req.createdAt || req.created_at) | date:'mediumDate' }}
+                </td>
+
+                <td class="py-3 px-4 whitespace-nowrap">
+                  <span [class]="'px-2.5 py-1 rounded-full text-label-sm font-semibold border ' + getStatusBadgeClass(req.status)">
+                    {{ req.status }}
+                  </span>
+                </td>
+
+                <!-- Actions — 3-dot menu -->
+                <td class="py-3 px-4 text-right whitespace-nowrap">
+
+                  <!-- Confirm Received (only when ASSIGNED) -->
+                  @if (req.status === 'ASSIGNED') {
+                    <button
+                      type="button"
+                      (click)="confirmReceiptForRequest.emit(req); $event.stopPropagation()"
+                      class="mr-2 px-3 py-1 text-label-sm font-medium rounded bg-primary text-on-primary hover:bg-primary/90 transition-colors shadow-xs">
+                      Confirm Received
+                    </button>
+                  }
+
+                  <!-- 3-dot button + dropdown -->
+                  <div class="relative inline-block">
+                    <button
+                      type="button"
+                      (click)="toggleMenu(req.id, $event)"
+                      class="p-1.5 rounded-lg hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-colors"
+                      title="More options">
+                      <span class="material-symbols-outlined text-[20px]">more_vert</span>
+                    </button>
+
+                    @if (openMenuId() === req.id) {
+                      <div
+                        class="absolute right-0 top-8 z-50 min-w-[140px] bg-surface border border-outline-variant rounded-xl shadow-lg py-1 overflow-hidden"
+                        (click)="$event.stopPropagation()">
+
+                        <!-- View Detail -->
+                        <button
+                          type="button"
+                          (click)="openDetail(req)"
+                          class="w-full flex items-center gap-2.5 px-4 py-2.5 text-label-md text-on-surface hover:bg-surface-container-high transition-colors text-left">
+                          <span class="material-symbols-outlined text-[18px] text-primary">visibility</span>
+                          View Detail
+                        </button>
+
+                        <div class="border-t border-outline-variant/50 my-1"></div>
+
+                        <!-- Delete -->
+                        <button
+                          type="button"
+                          (click)="onDelete(req)"
+                          class="w-full flex items-center gap-2.5 px-4 py-2.5 text-label-md text-error hover:bg-error/10 transition-colors text-left">
+                          <span class="material-symbols-outlined text-[18px]">delete</span>
+                          Delete
+                        </button>
+
+                      </div>
+                    }
+                  </div>
+
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+</div>
+
+<!-- ── Delete Confirmation Modal ─────────────────────────────────────────── -->
+@if (pendingDeleteItem()) {
+  <div
+    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+    (click)="cancelDelete()">
+
+    <div
+      class="bg-surface rounded-2xl shadow-2xl w-full max-w-sm border border-outline-variant overflow-hidden"
+      (click)="$event.stopPropagation()">
+
+      <!-- Header -->
+      <div class="flex items-center gap-3 px-6 py-4 border-b border-outline-variant">
+        <div class="w-10 h-10 rounded-xl bg-error/10 flex items-center justify-center shrink-0">
+          <span class="material-symbols-outlined text-[22px] text-error">delete</span>
+        </div>
+        <div>
+          <h2 class="text-title-md font-bold text-on-surface">Delete Request</h2>
+          <p class="text-label-sm text-on-surface-variant">
+            {{ pendingDeleteItem().displayId || pendingDeleteItem().display_id || pendingDeleteItem().requestNumber || pendingDeleteItem().request_number }}
+          </p>
+        </div>
+      </div>
+
+      <!-- Body -->
+      <div class="px-6 py-5">
+        <p class="text-body-md text-on-surface">
+          Are you sure you want to delete this asset request? This action cannot be undone.
+        </p>
+        <p class="text-body-sm text-on-surface-variant mt-1">
+          <span class="font-semibold">
+            {{ pendingDeleteItem().requestedAsset || pendingDeleteItem().requested_asset }}
+          </span>
+          &mdash; {{ pendingDeleteItem().categoryName || pendingDeleteItem().category_name }}
+        </p>
+      </div>
+
+      <!-- Footer -->
+      <div class="px-6 py-4 border-t border-outline-variant flex items-center justify-end gap-3">
+        <button
+          type="button"
+          (click)="cancelDelete()"
+          class="h-9 px-5 rounded-lg font-label-md border border-outline-variant text-on-surface hover:bg-surface-container-high transition-colors">
+          Cancel
+        </button>
+        <button
+          type="button"
+          (click)="confirmDelete()"
+          class="h-9 px-5 rounded-lg font-label-md bg-error text-on-error hover:bg-error/90 transition-colors flex items-center gap-2">
+          <span class="material-symbols-outlined text-[18px]">delete</span>
+          Delete
+        </button>
+      </div>
+
+    </div>
+  </div>
+}
+@if (detailItem()) {
+  <div
+    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+    (click)="closeDetail()">
+
+    <div
+      class="bg-surface rounded-2xl shadow-2xl w-full max-w-lg border border-outline-variant overflow-hidden"
+      (click)="$event.stopPropagation()">
+
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between px-6 py-4 border-b border-outline-variant bg-surface-container-low">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
+            <span class="material-symbols-outlined text-[20px] text-primary">inventory_2</span>
+          </div>
+          <div>
+            <h2 class="text-title-md font-bold text-on-surface">Request Detail</h2>
+            <p class="text-label-sm text-on-surface-variant">
+              {{ detailItem().displayId || detailItem().display_id || detailItem().requestNumber || detailItem().request_number }}
+            </p>
+          </div>
+        </div>
+        <button
+          type="button"
+          (click)="closeDetail()"
+          class="p-1.5 rounded-full hover:bg-surface-container-high text-on-surface-variant transition-colors">
+          <span class="material-symbols-outlined text-[22px]">close</span>
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="px-6 py-5 space-y-4 max-h-[65vh] overflow-y-auto">
+
+        <!-- Status + Priority row -->
+        <div class="flex items-center gap-3 flex-wrap">
+          <span [class]="'px-3 py-1 rounded-full text-label-sm font-semibold border ' + getStatusBadgeClass(detailItem().status)">
+            {{ detailItem().status }}
+          </span>
+          <span [class]="'px-3 py-1 rounded-full text-label-sm font-semibold border ' + getPriorityPillClass(detailItem().priority)">
+            {{ detailItem().priority }} Priority
+          </span>
+        </div>
+
+        <!-- Fields grid -->
+        <div class="grid grid-cols-2 gap-x-6 gap-y-4">
+
+          <div>
+            <p class="text-label-sm text-on-surface-variant mb-0.5">Requested Asset</p>
+            <p class="text-body-md font-semibold text-on-surface">
+              {{ detailItem().requestedAsset || detailItem().requested_asset || '—' }}
+            </p>
+          </div>
+
+          <div>
+            <p class="text-label-sm text-on-surface-variant mb-0.5">Category</p>
+            <p class="text-body-md text-on-surface">
+              {{ detailItem().categoryName || detailItem().category_name || '—' }}
+            </p>
+          </div>
+
+          <div>
+            <p class="text-label-sm text-on-surface-variant mb-0.5">Brand</p>
+            <p class="text-body-md text-on-surface">
+              {{ detailItem().brand || detailItem().assignedUnit?.asset?.brand || '—' }}
+            </p>
+          </div>
+
+          <div>
+            <p class="text-label-sm text-on-surface-variant mb-0.5">Model</p>
+            <p class="text-body-md text-on-surface">
+              {{ detailItem().model || detailItem().assignedUnit?.asset?.model || '—' }}
+            </p>
+          </div>
+
+          <div>
+            <p class="text-label-sm text-on-surface-variant mb-0.5">Date Submitted</p>
+            <p class="text-body-md text-on-surface">
+              {{ (detailItem().createdAt || detailItem().created_at) | date:'mediumDate' }}
+            </p>
+          </div>
+
+          <div>
+            <p class="text-label-sm text-on-surface-variant mb-0.5">Last Updated</p>
+            <p class="text-body-md text-on-surface">
+              {{ (detailItem().updatedAt || detailItem().updated_at) | date:'mediumDate' }}
+            </p>
+          </div>
+
+          @if (detailItem().approvedAt || detailItem().approved_at) {
+            <div>
+              <p class="text-label-sm text-on-surface-variant mb-0.5">Approved On</p>
+              <p class="text-body-md text-success font-medium">
+                {{ (detailItem().approvedAt || detailItem().approved_at) | date:'mediumDate' }}
+              </p>
+            </div>
+          }
+
+          @if (detailItem().assignedAt || detailItem().assigned_at) {
+            <div>
+              <p class="text-label-sm text-on-surface-variant mb-0.5">Asset Assigned On</p>
+              <p class="text-body-md text-on-surface font-medium">
+                {{ (detailItem().assignedAt || detailItem().assigned_at) | date:'mediumDate' }}
+              </p>
+            </div>
+          }
+
+          @if (detailItem().receivedAt || detailItem().received_at) {
+            <div>
+              <p class="text-label-sm text-on-surface-variant mb-0.5">Received On</p>
+              <p class="text-body-md text-success font-medium">
+                {{ (detailItem().receivedAt || detailItem().received_at) | date:'mediumDate' }}
+              </p>
+            </div>
+          }
+
+          @if (detailItem().assignedUnit || detailItem().assigned_unit) {
+            <div>
+              <p class="text-label-sm text-on-surface-variant mb-0.5">Serial Number</p>
+              <p class="text-body-md font-mono text-primary">
+                {{ detailItem().assignedUnit?.serialNumber
+                   || detailItem().assignedUnit?.serial_number
+                   || detailItem().assigned_unit?.serial_number
+                   || '—' }}
+              </p>
+            </div>
+          }
+
+        </div>
+
+        <!-- Reason -->
+        <div>
+          <p class="text-label-sm text-on-surface-variant mb-1">Reason</p>
+          <p class="text-body-md text-on-surface bg-surface-container rounded-lg px-3 py-2 border border-outline-variant/50">
+            {{ detailItem().reason || '—' }}
+          </p>
+        </div>
+
+        <!-- Notes -->
+        @if (detailItem().notes) {
+          <div>
+            <p class="text-label-sm text-on-surface-variant mb-1">Notes</p>
+            <p class="text-body-md text-on-surface bg-surface-container rounded-lg px-3 py-2 border border-outline-variant/50">
+              {{ detailItem().notes }}
+            </p>
+          </div>
+        }
+
+        <!-- Rejection Reason -->
+        @if (detailItem().status === 'REJECTED') {
+          <div class="rounded-xl bg-error/8 border border-error/25 px-4 py-3">
+            <div class="flex items-center gap-2 mb-1">
+              <span class="material-symbols-outlined text-[18px] text-error">cancel</span>
+              <p class="text-label-sm font-semibold text-error">Rejection Reason</p>
+            </div>
+            <p class="text-body-md text-on-surface">
+              {{ detailItem().rejectionReason || detailItem().rejection_reason || 'No reason provided.' }}
+            </p>
+          </div>
+        }
+
+        <!-- Approved banner -->
+        @if (detailItem().status === 'APPROVED' || detailItem().status === 'ASSIGNED' || detailItem().status === 'RECEIVED') {
+          <div class="rounded-xl bg-success/8 border border-success/25 px-4 py-3 flex items-center gap-2">
+            <span class="material-symbols-outlined text-[18px] text-success">task_alt</span>
+            <p class="text-body-md text-success font-medium">
+              @if (detailItem().status === 'APPROVED')  { Your request has been approved. }
+              @if (detailItem().status === 'ASSIGNED')  { Asset has been assigned. Please confirm receipt. }
+              @if (detailItem().status === 'RECEIVED')  { Asset received successfully. }
+            </p>
+          </div>
+        }
+
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="px-6 py-4 border-t border-outline-variant flex justify-end gap-3">
+        @if (detailItem().status === 'ASSIGNED') {
+          <button
+            type="button"
+            (click)="confirmReceiptForRequest.emit(detailItem()); closeDetail()"
+            class="h-9 px-5 rounded-lg font-label-md bg-primary text-on-primary hover:bg-primary/90 transition-colors flex items-center gap-2">
+            <span class="material-symbols-outlined text-[18px]">fact_check</span>
+            Confirm Received
+          </button>
+        }
+        <button
+          type="button"
+          (click)="closeDetail()"
+          class="h-9 px-5 rounded-lg font-label-md border border-outline-variant text-on-surface hover:bg-surface-container-high transition-colors">
+          Close
+        </button>
+      </div>
+
+    </div>
+  </div>
+}

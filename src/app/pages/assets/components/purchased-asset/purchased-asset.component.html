@@ -1,0 +1,568 @@
+@if (groups().length > 0) {
+
+  <!-- ─── Purchase Groups Table ─────────────────────────────────────────── -->
+  <div class="bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden shadow-sm">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="bg-surface-container-low border-b border-outline-variant h-12">
+            <th class="px-3 sm:px-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold">
+              Asset Details
+            </th>
+            <th class="px-3 sm:px-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold hidden lg:table-cell">
+              Supplier
+            </th>
+            <th class="px-3 sm:px-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold hidden sm:table-cell">
+              Purchase No.
+            </th>
+            <th class="px-2 sm:px-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold text-center">
+              Qty
+            </th>
+            <th class="px-2 sm:px-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold text-center">
+              Avail
+            </th>
+            <th class="px-2 sm:px-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold text-center hidden xs:table-cell">
+              Assigned
+            </th>
+            <th class="px-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold text-right hidden xl:table-cell">
+              Total Value
+            </th>
+            <th class="px-2 sm:px-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold text-center w-20 sm:w-auto">
+              Actions
+            </th>
+          </tr>
+        </thead>
+
+        <tbody class="font-body-sm text-body-sm text-on-surface divide-y divide-outline-variant">
+          @for (group of groups(); track group.id) {
+            <tr
+              class="hover:bg-surface-container-low/60 h-12 transition-colors cursor-pointer"
+              (click)="openModal(group)">
+
+              <!-- Asset Details -->
+              <td class="px-3 sm:px-4 py-2">
+                <div class="flex items-center gap-2">
+                  <span class="material-symbols-outlined text-[18px] text-on-surface-variant shrink-0">
+                    {{ getCategoryIcon(group.category) }}
+                  </span>
+                  <div class="min-w-0">
+                    <div class="font-label-md font-semibold truncate">{{ group.assetName }}</div>
+                    <div class="text-on-surface-variant text-[10px] truncate">
+                      {{ getCategoryName(group.category) }}
+                      @if (group.purchaseNumber) {
+                        <span class="sm:hidden font-mono ml-1 text-primary">· {{ group.purchaseNumber }}</span>
+                      }
+                    </div>
+                  </div>
+                </div>
+              </td>
+
+              <!-- Supplier (hidden on <lg) -->
+              <td class="px-4 text-body-sm text-on-surface hidden lg:table-cell">
+                @if (group.suppliers.length > 1) {
+                  <span class="text-on-surface-variant italic">Multiple</span>
+                } @else if (group.suppliers.length === 1) {
+                  {{ group.suppliers[0] }}
+                } @else {
+                  <span class="text-on-surface-variant">—</span>
+                }
+              </td>
+
+              <!-- Purchase No. (hidden on <sm, shown in subtitle on mobile) -->
+              <td class="px-3 sm:px-4 font-mono text-body-sm text-primary font-medium hidden sm:table-cell">
+                @if (group.purchaseNumbers.length > 1) {
+                  <span class="font-sans text-on-surface-variant text-[11px]">{{ group.purchaseNumbers.length }} POs</span>
+                } @else {
+                  {{ group.purchaseNumber }}
+                }
+              </td>
+
+              <!-- Qty -->
+              <td class="px-2 sm:px-4 text-center">
+                <span class="inline-flex items-center px-1.5 sm:px-2 py-0.5 rounded-full text-xs font-medium bg-surface-container text-on-surface">
+                  {{ group.quantity }}
+                </span>
+              </td>
+
+              <!-- Available -->
+              <td class="px-2 sm:px-4 text-center">
+                <span class="inline-flex items-center px-1.5 sm:px-2 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
+                  {{ group.availableCount }}
+                </span>
+              </td>
+
+              <!-- Assigned -->
+              <td class="px-2 sm:px-4 text-center hidden xs:table-cell">
+                <span class="inline-flex items-center px-1.5 sm:px-2 py-0.5 rounded-full text-xs font-medium bg-secondary/10 text-secondary">
+                  {{ group.assignedCount }}
+                </span>
+              </td>
+
+              <!-- Total Value -->
+              <td class="px-4 text-right hidden xl:table-cell font-label-md">
+                {{ group.totalAmount | appCurrency }}
+              </td>
+
+              <!-- Actions -->
+              <td class="px-2 sm:px-4 text-center" (click)="$event.stopPropagation()">
+                <div class="flex items-center justify-center gap-0.5 sm:gap-1">
+                  <button
+                    (click)="openModal(group)"
+                    class="p-1 hover:bg-surface-container-high rounded transition-colors"
+                    title="View Units">
+                    <span class="material-symbols-outlined text-[18px]">open_in_new</span>
+                  </button>
+                  <button
+                    (click)="purchaseMore.emit(group); $event.stopPropagation()"
+                    class="p-1 hover:bg-surface-container-high rounded transition-colors text-on-surface"
+                    title="Purchase more units">
+                    <span class="material-symbols-outlined text-[18px]">shopping_cart</span>
+                  </button>
+                  <button
+                    (click)="deleteGroup.emit(group); $event.stopPropagation()"
+                    class="p-1 hover:bg-error-container/30 rounded transition-colors text-error"
+                    title="Delete all units in this group">
+                    <span class="material-symbols-outlined text-[18px]">delete</span>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="px-4 py-3 border-t border-outline-variant bg-surface-container-low sm:px-6">
+
+      <!-- Mobile -->
+      <div class="flex sm:hidden items-center justify-between">
+        <p class="font-body-sm text-body-sm text-on-surface-variant">
+          Page <span class="font-medium text-on-surface">{{ currentPage() }}</span>
+          of <span class="font-medium text-on-surface">{{ totalPages() }}</span>
+        </p>
+        <div class="flex items-center gap-2">
+          <button
+            (click)="pageChange.emit(currentPage() - 1)"
+            [disabled]="currentPage() === 1"
+            class="inline-flex items-center px-3 py-1.5 rounded-md border border-outline-variant bg-surface-container-lowest font-body-sm text-body-sm font-medium text-on-surface-variant hover:bg-surface-container-high disabled:opacity-50 disabled:cursor-not-allowed">
+            <span class="material-symbols-outlined text-[18px]">chevron_left</span>
+          </button>
+          <button
+            (click)="pageChange.emit(currentPage() + 1)"
+            [disabled]="currentPage() >= totalPages()"
+            class="inline-flex items-center px-3 py-1.5 rounded-md border border-outline-variant bg-surface-container-lowest font-body-sm text-body-sm font-medium text-on-surface-variant hover:bg-surface-container-high disabled:opacity-50 disabled:cursor-not-allowed">
+            <span class="material-symbols-outlined text-[18px]">chevron_right</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Desktop -->
+      <div class="hidden sm:flex sm:items-center sm:justify-between">
+        <p class="font-body-sm text-body-sm text-on-surface-variant">
+          Showing
+          <span class="font-medium text-on-surface">
+            {{ (currentPage() - 1) * assetService.pageSize() + 1 }}
+          </span>
+          to
+          <span class="font-medium text-on-surface">
+            {{ currentPage() * assetService.pageSize() > groups().length
+               ? groups().length
+               : currentPage() * assetService.pageSize() }}
+          </span>
+          of
+          <span class="font-medium text-on-surface">{{ groups().length }}</span>
+          purchase groups
+        </p>
+        <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+          <button
+            (click)="pageChange.emit(currentPage() - 1)"
+            [disabled]="currentPage() === 1"
+            class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-outline-variant bg-surface-container-lowest font-body-sm text-body-sm font-medium text-on-surface-variant hover:bg-surface-container-high disabled:opacity-50 disabled:cursor-not-allowed">
+            <span class="sr-only">Previous</span>
+            <span class="material-symbols-outlined text-[18px]">chevron_left</span>
+          </button>
+          <button
+            (click)="pageChange.emit(1)"
+            [class.bg-primary-fixed]="currentPage() === 1"
+            [class.text-on-primary-fixed]="currentPage() === 1"
+            [class.bg-surface-container-lowest]="currentPage() !== 1"
+            class="relative inline-flex items-center px-4 py-2 border border-outline-variant font-body-sm text-body-sm font-medium">
+            1
+          </button>
+          @if (totalPages() > 1) {
+            <button
+              (click)="pageChange.emit(2)"
+              [class.bg-primary-fixed]="currentPage() === 2"
+              [class.text-on-primary-fixed]="currentPage() === 2"
+              [class.bg-surface-container-lowest]="currentPage() !== 2"
+              class="relative inline-flex items-center px-4 py-2 border border-outline-variant font-body-sm text-body-sm font-medium">
+              2
+            </button>
+          }
+          <button
+            (click)="pageChange.emit(currentPage() + 1)"
+            [disabled]="currentPage() >= totalPages()"
+            class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-outline-variant bg-surface-container-lowest font-body-sm text-body-sm font-medium text-on-surface-variant hover:bg-surface-container-high disabled:opacity-50 disabled:cursor-not-allowed">
+            <span class="sr-only">Next</span>
+            <span class="material-symbols-outlined text-[18px]">chevron_right</span>
+          </button>
+        </nav>
+      </div>
+
+    </div>
+  </div>
+
+} @else {
+  <div class="mt-8">
+    <app-empty-state
+      icon="shopping_cart"
+      title="No purchased assets found"
+      description="We couldn't find any purchased assets matching your current filters. Try adjusting your search or create a purchase."
+      actionLabel="Clear Filters"
+      (actionClick)="clearFilters.emit()" />
+  </div>
+}
+
+
+<!-- ─── Units Modal ────────────────────────────────────────────────────────── -->
+@if (activeGroup()) {
+
+  <!-- Backdrop -->
+  <div
+    class="fixed inset-0 z-[60] bg-black/40 backdrop-blur-[2px]"
+    (click)="closeModal()">
+  </div>
+
+  <!-- Modal Panel -->
+  <div class="fixed inset-0 z-[70] flex items-center justify-center p-4 pointer-events-none">
+    <div
+      class="pointer-events-auto w-full max-w-[1440px] bg-surface-container-lowest rounded-2xl shadow-2xl border border-outline-variant flex flex-col max-h-[85vh]"
+      (click)="$event.stopPropagation()">
+
+      <!-- Modal Header -->
+      <div class="flex items-start justify-between px-6 py-5 border-b border-outline-variant shrink-0">
+        <div class="flex items-center gap-3">
+          <span class="material-symbols-outlined text-[28px] text-primary">
+            {{ getCategoryIcon(activeGroup()!.category) }}
+          </span>
+          <div>
+            <h2 class="font-headline-sm text-headline-sm text-on-surface font-semibold">
+              {{ activeGroup()!.assetName }}
+            </h2>
+            <p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">
+              @if (activeGroup()!.purchaseNumbers.length > 1) {
+                {{ activeGroup()!.purchaseNumbers.length }} purchase orders
+              } @else {
+                {{ activeGroup()!.purchaseNumber }}
+              }
+              @if (activeGroup()!.suppliers.length === 1) {
+                &nbsp;•&nbsp;{{ activeGroup()!.suppliers[0] }}
+              } @else if (activeGroup()!.suppliers.length > 1) {
+                &nbsp;•&nbsp;{{ activeGroup()!.suppliers.length }} suppliers
+              }
+              
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats Strip — compact inline pills -->
+      <div class="flex items-center gap-4 px-6 py-2.5 border-b border-outline-variant shrink-0 bg-surface-container-low/50">
+        <div class="flex items-center gap-1.5">
+          <span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider text-[10px]">Total</span>
+          <span class="font-label-md text-label-md font-bold text-on-surface">{{ activeGroup()!.quantity }}</span>
+        </div>
+        <span class="text-outline-variant">·</span>
+        <div class="flex items-center gap-1.5">
+          <span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider text-[10px]">Available</span>
+          <span class="font-label-md text-label-md font-bold text-primary">{{ activeGroup()!.availableCount }}</span>
+        </div>
+        <span class="text-outline-variant">·</span>
+        <div class="flex items-center gap-1.5">
+          <span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider text-[10px]">Assigned</span>
+          <span class="font-label-md text-label-md font-bold text-secondary">{{ activeGroup()!.assignedCount }}</span>
+        </div>
+        <span class="text-outline-variant">·</span>
+        <div class="flex items-center gap-1.5">
+          <span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider text-[10px]">Maintenance</span>
+          <span class="font-label-md text-label-md font-bold text-tertiary">{{ activeGroup()!.maintenanceCount }}</span>
+        </div>
+        <span class="text-outline-variant">·</span>
+        <div class="flex items-center gap-1.5">
+          <span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider text-[10px]">Value</span>
+          <span class="font-label-md text-label-md font-bold text-on-surface">{{ activeGroup()!.totalAmount | appCurrency }}</span>
+        </div>
+      </div>
+
+      <!-- Filter Bar — only renders when there's something to filter by -->
+      @if (activeGroup()!.suppliers.length > 1 || activeGroup()!.assets.length > 1) {
+        <div class="flex items-center gap-3 px-5 py-2 border-b border-outline-variant bg-surface-container-lowest shrink-0 flex-wrap">
+
+          <!-- Supplier filter — only shown when there are multiple suppliers -->
+          @if (activeGroup()!.suppliers.length > 1) {
+            <div class="relative">
+              <select
+                (change)="modalFilterSupplier.set($any($event.target).value)"
+                class="appearance-none h-8 pl-3 pr-8 text-body-sm font-body-sm bg-surface-container-low text-on-surface border border-outline-variant rounded-md focus:outline-none focus:ring-1 focus:ring-primary">
+                <option value="">All Suppliers</option>
+                @for (sup of activeGroup()!.suppliers; track sup) {
+                  <option [value]="sup">{{ sup }}</option>
+                }
+              </select>
+              <span class="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none text-[16px]">expand_more</span>
+            </div>
+          }
+
+          <!-- Status filter -->
+          <div class="relative">
+            <select
+              (change)="modalFilterStatus.set($any($event.target).value)"
+              class="appearance-none h-8 pl-3 pr-8 text-body-sm font-body-sm bg-surface-container-low text-on-surface border border-outline-variant rounded-md focus:outline-none focus:ring-1 focus:ring-primary">
+              <option value="">All Status</option>
+              <option value="AVAILABLE">Available</option>
+              <option value="ASSIGNED">Assigned</option>
+              <option value="MAINTENANCE">Maintenance</option>
+              <option value="SCRAPPED">Scrapped</option>
+            </select>
+            <span class="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none text-[16px]">expand_more</span>
+          </div>
+
+          <!-- Active filter indicator + clear -->
+          @if (modalFilterSupplier() || modalFilterStatus()) {
+            <div class="flex items-center gap-2 ml-auto">
+              <span class="text-body-sm text-on-surface-variant">
+                {{ filteredModalAssets().length }} of {{ activeGroup()!.assets.length }} units
+              </span>
+              <button
+                (click)="modalFilterSupplier.set(''); modalFilterStatus.set('')"
+                class="h-7 px-2 rounded text-body-sm text-on-surface-variant hover:bg-surface-container-high transition-colors flex items-center gap-1">
+                <span class="material-symbols-outlined text-[14px]">close</span>
+                Clear
+              </button>
+            </div>
+          }
+
+        </div>
+      }
+
+      <!-- Scrollable Units Table -->
+      <div class="overflow-auto flex-1 min-h-[280px]">
+        <table class="w-full text-left border-collapse">
+          <thead class="sticky top-0 z-10">
+            <tr class="bg-surface-container-low border-b border-outline-variant h-10">
+              <th class="px-5 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold whitespace-nowrap">
+                Unit #
+              </th>
+              <th class="px-5 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold whitespace-nowrap">
+                Serial No.
+              </th>
+              <th class="px-5 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold whitespace-nowrap hidden sm:table-cell">
+                Purchase Date
+              </th>
+              <th class="px-5 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold whitespace-nowrap hidden md:table-cell">
+                PO No.
+              </th>
+              <th class="px-5 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold whitespace-nowrap hidden lg:table-cell">
+                Supplier
+              </th>
+              <th class="px-5 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold whitespace-nowrap text-right hidden lg:table-cell">
+                Unit Price
+              </th>
+              <th class="px-5 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold whitespace-nowrap">
+                Assigned To
+              </th>
+              <th class="px-5 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold whitespace-nowrap">
+                Employee ID
+              </th>
+              <th class="px-5 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold whitespace-nowrap text-center">
+                Status
+              </th>
+              <th class="px-5 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold whitespace-nowrap text-center">
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-outline-variant">
+            @for (asset of filteredModalAssets(); track asset.id; let i = $index) {
+              <tr class="h-12 hover:bg-surface-container-low/50 transition-colors">
+
+                <!-- Unit Number -->
+                <td class="px-5 font-medium text-body-sm text-on-surface-variant whitespace-nowrap">
+                  Unit {{ i + 1 }}
+                </td>
+
+                <!-- Serial Number -->
+                <td class="px-5 whitespace-nowrap">
+                  @if (asset.serialNumber) {
+                    <span
+                      class="font-mono text-body-sm text-primary font-bold"
+                      [title]="asset.serialNumber">
+                      {{ asset.serialNumber }}
+                    </span>
+                  } @else {
+                    <span class="text-on-surface-variant text-body-sm">Not assigned yet</span>
+                  }
+                </td>
+
+                <!-- Purchase Date -->
+                <td class="px-5 text-body-sm text-on-surface-variant whitespace-nowrap hidden sm:table-cell">
+                  {{ asset.purchaseDate || '—' }}
+                </td>
+
+                <!-- PO No. -->
+                <td class="px-5 font-mono text-body-sm text-on-surface-variant whitespace-nowrap hidden md:table-cell">
+                  {{ asset.purchaseNumber || '—' }}
+                </td>
+
+                <!-- Supplier -->
+                <td class="px-5 text-body-sm text-on-surface-variant whitespace-nowrap hidden lg:table-cell">
+                  {{ asset.supplier || '—' }}
+                </td>
+
+                <!-- Unit Price -->
+                <td class="px-5 text-body-sm text-on-surface text-right whitespace-nowrap hidden lg:table-cell">
+                  {{ (asset.purchaseCost || 0) | appCurrency }}
+                </td>
+
+                <!-- Assigned To -->
+                <td class="px-5 text-body-sm text-on-surface whitespace-nowrap">
+                  @if (asset.assignedTo || asset.assignedUser) {
+                    <div class="flex items-center gap-1.5">
+                      <span class="material-symbols-outlined text-[14px] text-primary">person</span>
+                      <span>{{ asset.assignedUser?.name || asset.assignedTo }}</span>
+                    </div>
+                  } @else {
+                    <span class="text-on-surface-variant">—</span>
+                  }
+                </td>
+
+                <!-- Employee ID -->
+                <td class="px-5 text-body-sm whitespace-nowrap font-mono text-primary font-semibold text-[12px]">
+                  {{ asset.assignedUser?.employeeId || '—' }}
+                </td>
+
+                <!-- Status -->
+                <td class="px-5 text-center">
+                  <app-status-badge [status]="asset.status" />
+                </td>
+
+                <!-- Row Actions -->
+                <td class="px-5 text-center">
+                  <div class="flex items-center justify-center gap-1 text-on-surface-variant relative">
+
+                    <!-- View -->
+                    <button
+                      (click)="onView(asset)"
+                      class="p-1 hover:bg-surface-container-high rounded transition-colors"
+                      title="View">
+                      <span class="material-symbols-outlined text-[16px]">visibility</span>
+                    </button>
+
+
+                    <!-- More (⋮) -->
+                    <button
+                      (click)="toggleActionMenu($event, asset.id)"
+                      class="p-1 hover:bg-surface-container-high rounded transition-colors"
+                      [ngClass]="{ 'bg-surface-container-high text-primary': activeMenuAssetId() === asset.id }"
+                      title="More options">
+                      <span class="material-symbols-outlined text-[16px]">more_vert</span>
+                    </button>
+
+                    <!-- Dropdown -->
+                    @if (activeMenuAssetId() === asset.id) {
+                      <div
+                        class="absolute right-0 top-full mt-1 w-48 bg-surface-container-lowest border border-outline-variant rounded-lg shadow-xl py-1 z-[80] text-left"
+                        (click)="$event.stopPropagation()">
+
+                        @if (asset.status === 'AVAILABLE') {
+                          <button
+                            (click)="onAssign(asset)"
+                            class="w-full px-3 py-2 font-body-sm text-body-sm text-on-surface hover:bg-surface-container-low flex items-center gap-2 transition-colors">
+                            <span class="material-symbols-outlined text-[18px] text-on-surface-variant">person_add</span>
+                            Assign Asset
+                          </button>
+                        }
+
+                        @if (asset.status === 'ASSIGNED') {
+                          <button
+                            (click)="onReturn(asset)"
+                            class="w-full px-3 py-2 font-body-sm text-body-sm text-on-surface hover:bg-surface-container-low flex items-center gap-2 transition-colors">
+                            <span class="material-symbols-outlined text-[18px] text-on-surface-variant">assignment_return</span>
+                            Return Asset
+                          </button>
+                        }
+
+                        @if (asset.status !== 'MAINTENANCE') {
+                          <button
+                            (click)="onMaintenance(asset)"
+                            class="w-full px-3 py-2 font-body-sm text-body-sm text-on-surface hover:bg-surface-container-low flex items-center gap-2 transition-colors">
+                            <span class="material-symbols-outlined text-[18px] text-on-surface-variant">build</span>
+                            Send to Maintenance
+                          </button>
+                        }
+
+                        <div class="my-1 border-t border-outline-variant"></div>
+
+                        <button
+                          (click)="onDelete(asset)"
+                          class="w-full px-3 py-2 font-body-sm text-body-sm text-error hover:bg-error-container/20 flex items-center gap-2 transition-colors">
+                          <span class="material-symbols-outlined text-[18px] text-error">delete</span>
+                          Delete Asset
+                        </button>
+
+                      </div>
+                    }
+
+                  </div>
+                </td>
+
+              </tr>
+            }
+
+            <!-- Empty state when filters return no results -->
+            @if (filteredModalAssets().length === 0) {
+              <tr>
+                <td colspan="8" class="px-5 py-16 text-center">
+                  <span class="material-symbols-outlined text-[36px] text-on-surface-variant/40 block mb-2">search_off</span>
+                  <p class="font-label-md text-label-md text-on-surface-variant">No units match the current filters</p>
+                  <button
+                    (click)="modalFilterSupplier.set(''); modalFilterStatus.set('')"
+                    class="mt-3 text-body-sm text-primary hover:underline">
+                    Clear filters
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="px-6 py-4 border-t border-outline-variant bg-surface-container-low rounded-b-2xl shrink-0 flex items-center justify-between">
+        <p class="font-body-sm text-body-sm text-on-surface-variant">
+          @if (modalFilterSupplier() || modalFilterStatus()) {
+            {{ filteredModalAssets().length }} of {{ activeGroup()!.assets.length }} unit{{ activeGroup()!.assets.length !== 1 ? 's' : '' }}
+          } @else {
+            {{ activeGroup()!.assets.length }} unit{{ activeGroup()!.assets.length !== 1 ? 's' : '' }} in this purchase
+          }
+        </p>
+        <div class="flex items-center gap-2">
+          <button
+            (click)="purchaseMore.emit(activeGroup()!); closeModal()"
+            class="h-8 px-3 rounded-md border border-outline-variant text-on-surface font-label-sm text-label-sm hover:bg-surface-container-high transition-colors flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-[16px]">shopping_cart</span>
+            New Purchase
+          </button>
+          <button
+            (click)="closeModal()"
+            class="h-8 px-4 rounded-md bg-primary text-on-primary font-label-sm text-label-sm hover:bg-primary/90 transition-colors">
+            Close
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+}

@@ -1,0 +1,76 @@
+@if (isOpen()) {
+
+  <!-- Full content-area overlay — same pattern as other pages -->
+  <div class="fixed top-[64px] left-0 md:left-[260px] right-0 bottom-0 z-30 bg-background overflow-y-auto">
+    <div class="max-w-[1440px] mx-auto p-gutter sm:p-container-padding py-8">
+
+      @if (category(); as cat) {
+        <!-- Page-style Header -->
+        <div class="mb-8">
+          <h1 class="font-headline-md text-headline-md text-on-surface font-semibold">Category Details</h1>
+          <p class="font-body-md text-body-md text-on-surface-variant mt-1">
+            View detailed information about this asset category.
+          </p>
+        </div>
+
+        <div class="space-y-6">
+          <!-- Header Banner -->
+          <div class="flex items-start gap-4 p-6 rounded-xl bg-surface-container-low border border-outline-variant/60">
+            <div class="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+              <span class="material-symbols-outlined text-[28px]">{{ getCategoryIconName(cat) }}</span>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between gap-2">
+                <h3 class="font-headline-sm text-headline-sm text-on-surface truncate">{{ cat.name }}</h3>
+                <app-status-badge [status]="cat.status || 'ACTIVE'" />
+              </div>
+              <p class="font-body-sm text-body-sm text-on-surface-variant mt-1">
+                {{ cat.description || 'No description provided for this category.' }}
+              </p>
+            </div>
+          </div>
+
+          <!-- Detail Grid -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="p-6 rounded-xl bg-surface-container-lowest border border-outline-variant">
+              <span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider block mb-2">
+                Total Assets
+              </span>
+              <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-[20px] text-on-surface-variant">inventory_2</span>
+                <span class="font-headline-sm text-headline-sm text-on-surface font-semibold">
+                  {{ cat.assetCount ?? 0 }}
+                </span>
+              </div>
+            </div>
+
+            <div class="p-6 rounded-xl bg-surface-container-lowest border border-outline-variant">
+              <span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider block mb-2">
+                Created Date
+              </span>
+              <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-[20px] text-on-surface-variant">calendar_today</span>
+                <span class="font-body-md text-body-md text-on-surface font-medium">
+                  {{ cat.createdAt || 'N/A' }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex items-center justify-end gap-4 pt-6">
+          <button
+            type="button"
+            (click)="onClose()"
+            class="h-[40px] px-6 rounded-lg border border-outline-variant font-label-md text-label-md text-on-surface hover:bg-surface-container-low transition-all"
+          >
+            Close
+          </button>
+        </div>
+
+      }
+    </div>
+  </div>
+
+}

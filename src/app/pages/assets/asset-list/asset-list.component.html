@@ -1,0 +1,231 @@
+<div class="max-w-[1440px] mx-auto p-gutter sm:p-container-padding">
+
+  <!-- Page Header -->
+  <div class="mb-6">
+    @if (isEmployee()) {
+      <app-page-header title="My Assets" subtitle="View your assigned company assets and submit asset requests.">
+        <div pageActions class="flex items-center gap-3">
+          <button
+            class="h-9 px-4 rounded-lg font-label-md text-label-md bg-primary text-on-primary hover:bg-primary/90 transition-colors flex items-center gap-2 shrink-0 shadow-xs"
+            (click)="onRequestNewAsset()">
+            <span class="material-symbols-outlined text-[18px]">add</span>
+            Request New Asset
+          </button>
+        </div>
+      </app-page-header>
+    } @else {
+      <app-page-header [showBack]="false" title="Assets" subtitle="Manage and track all company hardware, equipment, and employee requests.">
+        <div pageActions class="flex items-center gap-2 sm:gap-3">
+          @if (canManageAssets()) {
+            @if (managerActiveTab() === 'purchased') {
+              @if (canCreatePurchase()) {
+                <button
+                  class="h-9 px-3 sm:px-4 rounded-lg font-label-md text-label-md bg-primary text-on-primary hover:bg-primary/90 transition-colors flex items-center gap-1.5 sm:gap-2 shrink-0 shadow-xs"
+                  (click)="onAddPurchase()">
+                  <span class="material-symbols-outlined text-[18px]">shopping_cart</span>
+                  <span>Purchase</span>
+                </button>
+              }
+              @if (canCreateAsset()) {
+                <button
+                  class="h-9 px-3 sm:px-4 rounded-lg font-label-md text-label-md bg-secondary text-on-secondary hover:bg-secondary/90 transition-colors flex items-center gap-1.5 sm:gap-2 shrink-0 shadow-xs"
+                  (click)="onAddAsset()">
+                  <span class="material-symbols-outlined text-[18px]">add</span>
+                  <span>Add Asset</span>
+                </button>
+              }
+            } @else {
+              @if (canCreateAsset()) {
+                <button
+                  class="h-9 px-3 sm:px-4 rounded-lg font-label-md text-label-md bg-primary text-on-primary hover:bg-primary/90 transition-colors flex items-center gap-1.5 sm:gap-2 shrink-0 shadow-xs"
+                  (click)="onAddAsset()">
+                  <span class="material-symbols-outlined text-[18px]">add</span>
+                  <span>Add Asset</span>
+                </button>
+              }
+            }
+          }
+        </div>
+      </app-page-header>
+    }
+  </div>
+
+  <!-- â”€â”€â”€ EMPLOYEE VIEW â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+  @if (isEmployee()) {
+    <!-- Tabs Header -->
+    <div class="flex items-center border-b border-outline-variant/60 mb-6 gap-6">
+      <button
+        type="button"
+        (click)="employeeActiveTab.set('assigned')"
+        [class]="'pb-3 text-title-sm font-semibold flex items-center gap-2 border-b-2 transition-colors ' +
+          (employeeActiveTab() === 'assigned'
+            ? 'border-primary text-primary'
+            : 'border-transparent text-on-surface-variant hover:text-on-surface')">
+        <span class="material-symbols-outlined text-[20px]">devices</span>
+        My Assigned Assets
+        <span class="ml-1 px-2 py-0.5 rounded-full text-label-xs bg-surface-container-high text-on-surface-variant">
+          {{ myAssignedAssets().length }}
+        </span>
+      </button>
+
+      <button
+        type="button"
+        (click)="employeeActiveTab.set('requests')"
+        [class]="'pb-3 text-title-sm font-semibold flex items-center gap-2 border-b-2 transition-colors ' +
+          (employeeActiveTab() === 'requests'
+            ? 'border-primary text-primary'
+            : 'border-transparent text-on-surface-variant hover:text-on-surface')">
+        <span class="material-symbols-outlined text-[20px]">task_alt</span>
+        My Asset Requests
+        <span class="ml-1 px-2 py-0.5 rounded-full text-label-xs bg-surface-container-high text-on-surface-variant">
+          {{ myAssetRequests().length }}
+        </span>
+      </button>
+    </div>
+
+    <!-- Tab Contents -->
+    @if (employeeActiveTab() === 'assigned') {
+      <app-my-assigned-assets
+        [assignments]="myAssignedAssets()"
+        [loading]="false"
+        (confirmReceipt)="openReceiptModal($event)"
+        (reportProblem)="onReportProblem($event)"
+        (viewAsset)="onViewAsset($event)"
+        (deleteAssignment)="onDeleteAssignment($event)" />
+    } @else {
+      <app-my-asset-requests
+        [requests]="myAssetRequests()"
+        [loading]="false"
+        (openRequestModal)="onRequestNewAsset()"
+        (confirmReceiptForRequest)="openReceiptModal($event)"
+        (deleteRequest)="onDeleteAssetRequest($event)" />
+    }
+  } @else {
+
+    <!-- â”€â”€â”€ MANAGER / ADMIN VIEW â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+    <app-view-selector
+      [options]="viewOptions"
+      [selectedView]="managerActiveTab()"
+      (viewChanged)="onViewChanged($event)" />
+
+    <!-- Controls (Search & Filters) -->
+    @if (managerActiveTab() !== 'requests') {
+      <div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-3 sm:p-4 mb-6 shadow-xs flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-center justify-between">
+        <div class="w-full sm:w-72 md:w-80 lg:w-96">
+          <app-search-input
+            [value]="assetService.searchQuery()"
+            [placeholder]="assetService.selectedView() === 'purchased'
+              ? 'Search by Serial, Name, Brand, Model, User...'
+              : 'Search by Name, Brand, Model, Category...'"
+            (valueChange)="assetService.setSearchQuery($event)" />
+        </div>
+
+        <div class="flex items-center gap-2 sm:gap-3 w-full sm:w-auto justify-start sm:justify-end">
+          @if (assetService.selectedView() === 'purchased') {
+            <div class="flex-1 sm:w-40 sm:flex-none">
+              <app-select
+                [options]="statusOptions"
+                [value]="assetService.selectedStatus() || ''"
+                placeholder="Status: All"
+                (selectionChange)="onStatusSelect($event)" />
+            </div>
+          }
+          <div class="flex-1 sm:w-44 sm:flex-none">
+            <app-select
+              [options]="categoryOptions()"
+              [value]="assetService.selectedCategory() || ''"
+              placeholder="Category: All"
+              (selectionChange)="onCategorySelect($event)" />
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Tab Contents -->
+    @if (managerActiveTab() === 'inventory') {
+      <app-inventory-asset
+        [groups]="assetService.paginatedInventoryGroups()"
+        [currentPage]="assetService.currentPage()"
+        [totalPages]="assetService.inventoryTotalPages()"
+        (viewGroup)="onViewInventoryGroup($event)"
+        (editGroup)="onEditInventoryGroup($event)"
+        (purchaseMore)="onPurchaseMore($event)"
+        (deleteGroup)="onDeleteInventoryGroup($event)"
+        (clearFilters)="clearFilters()"
+        (pageChange)="onPageChange($event)" />
+    } @else if (managerActiveTab() === 'purchased') {
+      <app-purchased-asset
+        [groups]="assetService.paginatedPurchaseGroups()"
+        [currentPage]="assetService.currentPage()"
+        [totalPages]="assetService.purchaseTotalPages()"
+        (viewAsset)="onViewAsset($event)"
+        (editAsset)="onEditAsset($event)"
+        (assignAsset)="onAssignAsset($event)"
+        (returnAsset)="onReturnAsset($event)"
+        (sendToMaintenance)="onSendToMaintenance($event)"
+        (deleteAsset)="onDeleteAsset($event)"
+        (newPurchase)="onAddPurchase()"
+        (purchaseMore)="onPurchaseFromPurchasedGroup($event)"
+        (deleteGroup)="onDeletePurchaseGroup($event)"
+        (clearFilters)="clearFilters()"
+        (pageChange)="onPageChange($event)" />
+    } @else if (managerActiveTab() === 'requests') {
+      <app-manager-asset-requests
+        [requests]="managerAssetRequests()"
+        [availableUnits]="availableUnitsForAssign()"
+        (approveRequest)="onApproveRequest($event)"
+        (rejectRequest)="onRejectRequest($event)"
+        (assignUnitToRequest)="onAssignUnitToRequest($event)" />
+    }
+  }
+
+</div>
+
+
+<!-- Confirm Receipt Modal -->
+<app-confirm-receipt-modal
+  [isOpen]="isConfirmReceiptModalOpen()"
+  [assetName]="selectedReceiptItem()?.assetName || selectedReceiptItem()?.requestedAsset || selectedReceiptItem()?.unit?.asset?.name || 'Asset'"
+  [serialNumber]="selectedReceiptItem()?.serialNumber || selectedReceiptItem()?.unit_serial_snapshot || selectedReceiptItem()?.unit?.serial_number || ''"
+  (confirmReceipt)="onConfirmReceiptSubmit($event)"
+  (cancel)="isConfirmReceiptModalOpen.set(false)" />
+
+<!-- Delete Confirm Dialog (purchased asset) -->
+<app-confirm-dialog
+  [isOpen]="!!pendingDeleteAsset()"
+  title="Delete Asset"
+  [message]="pendingDeleteAsset()
+    ? 'Are you sure you want to delete ' + pendingDeleteAsset()!.name + ' (' + pendingDeleteAsset()!.serialNumber + ')? This action cannot be undone.'
+    : ''"
+  confirmLabel="Delete"
+  cancelLabel="Cancel"
+  [dangerous]="true"
+  (confirm)="onConfirmDeleteAsset()"
+  (cancel)="onCancelDeleteAsset()" />
+
+<!-- Delete Confirm Dialog (purchased group) -->
+<app-confirm-dialog
+  [isOpen]="!!pendingDeletePurchaseGroup()"
+  title="Delete All Units"
+  [message]="pendingDeletePurchaseGroup()
+    ? 'Are you sure you want to delete all ' + pendingDeletePurchaseGroup()!.quantity + ' unit(s) of ' + pendingDeletePurchaseGroup()!.assetName + '? This action cannot be undone.'
+    : ''"
+  confirmLabel="Delete All"
+  cancelLabel="Cancel"
+  [dangerous]="true"
+  (confirm)="onConfirmDeletePurchaseGroup()"
+  (cancel)="pendingDeletePurchaseGroup.set(null)" />
+
+<!-- Delete Confirm Dialog (inventory group) -->
+<app-confirm-dialog
+  [isOpen]="!!pendingDeleteGroup()"
+  title="Delete Inventory Group"
+  [message]="pendingDeleteGroup()
+    ? 'Are you sure you want to delete all ' + pendingDeleteGroup()!.totalStock + ' unit(s) of ' + pendingDeleteGroup()!.name + '? This action cannot be undone.'
+    : ''"
+  confirmLabel="Delete All"
+  cancelLabel="Cancel"
+  [dangerous]="true"
+  (confirm)="onConfirmDeleteGroup()"
+  (cancel)="pendingDeleteGroup.set(null)" />
+

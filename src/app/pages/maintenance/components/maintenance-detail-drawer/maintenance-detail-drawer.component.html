@@ -1,0 +1,312 @@
+@if (isOpen() && request()) {
+
+  <!-- Full content-area overlay -->
+  <div class="fixed top-[64px] left-0 md:left-[260px] right-0 bottom-0 z-30 bg-background overflow-y-auto">
+    <div class="max-w-[1440px] mx-auto p-gutter sm:p-container-padding py-8">
+
+      <!-- Page-style Header -->
+      <div class="mb-8 flex items-start justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+            <span class="material-symbols-outlined text-[22px] text-primary">build</span>
+          </div>
+          <div>
+            <h1 class="font-headline-md text-headline-md text-on-surface font-semibold">
+              {{ request()!.displayId || request()!.requestId }}
+            </h1>
+            <p class="font-body-md text-body-md text-on-surface-variant mt-0.5">Maintenance Details</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 mt-1 no-print">
+          <button
+            (click)="onExportPdf()"
+            class="h-9 px-3.5 rounded-lg border border-outline-variant text-on-surface hover:bg-surface-container-low transition-all flex items-center gap-2 font-label-md text-label-md shadow-xs"
+            title="Export as PDF"
+          >
+            <span class="material-symbols-outlined text-[18px] text-error">picture_as_pdf</span>
+            <span>Export PDF</span>
+          </button>
+          <button
+            (click)="onClose()"
+            class="shrink-0 h-9 w-9 rounded-lg border border-outline-variant text-on-surface-variant hover:bg-surface-container-low transition-all flex items-center justify-center"
+            aria-label="Close"
+          >
+            <span class="material-symbols-outlined text-[20px]">close</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Content grid: left = main info, right = sidebar info -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        <!-- ── Left column (2/3) ─────────────────────────────────────────── -->
+        <div class="lg:col-span-2 space-y-6">
+
+
+
+          <!-- Issue Description -->
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 shadow-sm">
+            <p class="font-headline-sm text-headline-sm text-on-surface font-semibold mb-5 pb-4 border-b border-outline-variant flex items-center gap-2">
+              <span class="material-symbols-outlined text-primary text-[20px]">description</span>
+              Issue Description
+            </p>
+            <p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-1">Component / Issue Type</p>
+            <p class="font-label-md text-label-md text-on-surface font-semibold mb-4">{{ request()!.componentOrIssueType }}</p>
+            <p class="font-body-md text-body-md text-on-surface leading-relaxed">{{ request()!.issueDescription }}</p>
+          </div>
+
+          <!-- Asset Maintenance History -->
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 shadow-sm">
+            <p class="font-headline-sm text-headline-sm text-on-surface font-semibold mb-5 pb-4 border-b border-outline-variant flex items-center gap-2">
+              <span class="material-symbols-outlined text-primary text-[20px]">manage_history</span>
+              Asset Maintenance History
+            </p>
+            @if (request()!.assetMaintenanceHistory && request()!.assetMaintenanceHistory!.length > 0) {
+              <div class="border border-outline-variant rounded-lg overflow-hidden">
+                <table class="w-full text-left border-collapse">
+                  <thead>
+                    <tr class="bg-surface-container-low border-b border-outline-variant">
+                      <th class="px-4 py-2.5 font-label-sm text-label-sm text-on-surface-variant">Date</th>
+                      <th class="px-4 py-2.5 font-label-sm text-label-sm text-on-surface-variant">Issue</th>
+                      <th class="px-4 py-2.5 font-label-sm text-label-sm text-on-surface-variant">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-outline-variant">
+                    @for (hist of request()!.assetMaintenanceHistory!; track hist.id) {
+                      <tr class="hover:bg-surface-container-low transition-colors">
+                        <td class="px-4 py-2.5 font-body-sm text-body-sm text-on-surface-variant whitespace-nowrap">
+                          {{ hist.date | date:'MMM d, yyyy' }}
+                        </td>
+                        <td class="px-4 py-2.5 font-body-sm text-body-sm text-on-surface">{{ hist.issue }}</td>
+                        <td class="px-4 py-2.5 font-body-sm text-body-sm text-on-surface-variant">{{ hist.action }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            } @else {
+              <p class="font-body-sm text-body-sm text-on-surface-variant italic">No previous maintenance history for this asset.</p>
+            }
+          </div>
+
+        </div>
+
+        <!-- ── Right column (1/3) ─────────────────────────────────────────── -->
+        <div class="space-y-6">
+
+          <!-- Request Information -->
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 shadow-sm">
+            <p class="font-headline-sm text-headline-sm text-on-surface font-semibold mb-5 pb-4 border-b border-outline-variant flex items-center gap-2">
+              <span class="material-symbols-outlined text-primary text-[20px]">info</span>
+              Request Info
+            </p>
+            <div class="space-y-4">
+
+              <div>
+                <p class="font-body-sm text-body-sm text-on-surface-variant mb-0.5">Asset</p>
+                <div class="flex items-center gap-2">
+                  <span class="material-symbols-outlined text-[18px] text-on-surface-variant">{{ request()!.assetIcon || 'devices' }}</span>
+                  <p class="font-label-md text-label-md text-on-surface font-medium">{{ request()!.assetName }}</p>
+                </div>
+              </div>
+
+              <div>
+                <p class="font-body-sm text-body-sm text-on-surface-variant mb-0.5">Serial Number</p>
+                <p class="font-mono text-body-sm font-semibold text-primary">
+                  {{ request()!.serialNumber || '—' }}
+                </p>
+              </div>
+
+              @if (request()!.assignedEmployee || request()!.requestedByName) {
+                <div>
+                  <p class="font-body-sm text-body-sm text-on-surface-variant mb-0.5">Assigned Employee</p>
+                  <div class="flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-[16px] text-on-surface-variant">person</span>
+                    <p class="font-label-md text-label-md text-on-surface font-medium">
+                      {{ request()!.assignedEmployee || request()!.requestedByName }}
+                    </p>
+                  </div>
+                  @if (request()!.department || request()!.assignedEmployeeDepartment) {
+                    <p class="text-[11px] text-on-surface-variant ml-5">
+                      {{ request()!.assignedEmployeeDepartment || request()!.department }}
+                    </p>
+                  }
+                </div>
+              }
+
+              @if (request()!.requestedByName && request()!.assignedEmployee && request()!.requestedByName !== request()!.assignedEmployee) {
+                <div>
+                  <p class="font-body-sm text-body-sm text-on-surface-variant mb-0.5">Reported By</p>
+                  <div class="flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-[16px] text-on-surface-variant">assignment_ind</span>
+                    <p class="font-label-md text-label-md text-on-surface">
+                      {{ request()!.requestedByName }}
+                    </p>
+                  </div>
+                </div>
+              }
+
+              <div>
+                <p class="font-body-sm text-body-sm text-on-surface-variant mb-0.5">Status</p>
+                <app-status-badge [status]="request()!.status" />
+              </div>
+
+              <div>
+                <p class="font-body-sm text-body-sm text-on-surface-variant mb-0.5">Priority</p>
+                <app-status-badge [status]="request()!.priority" />
+              </div>
+
+              <div>
+                <p class="font-body-sm text-body-sm text-on-surface-variant mb-0.5">Type</p>
+                <p class="font-label-md text-label-md text-on-surface">{{ getMaintenanceTypeLabel(request()!.maintenanceType) }}</p>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="flex flex-col gap-3 no-print">
+            @if (canEdit()) {
+              <button
+                (click)="onEditRequest()"
+                class="w-full h-[40px] px-4 rounded-lg border border-outline-variant text-on-surface font-label-md text-label-md hover:bg-surface-container-low transition-all flex items-center justify-center gap-2"
+              >
+                <span class="material-symbols-outlined text-[18px]">edit</span>
+                Edit Request
+              </button>
+            }
+            @if (canUpdateStatus()) {
+              <button
+                (click)="onUpdateStatus()"
+                class="w-full h-[40px] px-4 rounded-lg bg-primary text-on-primary font-label-md text-label-md hover:bg-primary/90 transition-all shadow-sm flex items-center justify-center gap-2"
+              >
+                <span class="material-symbols-outlined text-[18px]">update</span>
+                Update Status
+              </button>
+            }
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Update Status — full content-area overlay -->
+  @if (isStatusModalOpen()) {
+    <div class="fixed top-[64px] left-0 md:left-[260px] right-0 bottom-0 z-[60] bg-background overflow-y-auto">
+      <div class="max-w-[1440px] mx-auto p-gutter sm:p-container-padding py-8">
+
+        <!-- Header -->
+        <div class="mb-8 flex items-start justify-between gap-4">
+          <div>
+            <h1 class="font-headline-md text-headline-md text-on-surface font-semibold">Update Status</h1>
+            <p class="font-body-md text-body-md text-on-surface-variant mt-1">
+              Change the status of request {{ request()!.requestId }}.
+            </p>
+          </div>
+          <button
+            (click)="closeStatusModal()"
+            class="shrink-0 h-9 w-9 rounded-lg border border-outline-variant text-on-surface-variant hover:bg-surface-container-low transition-all flex items-center justify-center mt-1"
+            aria-label="Close"
+          >
+            <span class="material-symbols-outlined text-[20px]">close</span>
+          </button>
+        </div>
+
+        <!-- Form Card -->
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 shadow-sm space-y-6 max-w-xl">
+
+          <!-- Current Status -->
+          <div>
+            <p class="font-label-sm text-label-sm text-on-surface font-semibold mb-2">Current Status</p>
+            <app-status-badge [status]="request()!.status" />
+          </div>
+
+          <!-- New Status -->
+          <div>
+            <label class="block font-label-sm text-label-sm text-on-surface font-semibold mb-1.5">
+              New Status <span class="text-error">*</span>
+            </label>
+            <div class="relative">
+              <select
+                [(ngModel)]="selectedNewStatus"
+                class="w-full h-[40px] appearance-none bg-surface-container-lowest text-on-surface border border-outline-variant rounded-lg pl-3 pr-10 font-body-md text-body-md focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1"
+              >
+                <option value="">Select new status...</option>
+                @for (s of allowedNextStatuses(); track s) {
+                  <option [value]="s">{{ getStatusLabel(s) }}</option>
+                }
+              </select>
+              <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none text-[20px]">expand_more</span>
+            </div>
+          </div>
+
+          <!-- Note -->
+          <div>
+            <label class="block font-label-sm text-label-sm text-on-surface font-semibold mb-1.5">
+              Note <span class="font-normal text-on-surface-variant">(Optional)</span>
+            </label>
+            <textarea
+              [(ngModel)]="statusNote"
+              rows="4"
+              placeholder="Add a note about this status change..."
+              class="w-full p-3 font-body-md text-body-md bg-surface-container-lowest text-on-surface border border-outline-variant rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 transition-shadow placeholder:text-on-surface-variant/50 resize-none"
+            ></textarea>
+          </div>
+
+        </div>
+
+        <!-- Actions -->
+        <div class="flex items-center justify-end gap-4 pt-6 max-w-xl">
+          <button
+            (click)="closeStatusModal()"
+            class="h-[40px] px-6 rounded-lg border border-outline-variant font-label-md text-label-md text-on-surface hover:bg-surface-container-low transition-all"
+          >
+            Cancel
+          </button>
+          <button
+            (click)="confirmStatusUpdate()"
+            [disabled]="!selectedNewStatus || updatingStatus()"
+            class="h-[40px] px-6 rounded-lg bg-primary text-on-primary font-label-md text-label-md hover:bg-primary/90 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          >
+            @if (updatingStatus()) {
+              <div class="w-4 h-4 border-2 border-on-primary border-t-transparent rounded-full animate-spin"></div>
+              Saving...
+            } @else {
+              Confirm
+            }
+          </button>
+        </div>
+
+      </div>
+    </div>
+  }
+
+  <!-- PDF Viewer Modal -->
+  @if (pdfBlobUrl()) {
+    <div class="fixed inset-0 bg-black/75 flex items-center justify-center z-[3000] p-4">
+      <div class="bg-surface-container-lowest w-full max-w-4xl h-[90vh] border border-outline-variant rounded-xl shadow-2xl flex flex-col overflow-hidden relative animate-scale-in">
+
+        <div class="flex justify-between items-center border-b border-outline-variant p-4 bg-surface-container-low">
+          <h3 class="font-title-md text-title-md text-on-surface flex items-center gap-2 font-semibold">
+            <span class="material-symbols-outlined text-primary">description</span>
+            {{ pdfViewerTitle() }}
+          </h3>
+          <div class="flex items-center gap-2">
+            <a [href]="pdfBlobUrl()" [download]="pdfFileName()" class="btn bg-primary text-on-primary hover:bg-primary-container hover:text-on-primary-container px-4 py-2 rounded-md font-semibold text-body-sm flex items-center gap-1.5 focus:outline-none shadow-xs">
+              <span class="material-symbols-outlined text-[18px]">download</span> Download
+            </a>
+            <button (click)="closePdfViewer()" class="text-on-surface-variant hover:text-on-surface p-1.5 rounded-full hover:bg-surface-container-high focus:outline-none">
+              <span class="material-symbols-outlined text-[20px]">close</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="flex-1 bg-surface-container-high">
+          <iframe [src]="pdfBlobUrlSafe()" class="w-full h-full border-none"></iframe>
+        </div>
+      </div>
+    </div>
+  }
+
+}

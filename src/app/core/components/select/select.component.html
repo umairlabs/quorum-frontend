@@ -1,0 +1,67 @@
+<div class="relative w-full text-left" [class]="customClass()">
+  @if (label()) {
+    <label class="block font-label-sm text-label-sm font-semibold text-on-surface mb-1.5">
+      {{ label() }}
+    </label>
+  }
+
+  <!-- Select Trigger Button -->
+  <button
+    type="button"
+    (click)="toggleDropdown()"
+    [disabled]="disabled()"
+    [class]="triggerClasses()"
+  >
+    <div class="flex items-center gap-2 overflow-hidden truncate">
+      @if (icon()) {
+        <span class="material-symbols-outlined text-[18px] text-on-surface-variant shrink-0">{{ icon() }}</span>
+      }
+      <span
+        [class]="value() === null || value() === undefined || value() === '' ? 'text-on-surface-variant/70 font-normal' : 'font-semibold text-on-surface'"
+        class="truncate"
+      >
+        {{ selectedLabel() }}
+      </span>
+    </div>
+
+    <span
+      [class.rotate-180]="isOpen()"
+      class="material-symbols-outlined text-[18px] text-on-surface-variant shrink-0 transition-transform duration-200"
+    >
+      expand_more
+    </span>
+  </button>
+
+  <!-- Floating Custom Options Dropdown Popover -->
+  @if (isOpen()) {
+    <div
+      class="absolute left-0 right-0 top-full mt-1.5 py-1 bg-white rounded-xl border border-slate-300 shadow-xl z-50 max-h-60 overflow-y-auto hide-scrollbar animate-in fade-in-50 zoom-in-95 duration-100"
+    >
+      @for (opt of normalizedOptions(); track opt.value) {
+        <button
+          type="button"
+          (click)="selectOption(opt)"
+          [class]="isOptionSelected(opt)
+            ? 'bg-black text-white font-semibold'
+            : 'text-slate-800 hover:bg-slate-100 hover:text-black font-normal'"
+          class="w-full px-3.5 py-2 text-left text-body-sm font-body-sm flex items-center justify-between gap-2 transition-colors cursor-pointer"
+        >
+          <div class="flex items-center gap-2 truncate">
+            @if (opt.icon) {
+              <span class="material-symbols-outlined text-[16px] shrink-0">{{ opt.icon }}</span>
+            }
+            <span class="truncate">{{ opt.label }}</span>
+          </div>
+
+          @if (isOptionSelected(opt)) {
+            <span class="material-symbols-outlined text-[16px] text-white shrink-0">check</span>
+          }
+        </button>
+      } @empty {
+        <div class="px-3.5 py-2.5 text-body-sm text-slate-500 text-center font-medium">
+          No options available
+        </div>
+      }
+    </div>
+  }
+</div>

@@ -1,0 +1,368 @@
+<div class="max-w-[1440px] mx-auto p-gutter sm:p-container-padding py-8">
+
+  <!-- Page Header -->
+  <div class="mb-8">
+    <app-page-header title="New Assignment" subtitle="Select an available asset and fill in the employee details." />
+  </div>
+
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-6">
+
+    <!-- Section 1: Select Asset & Unit -->
+    <app-form-section title="Select Asset & Unit" icon="devices">
+      <div class="space-y-4">
+        <!-- Step A: Select Asset Type (Searchable Autocomplete) -->
+        <div class="relative">
+          <label class="block font-label-sm text-label-sm text-on-surface font-semibold mb-1.5" for="asset_search">
+            Asset Type <span class="text-error">*</span>
+          </label>
+
+          @if (availableAssets().length > 0) {
+          <div class="relative">
+            <input id="asset_search" type="text" [value]="selectedAsset() ? selectedAsset()!.name : assetSearchQuery()"
+              (focus)="onFocusAssetSearch()" (blur)="onBlurAssetSearch()"
+              (input)="onAssetInputChange($event.target.value)" placeholder="Search asset name, category, or brand..."
+              autocomplete="off"
+              class="w-full h-[40px] pl-10 pr-10 font-body-md text-body-md bg-surface-container-lowest text-on-surface border border-outline-variant rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 transition-shadow placeholder:text-on-surface-variant/50" />
+            <span
+              class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[20px] text-on-surface-variant pointer-events-none">search</span>
+
+            @if (selectedAsset()) {
+            <button type="button" (click)="clearSelectedAsset()"
+              class="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface p-0.5 rounded-full hover:bg-surface-container-low transition-colors"
+              title="Clear selected asset">
+              <span class="material-symbols-outlined text-[18px]">close</span>
+            </button>
+            } @else {
+            <span
+              class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-[20px] text-on-surface-variant pointer-events-none">arrow_drop_down</span>
+            }
+          </div>
+
+          <!-- Floating Searchable Asset Dropdown -->
+          @if (showAssetDropdown()) {
+          <div
+            class="absolute left-0 right-0 top-full mt-1 bg-surface-container-lowest border border-outline-variant rounded-lg shadow-xl max-h-64 overflow-y-auto z-50 divide-y divide-outline-variant/40">
+            <div
+              class="px-3 py-1.5 bg-surface-container-low text-[11px] font-semibold uppercase tracking-wider text-on-surface-variant flex items-center justify-between">
+              <span>Select Purchased Asset</span>
+              <span>{{ filteredAvailableAssets().length }} available</span>
+            </div>
+            @for (asset of filteredAvailableAssets(); track asset.id) {
+            <div (mousedown)="selectAsset(asset)"
+              class="p-3 hover:bg-surface-container-low cursor-pointer flex items-center justify-between transition-colors group">
+              <div class="flex items-center gap-3">
+                <div
+                  class="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0 group-hover:bg-primary group-hover:text-on-primary transition-colors">
+                  <span class="material-symbols-outlined text-[18px]">devices</span>
+                </div>
+                <div>
+                  <p class="font-label-md text-on-surface font-semibold group-hover:text-primary transition-colors">
+                    {{ asset.name }}
+                  </p>
+                  <p class="text-[11px] text-on-surface-variant">
+                    {{ getCategoryName(asset) }}
+                    @if (asset.brand || asset.model) {
+                    • {{ asset.brand }} {{ asset.model }}
+                    }
+                  </p>
+                </div>
+              </div>
+              <span
+                class="px-2 py-0.5 text-[11px] font-semibold rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
+                {{ asset.availableQuantity }} available
+              </span>
+            </div>
+            } @empty {
+            <div class="p-4 text-center text-body-sm text-on-surface-variant">
+              No assets match your search "{{ assetSearchQuery() }}".
+            </div>
+            }
+          </div>
+          }
+          } @else {
+          <div class="flex items-center gap-3 p-4 bg-surface-container-low border border-outline-variant rounded-lg">
+            <span class="material-symbols-outlined text-on-surface-variant text-[22px]">info</span>
+            <p class="font-body-md text-body-md text-on-surface-variant">
+              No available purchased assets. All assets are currently assigned, unavailable, or not yet purchased.
+            </p>
+          </div>
+          }
+        </div>
+
+        <!-- Step B: Select Specific Unit -->
+        @if (selectedAsset()) {
+        <div class="relative">
+          <label class="block font-label-sm text-label-sm text-on-surface font-semibold mb-1.5" for="unit_search">
+            Select Unit <span class="text-error">*</span>
+          </label>
+
+          @if (unitsLoading()) {
+          <div class="flex items-center gap-3 p-4 bg-surface-container-low border border-outline-variant rounded-lg">
+            <div class="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+            <p class="font-body-md text-body-md text-on-surface-variant">Loading available units...</p>
+          </div>
+          } @else if (availableUnits().length > 0) {
+          <div class="relative">
+            <input id="unit_search" type="text" [value]="unitSearchQuery()"
+              placeholder="Search or select unit ID..."
+              (focus)="onFocusUnitSearch()"
+              (blur)="onBlurUnitSearch()"
+              (input)="onUnitInputChange($event.target.value)"
+              autocomplete="off"
+              class="w-full h-[40px] pl-10 pr-10 font-body-md text-body-md bg-surface-container-lowest text-on-surface border border-outline-variant rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 transition-shadow font-mono" />
+            <span
+              class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[20px] text-on-surface-variant pointer-events-none">search</span>
+
+            @if (unitSearchQuery()) {
+            <button type="button" (click)="clearSelectedUnit()"
+              class="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface p-0.5 rounded-full hover:bg-surface-container-low transition-colors"
+              title="Clear selected unit">
+              <span class="material-symbols-outlined text-[18px]">close</span>
+            </button>
+            } @else {
+            <span
+              class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-[20px] text-on-surface-variant pointer-events-none">arrow_drop_down</span>
+            }
+          </div>
+
+          <!-- Floating Searchable Unit Dropdown (Always opens downwards with scrollbar) -->
+          @if (showUnitDropdown()) {
+          <div
+            class="absolute left-0 right-0 top-full mt-1 bg-surface-container-lowest border border-outline-variant rounded-lg shadow-xl max-h-60 overflow-y-auto z-50 divide-y divide-outline-variant/40">
+            <div
+              class="px-3 py-1.5 bg-surface-container-low text-[11px] font-semibold uppercase tracking-wider text-on-surface-variant flex items-center justify-between sticky top-0 z-10">
+              <span>Select Unit ID</span>
+              <span>{{ filteredAvailableUnits().length }} units</span>
+            </div>
+            @for (unit of filteredAvailableUnits(); track unit.id) {
+            <div (mousedown)="selectUnit(unit)"
+              class="p-3 hover:bg-surface-container-low cursor-pointer flex items-center justify-between transition-colors group">
+              <div class="flex items-center gap-3">
+                <div
+                  class="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0 group-hover:bg-primary group-hover:text-on-primary transition-colors">
+                  <span class="material-symbols-outlined text-[18px]">qr_code_2</span>
+                </div>
+                <div>
+                  <p class="font-mono text-xs font-bold text-on-surface group-hover:text-primary transition-colors">
+                    {{ unit.displayId || unit.serialNumber || unit.id }}
+                  </p>
+                  @if (unit.displayId && unit.serialNumber && unit.displayId !== unit.serialNumber) {
+                    <p class="text-[11px] text-on-surface-variant font-mono">SN: {{ unit.serialNumber }}</p>
+                  }
+                </div>
+              </div>
+              <span
+                class="px-2 py-0.5 text-[10px] font-semibold rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
+                Available
+              </span>
+            </div>
+            } @empty {
+            <div class="p-3 text-center text-body-sm text-on-surface-variant">
+              No units match your search "{{ unitSearchQuery() }}".
+            </div>
+            }
+          </div>
+          }
+          } @else {
+          <div class="flex items-center gap-3 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+            <span class="material-symbols-outlined text-amber-600 text-[22px]">warning</span>
+            <p class="font-body-md text-body-md text-amber-700">
+              No available units for this asset. All units are currently assigned or under maintenance.
+            </p>
+          </div>
+          }
+        </div>
+        }
+      </div>
+    </app-form-section>
+
+    <!-- Section 2: Employee Details -->
+    <app-form-section title="Employee Details" icon="person">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
+
+        <!-- Employee Name Field with Search Autocomplete -->
+        <div class="relative">
+          <label class="block font-label-sm text-label-sm text-on-surface font-semibold mb-1.5" for="emp_name">
+            Employee Name <span class="text-error">*</span>
+          </label>
+          <div class="relative">
+            <input id="emp_name" type="text" formControlName="employeeName"
+              placeholder="e.g. Jane Doe (click to view all employees)" (focus)="onFocusNameSearch()"
+              (blur)="onBlurNameSearch()" (input)="onNameInputChange($event.target.value)"
+              autocomplete="off"
+              class="w-full h-[40px] px-3 pr-8 font-body-md text-body-md bg-surface-container-lowest text-on-surface border border-outline-variant rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 transition-shadow placeholder:text-on-surface-variant/50" />
+            <span
+              class="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 text-[18px] text-on-surface-variant pointer-events-none">search</span>
+          </div>
+
+          <!-- Floating Searchable Employee Dropdown -->
+          @if (showNameDropdown()) {
+          <div
+            class="absolute left-0 right-0 top-full mt-1 bg-surface-container-lowest border border-outline-variant rounded-lg shadow-xl max-h-60 overflow-y-auto z-50 divide-y divide-outline-variant/40">
+            <div
+              class="px-3 py-1.5 bg-surface-container-low text-[11px] font-semibold uppercase tracking-wider text-on-surface-variant flex items-center justify-between">
+              <span>Select Registered Employee</span>
+              <span>{{ filteredEmployees().length }} users</span>
+            </div>
+            @for (emp of filteredEmployees(); track emp.id) {
+            <div (mousedown)="onSelectEmployeeFromName(emp)"
+              class="p-3 hover:bg-surface-container-low cursor-pointer flex items-center justify-between transition-colors group">
+              <div class="flex items-center gap-3">
+                <div
+                  class="w-8 h-8 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center text-xs group-hover:bg-primary group-hover:text-on-primary transition-colors shrink-0">
+                  {{ emp.avatarInitials || (emp.fullName ? emp.fullName.slice(0,2).toUpperCase() : 'EM') }}
+                </div>
+                <div>
+                  <p class="font-label-md text-on-surface font-semibold group-hover:text-primary transition-colors">
+                    {{ emp.fullName || (emp.firstName + ' ' + emp.lastName) }}
+                  </p>
+                  <p class="text-[11px] text-on-surface-variant">
+                    {{ emp.department || 'Employee' }} • {{ emp.email }}
+                  </p>
+                </div>
+              </div>
+            </div>
+            } @empty {
+            <div class="p-3 text-center text-body-sm text-on-surface-variant">
+              No matching employee found. You can enter details manually.
+            </div>
+            }
+          </div>
+          }
+        </div>
+
+        <!-- Employee ID Field with Search Autocomplete -->
+        <div class="relative">
+          <label class="block font-label-sm text-label-sm text-on-surface font-semibold mb-1.5" for="emp_id">
+            Employee ID <span class="text-error">*</span>
+          </label>
+          <div class="relative">
+            <input id="emp_id" type="text" formControlName="employeeId" placeholder="e.g. EMP-892"
+              (focus)="onFocusIdSearch()" (blur)="onBlurIdSearch()"
+              (input)="onIdInputChange($event.target.value)" autocomplete="off"
+              class="w-full h-[40px] px-3 pr-8 font-body-md text-body-md bg-surface-container-lowest text-on-surface border border-outline-variant rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 transition-shadow placeholder:text-on-surface-variant/50 font-mono" />
+            <span
+              class="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 text-[18px] text-on-surface-variant pointer-events-none">search</span>
+          </div>
+
+          <!-- Floating Searchable Employee Dropdown for ID field -->
+          @if (showIdDropdown()) {
+          <div
+            class="absolute left-0 right-0 top-full mt-1 bg-surface-container-lowest border border-outline-variant rounded-lg shadow-xl max-h-60 overflow-y-auto z-50 divide-y divide-outline-variant/40">
+            <div
+              class="px-3 py-1.5 bg-surface-container-low text-[11px] font-semibold uppercase tracking-wider text-on-surface-variant flex items-center justify-between">
+              <span>Select Registered Employee</span>
+              <span>{{ filteredEmployees().length }} users</span>
+            </div>
+            @for (emp of filteredEmployees(); track emp.id) {
+            <div (mousedown)="onSelectEmployeeFromId(emp)"
+              class="p-3 hover:bg-surface-container-low cursor-pointer flex items-center justify-between transition-colors group">
+              <div class="flex items-center gap-3">
+                <div
+                  class="w-8 h-8 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center text-xs group-hover:bg-primary group-hover:text-on-primary transition-colors shrink-0">
+                  {{ emp.avatarInitials || (emp.fullName ? emp.fullName.slice(0,2).toUpperCase() : 'EM') }}
+                </div>
+                <div>
+                  <p class="font-label-md text-on-surface font-semibold group-hover:text-primary transition-colors">
+                    {{ emp.fullName || (emp.firstName + ' ' + emp.lastName) }}
+                  </p>
+                  <p class="text-[11px] text-on-surface-variant">
+                    {{ emp.employeeId || emp.id }} &bull; {{ emp.department || 'Employee' }}
+                  </p>
+                </div>
+              </div>
+            </div>
+            } @empty {
+            <div class="p-3 text-center text-body-sm text-on-surface-variant">
+              No matching employee found.
+            </div>
+            }
+          </div>
+          }
+        </div>
+
+        <div>
+          <label class="block font-label-sm text-label-sm text-on-surface font-semibold mb-1.5" for="emp_initials">
+            Initials <span class="text-error">*</span>
+          </label>
+          <input id="emp_initials" type="text" formControlName="employeeInitials" placeholder="e.g. JD" maxlength="2"
+            class="w-full h-[40px] px-3 font-body-md text-body-md bg-surface-container-lowest text-on-surface border border-outline-variant rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 transition-shadow placeholder:text-on-surface-variant/50" />
+        </div>
+
+        <div class="relative">
+          <label class="block font-label-sm text-label-sm text-on-surface font-semibold mb-1.5" for="department">
+            Department <span class="text-error">*</span>
+          </label>
+          <div class="relative">
+            <input id="department" type="text" formControlName="department"
+              placeholder="e.g. Engineering" (focus)="onFocusDeptSearch()" (blur)="onBlurDeptSearch()"
+              (input)="onDeptInputChange($event.target.value)" autocomplete="off"
+              class="w-full h-[40px] px-3 pr-8 font-body-md text-body-md bg-surface-container-lowest text-on-surface border border-outline-variant rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 transition-shadow placeholder:text-on-surface-variant/50" />
+            <span
+              class="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 text-[18px] text-on-surface-variant pointer-events-none">search</span>
+          </div>
+
+          @if (showDeptDropdown()) {
+          <div
+            class="absolute left-0 right-0 top-full mt-1 bg-surface-container-lowest border border-outline-variant rounded-lg shadow-xl max-h-52 overflow-y-auto z-50 divide-y divide-outline-variant/40">
+            @for (dept of filteredDepts(); track dept) {
+            <div (mousedown)="onSelectDept(dept)"
+              class="px-4 py-2.5 hover:bg-surface-container-low cursor-pointer text-body-md text-on-surface transition-colors">
+              {{ dept }}
+            </div>
+            } @empty {
+            <div class="p-3 text-center text-body-sm text-on-surface-variant">No matching department.</div>
+            }
+          </div>
+          }
+        </div>
+
+      </div>
+    </app-form-section>
+
+    <!-- Section 3: Assignment Details -->
+    <app-form-section title="Assignment Details" icon="assignment">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
+
+        <div>
+          <label class="block font-label-sm text-label-sm text-on-surface font-semibold mb-1.5" for="assigned_date">
+            Assigned Date <span class="text-error">*</span>
+          </label>
+          <input id="assigned_date" type="date" formControlName="assignedDate" min="1900-01-01" max="2099-12-31"
+            (input)="onDateInput('assignedDate', $event)" (blur)="onDateBlur('assignedDate', $event)"
+            class="w-full h-[40px] px-3 font-body-md text-body-md bg-surface-container-lowest text-on-surface border border-outline-variant rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 transition-shadow" />
+        </div>
+
+        <div>
+          <label class="block font-label-sm text-label-sm text-on-surface font-semibold mb-1.5" for="return_date">
+            Expected Return Date <span class="text-error">*</span>
+          </label>
+          <input id="return_date" type="date" formControlName="expectedReturnDate" [min]="minExpectedReturnDate" max="2099-12-31"
+            (input)="onDateInput('expectedReturnDate', $event)" (blur)="onDateBlur('expectedReturnDate', $event)"
+            class="w-full h-[40px] px-3 font-body-md text-body-md bg-surface-container-lowest text-on-surface border border-outline-variant rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 transition-shadow"
+            [class.border-error]="(form.get('expectedReturnDate')?.touched && form.get('expectedReturnDate')?.invalid) || (form.touched && form.hasError('returnDateMustBeAfterAssigned'))" />
+          @if (form.get('expectedReturnDate')?.touched && form.get('expectedReturnDate')?.hasError('required')) {
+          <p class="text-error font-body-sm text-[12px] mt-1">Expected Return Date is required.</p>
+          } @else if ((form.get('expectedReturnDate')?.touched || form.get('assignedDate')?.touched) &&
+          form.hasError('returnDateMustBeAfterAssigned')) {
+          <p class="text-error font-body-sm text-[12px] mt-1">Expected Return Date must be after the Assigned Date.</p>
+          }
+        </div>
+
+      </div>
+    </app-form-section>
+
+    <!-- Form Actions -->
+    <div class="flex items-center justify-end gap-4 pt-4">
+      <button type="button" (click)="onCancel()"
+        class="h-[40px] px-6 rounded-lg border border-outline-variant font-label-md text-label-md text-on-surface hover:bg-surface-container-low transition-all">
+        Cancel
+      </button>
+      <button type="submit" [disabled]="form.invalid || availableAssets().length === 0"
+        class="h-[40px] px-6 rounded-lg bg-primary text-on-primary font-label-md text-label-md hover:bg-primary/90 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
+        Create Assignment
+      </button>
+    </div>
+
+  </form>
+</div>

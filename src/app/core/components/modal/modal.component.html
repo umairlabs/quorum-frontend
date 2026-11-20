@@ -1,0 +1,80 @@
+@if (isOpen()) {
+  @if (fullPage()) {
+    <!-- Full content-area modal overlay (leaves left sidebar & top header visible) -->
+    <div
+      class="modal-backdrop fixed top-[64px] left-0 md:left-[260px] right-0 bottom-0 z-30 bg-background overflow-y-auto flex flex-col"
+      (click)="onBackdropClick($event)"
+    >
+      <!-- Sticky Modal Header -->
+      @if (!hideHeader()) {
+      <div class="sticky top-0 z-10 flex items-center justify-between px-6 sm:px-8 py-4 border-b border-outline-variant bg-surface-container-lowest/95 backdrop-blur shrink-0 shadow-sm">
+        <div>
+          @if (breadcrumb()) {
+            <p class="font-label-sm text-label-sm text-on-surface-variant mb-1">{{ breadcrumb() }}</p>
+          }
+          <h2 class="font-headline-md text-headline-md text-on-surface font-semibold">{{ title() }}</h2>
+        </div>
+        @if (showCloseButton()) {
+          <button
+            (click)="onClose()"
+            class="p-2 rounded-lg hover:bg-surface-container-high transition-colors text-on-surface-variant flex items-center justify-center cursor-pointer"
+            aria-label="Close"
+          >
+            <span class="material-symbols-outlined text-[24px]">close</span>
+          </button>
+        }
+      </div>
+      }
+
+      <!-- Main Body Container -->
+      <div class="flex-1 {{ hideHeader() ? 'py-6 sm:py-8' : 'pt-14 pb-6' }} px-4 sm:px-6 lg:px-8 {{ maxWidth() }} mx-auto w-full">
+        <ng-content select="[modalBody]" />
+        <ng-content />
+      </div>
+
+      <!-- Optional Footer -->
+      <div class="shrink-0 {{ maxWidth() }} mx-auto w-full px-6 sm:px-8 pb-6">
+        <ng-content select="[modalFooter]" />
+      </div>
+    </div>
+  } @else {
+    <div
+      class="modal-backdrop fixed inset-0 md:left-[260px] z-40 flex items-center justify-center bg-scrim/60 p-4 sm:p-6"
+      (click)="onBackdropClick($event)"
+    >
+      <div class="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-2xl w-full {{ maxWidth() }} flex flex-col max-h-[90vh] overflow-hidden">
+
+        <!-- Header -->
+        <div class="flex items-center justify-between px-6 py-4 border-b border-outline-variant shrink-0 bg-surface-container-low/50">
+          <div>
+            @if (breadcrumb()) {
+              <p class="font-label-sm text-label-sm text-on-surface-variant mb-1">{{ breadcrumb() }}</p>
+            }
+            <h2 class="font-headline-sm text-headline-sm text-on-surface font-semibold">{{ title() }}</h2>
+          </div>
+          @if (showCloseButton()) {
+            <button
+              (click)="onClose()"
+              class="p-1.5 rounded-lg hover:bg-surface-container-high transition-colors text-on-surface-variant flex items-center justify-center cursor-pointer"
+              aria-label="Close"
+            >
+              <span class="material-symbols-outlined text-[22px]">close</span>
+            </button>
+          }
+        </div>
+
+        <!-- Scrollable Body -->
+        <div class="overflow-y-auto flex-1 p-6">
+          <ng-content select="[modalBody]" />
+          <ng-content />
+        </div>
+
+        <!-- Footer (optional slot) -->
+        <div class="shrink-0">
+          <ng-content select="[modalFooter]" />
+        </div>
+
+      </div>
+    </div>
+  }
+}

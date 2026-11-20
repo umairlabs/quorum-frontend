@@ -1,0 +1,110 @@
+@if (isOpen()) {
+<div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-scrim/40 backdrop-blur-sm animate-fade-in" (click)="onClose()">
+  <div class="relative w-full max-w-[1440px] bg-surface-container-lowest rounded-2xl shadow-2xl overflow-hidden border border-outline-variant/30 flex flex-col max-h-[90vh]" (click)="$event.stopPropagation()">
+    
+    <!-- Modal Header -->
+    <div class="flex items-center justify-between p-6 border-b border-outline-variant/30 bg-surface-container-low/40">
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-xl bg-primary-container/40 text-primary flex items-center justify-center font-bold">
+          <span class="material-symbols-outlined text-[26px]">business</span>
+        </div>
+        <div>
+          <h2 class="font-headline-sm text-headline-sm font-semibold text-on-surface">
+            {{ resolvedSupplier()?.company || 'Supplier Details' }}
+          </h2>
+          <p class="font-body-sm text-body-sm text-on-surface-variant">
+            Supplier specifications and contact details
+          </p>
+        </div>
+      </div>
+      <button 
+        type="button" 
+        (click)="onClose()" 
+        class="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-surface-container-high text-on-surface-variant transition-colors"
+      >
+        <span class="material-symbols-outlined text-[22px]">close</span>
+      </button>
+    </div>
+
+    <!-- Modal Body -->
+    <div class="p-6 overflow-y-auto space-y-6">
+
+      <!-- Basic Info Grid -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+        <div class="p-4 rounded-xl bg-surface-container-low border border-outline-variant/40">
+          <p class="text-label-sm font-label-sm text-on-surface-variant font-medium mb-1">Company Name</p>
+          <p class="text-body-md font-body-md text-on-surface font-semibold">
+            {{ resolvedSupplier()?.company || 'N/A' }}
+          </p>
+        </div>
+
+        <div class="p-4 rounded-xl bg-surface-container-low border border-outline-variant/40">
+          <p class="text-label-sm font-label-sm text-on-surface-variant font-medium mb-1">Contact Person</p>
+          <p class="text-body-md font-body-md text-on-surface font-medium">
+            {{ resolvedSupplier()?.name || 'N/A' }}
+          </p>
+        </div>
+
+        <div class="p-4 rounded-xl bg-surface-container-low border border-outline-variant/40">
+          <p class="text-label-sm font-label-sm text-on-surface-variant font-medium mb-1">Phone Number</p>
+          <p class="text-body-md font-body-md text-on-surface font-mono">
+            {{ resolvedSupplier()?.phone || 'N/A' }}
+          </p>
+        </div>
+
+        <div class="p-4 rounded-xl bg-surface-container-low border border-outline-variant/40">
+          <p class="text-label-sm font-label-sm text-on-surface-variant font-medium mb-1">Email</p>
+          <p class="text-body-md font-body-md text-primary font-medium">
+            {{ resolvedSupplier()?.email || 'N/A' }}
+          </p>
+        </div>
+
+        <div class="sm:col-span-2 p-4 rounded-xl bg-surface-container-low border border-outline-variant/40">
+          <p class="text-label-sm font-label-sm text-on-surface-variant font-medium mb-1">Company Address</p>
+          <p class="text-body-md font-body-md text-on-surface">
+            {{ resolvedSupplier()?.address || 'N/A' }}
+          </p>
+        </div>
+
+      </div>
+
+      <!-- Additional Details / Specifications -->
+      <div>
+        <h3 class="text-label-md font-label-md font-semibold text-on-surface mb-3 flex items-center gap-2">
+          <span class="material-symbols-outlined text-primary text-[18px]">list_alt</span>
+          Additional Details / Specifications
+        </h3>
+
+        @if (specList.length > 0) {
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            @for (spec of specList; track spec.key) {
+              <div class="p-3 bg-surface-container-low rounded-lg border border-outline-variant/40 flex flex-col justify-center">
+                <span class="text-label-sm font-label-sm text-on-surface-variant font-medium">{{ spec.key }}</span>
+                <span class="text-body-md font-body-md text-on-surface font-medium mt-0.5">{{ spec.value }}</span>
+              </div>
+            }
+          </div>
+        } @else {
+          <div class="p-4 rounded-xl border border-dashed border-outline-variant text-center">
+            <p class="text-body-sm text-on-surface-variant">No additional specifications recorded for this supplier.</p>
+          </div>
+        }
+      </div>
+
+    </div>
+
+    <!-- Modal Footer -->
+    <div class="p-4 px-6 border-t border-outline-variant/30 bg-surface-container-low/40 flex items-center justify-end">
+      <button 
+        type="button" 
+        (click)="onClose()"
+        class="h-[40px] px-6 rounded-lg bg-primary text-on-primary font-label-md text-label-md hover:bg-primary/90 transition-all shadow-sm"
+      >
+        Close
+      </button>
+    </div>
+
+  </div>
+</div>
+}

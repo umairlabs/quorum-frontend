@@ -1,0 +1,444 @@
+<div class="max-w-[1440px] mx-auto p-gutter sm:p-container-padding py-8">
+
+  <div class="mb-8">
+    <app-page-header
+      title="New Maintenance Request"
+      subtitle="Select the asset, describe the issue — or let AI write it for you."
+    />
+  </div>
+
+  <div class="space-y-6">
+
+    <!-- ─── Section 1: Select Asset & Unit ─────────────────────────────── -->
+    <app-form-section title="Select Asset & Unit" icon="devices">
+      <div class="space-y-4">
+
+        <!-- Searchable Asset Autocomplete -->
+        <div class="relative">
+          <label class="block font-label-sm text-label-sm text-on-surface font-semibold mb-1.5" for="mnt_asset_search">
+            Asset <span class="text-error">*</span>
+          </label>
+
+          @if (allPurchasedAssets().length > 0) {
+            <div class="relative">
+              <input
+                id="mnt_asset_search"
+                type="text"
+                [value]="selectedAsset() ? selectedAsset()!.name : assetSearchQuery()"
+                (focus)="onFocusAssetSearch()"
+                (blur)="onBlurAssetSearch()"
+                (input)="onAssetInputChange($any($event.target).value)"
+                placeholder="Search asset name, category, or brand..."
+                autocomplete="off"
+                class="w-full h-[40px] pl-10 pr-10 font-body-md text-body-md bg-surface-container-lowest text-on-surface border border-outline-variant rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 transition-shadow placeholder:text-on-surface-variant/50"
+                [class.border-error]="submitAttempted() && !selectedAsset()"
+              />
+              <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[20px] text-on-surface-variant pointer-events-none">search</span>
+
+              @if (selectedAsset()) {
+                <button
+                  type="button"
+                  (click)="clearSelectedAsset()"
+                  class="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface p-0.5 rounded-full hover:bg-surface-container-low transition-colors"
+                  title="Clear selected asset"
+                >
+                  <span class="material-symbols-outlined text-[18px]">close</span>
+                </button>
+              } @else {
+                <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-[20px] text-on-surface-variant pointer-events-none">arrow_drop_down</span>
+              }
+            </div>
+
+            <!-- Floating dropdown -->
+            @if (showAssetDropdown()) {
+              <div class="absolute left-0 right-0 top-full mt-1 bg-surface-container-lowest border border-outline-variant rounded-lg shadow-xl max-h-64 overflow-y-auto z-50 divide-y divide-outline-variant/40">
+                <div class="px-3 py-1.5 bg-surface-container-low text-[11px] font-semibold uppercase tracking-wider text-on-surface-variant flex items-center justify-between">
+                  <span>Select Asset</span>
+                  <span>{{ isEmployee() ? filteredAssets().length + ' assigned' : totalAvailableUnitsCount() + ' available' }}</span>
+                </div>
+                @for (asset of filteredAssets(); track asset.id) {
+                  <div
+                    (mousedown)="selectAsset(asset)"
+                    class="p-3 hover:bg-surface-container-low cursor-pointer flex items-center justify-between transition-colors group"
+                  >
+                    <div class="flex items-center gap-3">
+                      <div class="w-8 h-8 rounded-lg bg-tertiary/10 text-tertiary flex items-center justify-center shrink-0 group-hover:bg-tertiary group-hover:text-on-tertiary transition-colors">
+                        <span class="material-symbols-outlined text-[18px]">build</span>
+                      </div>
+                      <div>
+                        <p class="font-label-md text-on-surface font-semibold group-hover:text-tertiary transition-colors">{{ asset.name }}</p>
+                        <p class="text-[11px] text-on-surface-variant">
+                          {{ getCategoryName(asset) }}
+                          @if (asset.brand || asset.model) { &bull; {{ asset.brand }} {{ asset.model }} }
+                          @if ($any(asset)._unitId && asset.serialNumber) { &bull; SN: <span class="font-mono font-medium text-on-surface">{{ asset.serialNumber }}</span> }
+                        </p>
+                      </div>
+                    </div>
+                    @if ($any(asset)._unitId && asset.serialNumber) {
+                      <span class="px-2 py-0.5 text-[11px] font-mono font-semibold rounded-full bg-primary/10 text-primary border border-primary/20">
+                        {{ asset.serialNumber }}
+                      </span>
+                    } @else {
+                      <span class="px-2 py-0.5 text-[11px] font-semibold rounded-full bg-surface-container text-on-surface-variant border border-outline-variant">
+                        {{ asset.availableQuantity ?? 0 }} available
+                      </span>
+                    }
+                  </div>
+                } @empty {
+                  <div class="p-4 text-center text-body-sm text-on-surface-variant">
+                    No assets match "{{ assetSearchQuery() }}"
+                  </div>
+                }
+              </div>
+            }
+
+          } @else {
+            <div class="flex items-center gap-3 p-4 bg-surface-container-low border border-outline-variant rounded-lg">
+              <span class="material-symbols-outlined text-on-surface-variant text-[22px]">info</span>
+              <p class="font-body-md text-body-md text-on-surface-variant">
+                {{ isEmployee() ? 'No assigned assets available for maintenance. If an asset is already in repair, it will show again once repaired.' : 'No assets with available units found. If all units are currently under maintenance, wait until they are repaired.' }}
+              </p>
+            </div>
+          }
+
+          @if (submitAttempted() && !selectedAsset()) {
+            <p class="font-body-sm text-body-sm text-error mt-1.5">Please select an asset.</p>
+          }
+        </div>
+
+        <!-- Unit Selection (Manager / Multi-unit flow only) -->
+        @if (selectedAsset() && !$any(selectedAsset())._unitId) {
+          <div>
+            <label class="block font-label-sm text-label-sm text-on-surface font-semibold mb-1.5" for="mnt_unitId">
+              Select Unit
+              <span class="font-normal text-on-surface-variant">(Optional — leave blank if not unit-specific)</span>
+            </label>
+
+            @if (unitsLoading()) {
+              <div class="flex items-center gap-3 p-4 bg-surface-container-low border border-outline-variant rounded-lg">
+                <div class="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                <p class="font-body-md text-body-md text-on-surface-variant">Loading units...</p>
+              </div>
+            } @else if (availableUnits().length > 0) {
+              <div class="relative">
+                <input
+                  id="mnt_unit_search"
+                  type="text"
+                  [value]="selectedUnit() ? (selectedUnit()!.displayId || selectedUnit()!.serialNumber) : unitSearchQuery()"
+                  (focus)="onFocusUnitSearch()"
+                  (blur)="onBlurUnitSearch()"
+                  (input)="onUnitInputChange($any($event.target).value)"
+                  placeholder="Search or select unit ID..."
+                  autocomplete="off"
+                  class="w-full h-[40px] pl-10 pr-10 font-body-md text-body-md bg-surface-container-lowest text-on-surface border border-outline-variant rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 transition-shadow placeholder:text-on-surface-variant/50"
+                />
+                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[20px] text-on-surface-variant pointer-events-none">search</span>
+
+                @if (selectedUnit() || unitSearchQuery()) {
+                  <button
+                    type="button"
+                    (click)="clearSelectedUnit($event)"
+                    class="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface p-0.5 rounded-full hover:bg-surface-container-low transition-colors"
+                    title="Clear selected unit"
+                  >
+                    <span class="material-symbols-outlined text-[18px]">close</span>
+                  </button>
+                } @else {
+                  <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-[20px] text-on-surface-variant pointer-events-none">arrow_drop_down</span>
+                }
+
+                @if (showUnitDropdown()) {
+                  <div class="absolute left-0 right-0 top-full mt-1 bg-surface-container-lowest border border-outline-variant rounded-lg shadow-xl max-h-60 overflow-y-auto z-50 divide-y divide-outline-variant/40">
+                    <div class="px-3 py-1.5 bg-surface-container-low text-[11px] font-semibold uppercase tracking-wider text-on-surface-variant flex items-center justify-between sticky top-0 z-10">
+                      <span>Select Unit</span>
+                      <span>{{ filteredAvailableUnits().length }} available</span>
+                    </div>
+                    <div
+                      (mousedown)="clearSelectedUnit($event)"
+                      class="p-2.5 hover:bg-surface-container-low cursor-pointer flex items-center gap-2 text-on-surface-variant font-body-sm text-body-sm italic border-b border-outline-variant/40"
+                    >
+                      <span class="material-symbols-outlined text-[18px]">block</span>
+                      All units / Not unit-specific
+                    </div>
+                    @for (unit of filteredAvailableUnits(); track unit.id) {
+                      <div
+                        (mousedown)="selectUnit(unit)"
+                        class="p-3 hover:bg-surface-container-low cursor-pointer flex items-center justify-between transition-colors group"
+                      >
+                        <div class="flex items-center gap-3">
+                          <div class="w-8 h-8 rounded-lg bg-tertiary/10 text-tertiary flex items-center justify-center shrink-0 group-hover:bg-tertiary group-hover:text-on-tertiary transition-colors">
+                            <span class="material-symbols-outlined text-[18px]">build</span>
+                          </div>
+                          <div>
+                            <p class="font-label-md text-on-surface font-semibold group-hover:text-tertiary transition-colors">
+                              {{ unit.displayId || unit.serialNumber }}
+                            </p>
+                            <p class="text-[11px] text-on-surface-variant">
+                              @if (unit.displayId && unit.serialNumber && unit.displayId !== unit.serialNumber) { SN: {{ unit.serialNumber }} }
+                              @if (unit.location) { • Location: {{ unit.location }} }
+                            </p>
+                          </div>
+                        </div>
+                        <span class="px-2 py-0.5 text-[11px] font-semibold rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
+                          AVAILABLE
+                        </span>
+                      </div>
+                    } @empty {
+                      <div class="p-4 text-center text-body-sm text-on-surface-variant">
+                        No units match "{{ unitSearchQuery() }}"
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            } @else {
+              <div class="flex items-center gap-3 p-3 bg-surface-container-low border border-outline-variant rounded-lg text-on-surface-variant">
+                <span class="material-symbols-outlined text-[18px]">info</span>
+                <p class="font-body-sm text-body-sm">No eligible units found for this asset.</p>
+              </div>
+            }
+          </div>
+        }
+
+      </div>
+    </app-form-section>
+
+    <!-- ─── Section 2: Issue Details ──────────────────────────────────────── -->
+    <app-form-section title="Issue Details" icon="description">
+      <div class="space-y-5">
+
+        <!-- AI Generator Input -->
+        <div class="rounded-xl border border-primary/30 bg-primary/5 p-4">
+          <div class="flex items-center gap-2 mb-3">
+            <span class="material-symbols-outlined text-[20px] text-primary">auto_awesome</span>
+            <span class="font-label-md text-label-md text-primary font-semibold">Write with AI</span>
+            <span class="ml-auto text-[11px] text-on-surface-variant bg-surface-container px-2 py-0.5 rounded-full border border-outline-variant">
+              Powered by Groq
+            </span>
+          </div>
+          <div class="flex gap-2">
+            <input
+              type="text"
+              name="aiPromptInput"
+              [value]="aiPrompt()"
+              (input)="aiPrompt.set($any($event.target).value)"
+              placeholder='e.g. "the laptop screen is cracking and flickering"'
+              class="flex-1 h-[40px] px-3 font-body-md text-body-md bg-surface-container-lowest text-on-surface border border-outline-variant rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 transition-shadow placeholder:text-on-surface-variant/50"
+              (keyup.enter)="generateWithAI()"
+            />
+            <button
+              type="button"
+              (click)="generateWithAI()"
+              [disabled]="aiGenerating() || !aiPrompt().trim()"
+              class="h-[40px] px-4 rounded-lg bg-primary text-on-primary font-label-sm text-label-sm hover:bg-primary/90 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shrink-0"
+            >
+              @if (aiGenerating()) {
+                <div class="w-4 h-4 border-2 border-on-primary border-t-transparent rounded-full animate-spin"></div>
+                Generating...
+              } @else {
+                <span class="material-symbols-outlined text-[18px]">auto_awesome</span>
+                Generate
+              }
+            </button>
+          </div>
+          <p class="text-[11px] text-on-surface-variant mt-2">
+            Describe the issue in plain language. AI will write a professional title, description, and suggest a priority.
+          </p>
+        </div>
+
+        <!-- Issue Title -->
+        <div>
+          <label class="block font-label-sm text-label-sm text-on-surface font-semibold mb-1.5" for="mnt_title">
+            Issue Title <span class="text-error">*</span>
+          </label>
+          <input
+            id="mnt_title"
+            type="text"
+            name="issueTitle"
+            [(ngModel)]="formData.issueTitle"
+            placeholder="e.g. Cooling System Malfunction - Excessive Fan Noise"
+            class="w-full h-[40px] px-3 font-body-md text-body-md bg-surface-container-lowest text-on-surface border border-outline-variant rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 transition-shadow placeholder:text-on-surface-variant/50"
+            [class.border-error]="submitAttempted() && formData.issueTitle.trim().length < 5"
+          />
+          @if (submitAttempted() && formData.issueTitle.trim().length < 5) {
+            <p class="font-body-sm text-body-sm text-error mt-1.5">Please enter an issue title (at least 5 characters).</p>
+          }
+        </div>
+
+        <!-- Issue Description -->
+        <div>
+          <label class="block font-label-sm text-label-sm text-on-surface font-semibold mb-1.5" for="mnt_desc">
+            Issue Description <span class="text-error">*</span>
+          </label>
+          <textarea
+            id="mnt_desc"
+            name="issueDescription"
+            [(ngModel)]="formData.issueDescription"
+            rows="4"
+            placeholder="Detailed description — what is happening, impact on user, recommended action..."
+            class="w-full p-3 font-body-md text-body-md bg-surface-container-lowest text-on-surface border border-outline-variant rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 transition-shadow placeholder:text-on-surface-variant/50 resize-y"
+            [class.border-error]="submitAttempted() && formData.issueDescription.trim().length < 10"
+          ></textarea>
+          @if (submitAttempted() && formData.issueDescription.trim().length < 10) {
+            <p class="font-body-sm text-body-sm text-error mt-1.5">Please provide at least 10 characters.</p>
+          }
+        </div>
+
+        <!-- Assign Technician (Optional) -->
+        <div>
+          <label class="block font-label-sm text-label-sm text-on-surface font-semibold mb-1.5">
+            Assign Technician <span class="text-error font-medium">*</span>
+          </label>
+
+          <div class="relative">
+            <!-- Input -->
+            <div class="relative flex items-center">
+              <span class="material-symbols-outlined absolute left-3 text-[18px] text-on-surface-variant pointer-events-none">
+                {{ selectedAssignee() ? 'build' : 'person_add' }}
+              </span>
+
+              <input
+                type="text"
+                [value]="assigneeSearchQuery()"
+                [placeholder]="selectedAssignee() ? '' : 'Select or search technician...'"
+                (focus)="onFocusAssigneeSearch()"
+                (blur)="onBlurAssigneeSearch()"
+                (input)="onAssigneeInputChange($any($event.target).value)"
+                autocomplete="off"
+                [class.border-error]="submitAttempted() && !selectedAssignee()"
+                class="w-full h-[42px] pl-9 pr-10 font-body-md text-body-md bg-surface-container-lowest text-on-surface border border-outline-variant rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 transition-shadow placeholder:text-on-surface-variant/50 cursor-pointer"
+              />
+
+              @if (assigneeSearchQuery() || selectedAssignee()) {
+                <button
+                  type="button"
+                  (mousedown)="clearSelectedAssignee($event)"
+                  class="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface p-1 rounded-full hover:bg-surface-container-low transition-colors"
+                  title="Clear assignment"
+                >
+                  <span class="material-symbols-outlined text-[18px]">close</span>
+                </button>
+              } @else {
+                <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-[20px] text-on-surface-variant pointer-events-none">
+                  arrow_drop_down
+                </span>
+              }
+            </div>
+
+            <!-- Floating Searchable Dropdown -->
+            @if (showAssigneeDropdown()) {
+              <div
+                (mousedown)="$event.preventDefault()"
+                class="absolute left-0 right-0 top-full mt-1.5 bg-surface-container-lowest border border-outline-variant rounded-xl shadow-xl max-h-72 overflow-hidden z-50 flex flex-col"
+              >
+                <!-- Dropdown Header -->
+                <div class="px-3 py-2 bg-surface-container-low/70 border-b border-outline-variant/60 flex items-center justify-between text-xs font-semibold text-on-surface-variant shrink-0">
+                  <div class="flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-[16px] text-primary">build</span>
+                    <span>Available Technicians</span>
+                  </div>
+                  <span class="text-[10px] px-2 py-0.5 rounded-full font-bold bg-primary/10 text-primary">
+                    {{ filteredAssignees().length }}
+                  </span>
+                </div>
+
+                <!-- User List -->
+                <div class="overflow-y-auto divide-y divide-outline-variant/30 flex-1 max-h-56">
+                  @for (user of filteredAssignees(); track user.id) {
+                    <div
+                      (mousedown)="selectAssignee(user)"
+                      class="p-2.5 hover:bg-surface-container-low cursor-pointer flex items-center justify-between transition-colors group"
+                      [class.bg-primary/5]="selectedAssignee()?.id === user.id"
+                    >
+                      <div class="flex items-center gap-2.5 min-w-0">
+                        <div class="w-7 h-7 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center text-xs group-hover:bg-primary group-hover:text-on-primary transition-colors shrink-0">
+                          {{ user.avatarInitials || (user.fullName ? user.fullName.slice(0, 2).toUpperCase() : (user.firstName ? user.firstName.slice(0, 1) : 'U')) }}
+                        </div>
+                        <div class="truncate">
+                          <p class="font-label-md text-xs font-semibold text-on-surface group-hover:text-primary transition-colors truncate">
+                            {{ user.fullName || (user.firstName + ' ' + user.lastName) }}
+                          </p>
+                          <p class="text-[11px] text-on-surface-variant truncate">
+                            {{ user.email }} • {{ user.department || user.role }}
+                          </p>
+                        </div>
+                      </div>
+                      <div class="flex items-center gap-2 shrink-0">
+                        <span class="px-2 py-0.5 text-[10px] font-medium rounded bg-surface-container text-on-surface-variant border border-outline-variant/50">
+                          {{ user.role }}
+                        </span>
+                        @if (selectedAssignee()?.id === user.id) {
+                          <span class="material-symbols-outlined text-primary text-[18px]">check</span>
+                        }
+                      </div>
+                    </div>
+                  } @empty {
+                    <div class="py-6 text-center text-body-sm text-on-surface-variant">
+                      <span class="material-symbols-outlined text-3xl text-on-surface-variant/40 block mb-1">engineering</span>
+                      No matching technicians found.
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+          @if (submitAttempted() && !selectedAssignee()) {
+            <p class="font-body-sm text-body-sm text-error mt-1.5">Please select a technician.</p>
+          }
+        </div>
+
+        <!-- Priority -->
+        <div>
+          <label class="block font-label-sm text-label-sm text-on-surface font-semibold mb-2">
+            Priority <span class="text-error">*</span>
+          </label>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            @for (option of priorityOptions; track option.value) {
+              <label
+                class="flex flex-col items-center gap-1.5 py-3 px-3 rounded-xl border-2 cursor-pointer transition-all select-none"
+                [class.border-primary]="formData.priority === option.value && option.value !== 'CRITICAL'"
+                [class.bg-primary-fixed]="formData.priority === option.value && option.value !== 'CRITICAL'"
+                [class.border-error]="formData.priority === option.value && option.value === 'CRITICAL'"
+                [class.bg-error-container]="formData.priority === option.value && option.value === 'CRITICAL'"
+                [class.border-outline-variant]="formData.priority !== option.value"
+                [class.bg-surface-container-low]="formData.priority !== option.value">
+                <input type="radio" name="priority" [value]="option.value" [(ngModel)]="formData.priority" class="sr-only" />
+                <span class="material-symbols-outlined text-[20px]"
+                  [class.text-primary]="formData.priority === option.value && option.value !== 'CRITICAL'"
+                  [class.text-error]="formData.priority === option.value && option.value === 'CRITICAL'"
+                  [class.text-on-surface-variant]="formData.priority !== option.value">
+                  {{ option.icon }}
+                </span>
+                <span class="font-label-md text-label-md text-on-surface">{{ option.label }}</span>
+                <span class="font-body-sm text-body-sm text-on-surface-variant text-center text-[11px] leading-tight">{{ option.hint }}</span>
+              </label>
+            }
+          </div>
+          @if (showPriorityError) {
+            <p class="font-body-sm text-body-sm text-error mt-1.5">Please select a priority level.</p>
+          }
+        </div>
+
+      </div>
+    </app-form-section>
+
+    <!-- ─── Actions ─────────────────────────────────────────────────────── -->
+    <div class="flex items-center justify-end gap-4 pt-2">
+      <button type="button" (click)="onCancel()"
+        class="h-[40px] px-6 rounded-lg border border-outline-variant font-label-md text-label-md text-on-surface hover:bg-surface-container-low transition-all">
+        Cancel
+      </button>
+      <button type="button" (click)="onSubmit()" [disabled]="saving() || !isFormValid()"
+        class="h-[40px] px-6 rounded-lg bg-primary text-on-primary font-label-md text-label-md hover:bg-primary/90 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+        @if (saving()) {
+          <div class="w-4 h-4 border-2 border-on-primary border-t-transparent rounded-full animate-spin"></div>
+          Saving...
+        } @else {
+          <span class="material-symbols-outlined text-[18px]">build</span>
+          Create Request
+        }
+      </button>
+    </div>
+
+  </div>
+</div>

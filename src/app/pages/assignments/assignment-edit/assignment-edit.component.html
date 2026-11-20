@@ -1,0 +1,204 @@
+<div class="max-w-[1440px] mx-auto p-gutter sm:p-container-padding py-8">
+
+  <!-- Page Header -->
+  <div class="mb-8">
+    <app-page-header
+      title="Edit Assignment"
+      subtitle="Update the employee details or dates for this assignment."
+    />
+  </div>
+
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-6">
+
+    <!-- Section 1: Asset (read-only) -->
+    @if (asset) {
+      <app-form-section title="Assigned Asset" icon="devices">
+        <div class="flex items-center gap-4 p-4 bg-surface-container-low rounded-lg border border-outline-variant">
+          <div class="w-10 h-10 rounded-lg bg-surface-container-high flex items-center justify-center shrink-0">
+            <span class="material-symbols-outlined text-[22px] text-on-surface-variant">{{ assignment?.assetIcon }}</span>
+          </div>
+          <div>
+            <p class="font-label-md text-on-surface">{{ asset.name }}</p>
+            <p class="font-body-sm text-on-surface-variant mt-0.5">{{ asset.serialNumber }} Â· {{ getCategoryName() }}</p>
+          </div>
+          <span class="ml-auto font-label-sm text-label-sm text-on-surface-variant bg-surface-container-highest px-3 py-1 rounded-full">
+            Read-only
+          </span>
+        </div>
+      </app-form-section>
+    }
+
+    <!-- Section 2: Employee Details -->
+    <app-form-section title="Employee Details" icon="person">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
+
+        <!-- Employee Name Field with Autocomplete -->
+        <div class="relative">
+          <label class="block font-label-sm text-label-sm text-on-surface font-semibold mb-1.5" for="emp_name">
+            Employee Name <span class="text-error">*</span>
+          </label>
+          <div class="relative">
+            <input
+              id="emp_name" type="text" formControlName="employeeName"
+              placeholder="e.g. Jane Doe (click to view all employees)"
+              (focus)="onFocusEmployeeSearch()"
+              (blur)="onBlurEmployeeSearch()"
+              (input)="onEmployeeInputChange($event.target.value, 'name')"
+              autocomplete="off"
+              class="w-full h-[40px] px-3 pr-8 font-body-md text-body-md bg-surface-container-lowest text-on-surface border border-outline-variant rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 transition-shadow placeholder:text-on-surface-variant/50"
+            />
+            <span class="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 text-[18px] text-on-surface-variant pointer-events-none">search</span>
+          </div>
+
+          <!-- Floating Searchable Employee Dropdown -->
+          @if (showEmployeeDropdown()) {
+            <div class="absolute left-0 right-0 top-full mt-1 bg-surface-container-lowest border border-outline-variant rounded-lg shadow-xl max-h-60 overflow-y-auto z-50 divide-y divide-outline-variant/40">
+              <div class="px-3 py-1.5 bg-surface-container-low text-[11px] font-semibold uppercase tracking-wider text-on-surface-variant flex items-center justify-between">
+                <span>Select Registered Employee</span>
+                <span>{{ filteredEmployees().length }} users</span>
+              </div>
+              @for (emp of filteredEmployees(); track emp.id) {
+                <div
+                  (mousedown)="onSelectEmployee(emp)"
+                  class="p-3 hover:bg-surface-container-low cursor-pointer flex items-center justify-between transition-colors group"
+                >
+                  <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center text-xs group-hover:bg-primary group-hover:text-on-primary transition-colors shrink-0">
+                      {{ emp.avatarInitials || (emp.fullName ? emp.fullName.slice(0,2).toUpperCase() : 'EM') }}
+                    </div>
+                    <div>
+                      <p class="font-label-md text-on-surface font-semibold group-hover:text-primary transition-colors">
+                        {{ emp.fullName || (emp.firstName + ' ' + emp.lastName) }}
+                      </p>
+                      <p class="text-[11px] text-on-surface-variant">
+                        {{ emp.department || 'Employee' }} • {{ emp.email }}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              } @empty {
+                <div class="p-3 text-center text-body-sm text-on-surface-variant">
+                  No matching employee found. You can enter details manually.
+                </div>
+              }
+            </div>
+          }
+        </div>
+
+        <!-- Employee ID Field with Autocomplete -->
+        <div>
+          <label class="block font-label-sm text-label-sm text-on-surface font-semibold mb-1.5" for="emp_id">
+            Employee ID <span class="text-error">*</span>
+          </label>
+          <div class="relative">
+            <input
+              id="emp_id" type="text" formControlName="employeeId"
+              placeholder="e.g. EMP-892"
+              (focus)="onFocusEmployeeSearch()"
+              (blur)="onBlurEmployeeSearch()"
+              (input)="onEmployeeInputChange($event.target.value, 'id')"
+              autocomplete="off"
+              class="w-full h-[40px] px-3 font-body-md text-body-md bg-surface-container-lowest text-on-surface border border-outline-variant rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 transition-shadow placeholder:text-on-surface-variant/50 font-mono"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-label-sm text-label-sm text-on-surface font-semibold mb-1.5" for="emp_initials">
+            Initials <span class="text-error">*</span>
+          </label>
+          <input
+            id="emp_initials" type="text" formControlName="employeeInitials"
+            placeholder="e.g. JD" maxlength="2"
+            class="w-full h-[40px] px-3 font-body-md text-body-md bg-surface-container-lowest text-on-surface border border-outline-variant rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 transition-shadow placeholder:text-on-surface-variant/50"
+          />
+        </div>
+
+        <div>
+          <div class="flex items-center justify-between mb-1.5">
+            <label class="block font-label-sm text-label-sm text-on-surface font-semibold" for="department">
+              Department <span class="text-error">*</span>
+            </label>
+            <button type="button" (click)="onOpenAddDepartmentModal()"
+              class="font-label-sm text-body-sm text-primary hover:underline flex items-center gap-1 font-medium cursor-pointer">
+              <span class="material-symbols-outlined text-[16px]">add</span>
+              Add Department
+            </button>
+          </div>
+          <div class="relative">
+            <select id="department" formControlName="department"
+              class="w-full h-[40px] px-3 pr-10 font-body-md text-body-md bg-surface-container-lowest text-on-surface border border-outline-variant rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 appearance-none transition-shadow"
+            >
+              <option value="" disabled>Select department...</option>
+              @for (dept of departmentService.activeDepartmentsList(); track dept.id) {
+                <option [value]="dept.name">{{ dept.name }}</option>
+              }
+            </select>
+            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-on-surface-variant">
+              <span class="material-symbols-outlined text-[20px]">arrow_drop_down</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </app-form-section>
+
+    <!-- Section 3: Assignment Details -->
+    <app-form-section title="Assignment Details" icon="assignment">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
+
+        <div>
+          <label class="block font-label-sm text-label-sm text-on-surface font-semibold mb-1.5" for="assigned_date">
+            Assigned Date <span class="text-error">*</span>
+          </label>
+          <input
+            id="assigned_date" type="date" formControlName="assignedDate" min="1900-01-01" max="2099-12-31"
+            class="w-full h-[40px] px-3 font-body-md text-body-md bg-surface-container-lowest text-on-surface border border-outline-variant rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 transition-shadow"
+          />
+        </div>
+
+        <div>
+          <label class="block font-label-sm text-label-sm text-on-surface font-semibold mb-1.5" for="return_date">
+            Expected Return Date <span class="text-error">*</span>
+          </label>
+          <input
+            id="return_date" type="date" formControlName="expectedReturnDate"
+            [min]="minExpectedReturnDate" max="2099-12-31"
+            class="w-full h-[40px] px-3 font-body-md text-body-md bg-surface-container-lowest text-on-surface border border-outline-variant rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 transition-shadow"
+            [class.border-error]="(form.get('expectedReturnDate')?.touched && form.get('expectedReturnDate')?.invalid) || (form.touched && form.hasError('returnDateMustBeAfterAssigned'))"
+          />
+          @if (form.get('expectedReturnDate')?.touched && form.get('expectedReturnDate')?.hasError('required')) {
+            <p class="text-error font-body-sm text-[12px] mt-1">Expected Return Date is required.</p>
+          } @else if ((form.get('expectedReturnDate')?.touched || form.get('assignedDate')?.touched) && form.hasError('returnDateMustBeAfterAssigned')) {
+            <p class="text-error font-body-sm text-[12px] mt-1">Expected Return Date must be after the Assigned Date.</p>
+          }
+        </div>
+
+      </div>
+    </app-form-section>
+
+    <!-- Form Actions -->
+    <div class="flex items-center justify-end gap-4 pt-4">
+      <button
+        type="button" (click)="onCancel()"
+        class="h-[40px] px-6 rounded-lg border border-outline-variant font-label-md text-label-md text-on-surface hover:bg-surface-container-low transition-all"
+      >
+        Cancel
+      </button>
+      <button
+        type="submit" [disabled]="form.invalid"
+        class="h-[40px] px-6 rounded-lg bg-primary text-on-primary font-label-md text-label-md hover:bg-primary/90 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        Save Changes
+      </button>
+    </div>
+
+  </form>
+</div>
+
+<app-department-modal
+  [isOpen]="isAddDepartmentModalOpen()"
+  (close)="onCloseAddDepartmentModal()"
+  (save)="onSaveDepartment($event)">
+</app-department-modal>
+

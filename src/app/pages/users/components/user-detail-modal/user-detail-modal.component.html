@@ -1,0 +1,161 @@
+<app-modal [isOpen]="isOpen()" [hideHeader]="true" maxWidth="max-w-[1440px]" (close)="onClose()">
+  <div modalBody>
+    @if (user(); as u) {
+    <div class="bg-surface-container-lowest p-6 sm:p-8 rounded-xl border border-outline-variant shadow-xs space-y-6">
+
+      <!-- Profile Header Avatar & Main Info -->
+      <div class="flex items-center gap-5 pb-5 border-b border-outline-variant">
+        <div
+          class="w-16 h-16 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center font-bold text-headline-md border border-outline-variant shrink-0">
+          {{ u.avatarInitials || (u.firstName ? u.firstName.charAt(0) : 'U') }}
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center justify-between gap-3">
+            <h3 class="font-headline-sm text-headline-sm text-on-surface font-semibold truncate">
+              {{ u.fullName || (u.firstName + ' ' + u.lastName) }}
+            </h3>
+            <app-status-badge [status]="u.isActive ? 'ACTIVE' : 'INACTIVE'" />
+          </div>
+          <p class="font-body-md text-body-md text-on-surface-variant mt-0.5">{{ u.email }}</p>
+          <div class="mt-2 flex items-center gap-2">
+            <span
+              class="px-2.5 py-0.5 rounded text-label-sm font-medium bg-primary/10 text-primary border border-primary/20">
+              {{ getRoleDisplayName(u.role) }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Account Specifications Grid -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="bg-surface-container-low p-4 rounded-lg border border-outline-variant/60">
+          <p class="font-label-sm text-label-sm text-on-surface-variant font-medium">Employee ID</p>
+          <p class="font-body-md text-body-md text-primary font-bold mt-1 font-mono">
+            {{ getDisplayEmployeeId(u) }}
+          </p>
+        </div>
+
+        <div class="bg-surface-container-low p-4 rounded-lg border border-outline-variant/60">
+          <p class="font-label-sm text-label-sm text-on-surface-variant font-medium">Contact Number</p>
+          <p class="font-body-md text-body-md text-on-surface font-semibold mt-1">
+            {{ u.phoneNumber || 'Not specified' }}
+          </p>
+        </div>
+
+        <div class="bg-surface-container-low p-4 rounded-lg border border-outline-variant/60">
+          <p class="font-label-sm text-label-sm text-on-surface-variant font-medium">Department</p>
+          <p class="font-body-md text-body-md text-on-surface font-semibold mt-1">
+            {{ u.department || 'Not specified' }}
+          </p>
+        </div>
+
+        <div class="bg-surface-container-low p-4 rounded-lg border border-outline-variant/60">
+          <p class="font-label-sm text-label-sm text-on-surface-variant font-medium">Joining Date</p>
+          <p class="font-body-md text-body-md text-on-surface font-semibold mt-1">
+            {{ u.joiningDate || 'Not specified' }}
+          </p>
+        </div>
+      </div>
+
+      <!-- ─── ASSIGNED ASSETS SECTION ───────────────────────────────── -->
+      <div class="space-y-3 pt-2">
+        <div class="flex items-center justify-between">
+          <h4 class="font-title-md text-title-md font-bold text-on-surface flex items-center gap-2">
+            <span class="material-symbols-outlined text-[20px] text-primary">devices</span>
+            Assigned Assets
+          </h4>
+          @if (assignedAssets().length > 0) {
+          <span
+            class="px-2.5 py-0.5 rounded-full text-[12px] font-semibold bg-primary/10 text-primary border border-primary/20">
+            {{ activeAssignmentsCount() }} Active
+          </span>
+          }
+        </div>
+
+        @if (isLoadingAssets()) {
+        <div
+          class="p-4 bg-surface-container-low rounded-xl border border-outline-variant/60 flex items-center justify-center gap-3 text-on-surface-variant">
+          <span class="material-symbols-outlined text-[20px] animate-spin text-primary">sync</span>
+          <span class="font-body-sm text-body-sm">Loading assigned assets...</span>
+        </div>
+        } @else if (assignedAssets().length > 0) {
+        <div class="space-y-3 max-h-60 overflow-y-auto pr-1">
+          @for (assignment of assignedAssets(); track assignment.id) {
+          <div
+            class="p-4 rounded-xl border border-outline-variant bg-surface-container-low/60 hover:bg-surface-container-low transition-colors space-y-2">
+            <div class="flex items-start justify-between gap-3">
+              <div class="flex items-center gap-3">
+                <div
+                  class="w-10 h-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0 font-bold">
+                  <span class="material-symbols-outlined text-[22px]">laptop_mac</span>
+                </div>
+                <div>
+                  <p class="font-title-sm text-title-sm font-semibold text-on-surface">
+                    {{ assignment.assetName }}
+                  </p>
+                  <p class="font-body-sm text-[12px] text-on-surface-variant font-mono">
+                    Serial: {{ assignment.serialNumber || 'N/A' }}
+                    @if (assignment.brand || assignment.model) {
+                    &bull; {{ assignment.brand }} {{ assignment.model }}
+                    }
+                  </p>
+                </div>
+              </div>
+
+              <span class="px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider"
+                [class.bg-success-container]="assignment.status === 'Assigned'"
+                [class.text-on-success-container]="assignment.status === 'Assigned'"
+                [class.bg-error-container]="assignment.status === 'Overdue'"
+                [class.text-on-error-container]="assignment.status === 'Overdue'"
+                [class.bg-surface-container-high]="assignment.status === 'Returned'"
+                [class.text-on-surface-variant]="assignment.status === 'Returned'">
+                {{ assignment.status }}
+              </span>
+            </div>
+
+            <!-- Assignment Details Row -->
+            <div class="grid grid-cols-2 gap-3 pt-2 border-t border-outline-variant/40 text-[12px]">
+              <div>
+                <span class="text-on-surface-variant font-medium">Assigned Date:</span>
+                <span class="text-on-surface font-semibold ml-1.5">{{ assignment.assignedDate || '—' }}</span>
+              </div>
+              <div>
+                <span class="text-on-surface-variant font-medium">Expected Return:</span>
+                <span class="text-on-surface font-semibold ml-1.5">{{ assignment.expectedReturnDate || 'N/A' }}</span>
+              </div>
+            </div>
+          </div>
+          }
+        </div>
+        } @else {
+        <!-- Empty State: No Assets Assigned -->
+        <div
+          class="p-6 rounded-xl border border-dashed border-outline-variant bg-surface-container-low/40 flex flex-col items-center justify-center text-center gap-2">
+          <div
+            class="w-10 h-10 rounded-full bg-surface-container-high text-on-surface-variant flex items-center justify-center">
+            <span class="material-symbols-outlined text-[22px]">inventory_2</span>
+          </div>
+          <p class="font-title-sm text-title-sm font-semibold text-on-surface">No Assets Assigned</p>
+          <p class="font-body-sm text-body-sm text-on-surface-variant max-w-sm">
+            No physical assets are currently assigned to this employee.
+          </p>
+        </div>
+        }
+      </div>
+
+      <!-- Actions -->
+      <div class="flex items-center justify-end gap-3 pt-4 border-t border-outline-variant">
+        <button type="button" (click)="onClose()"
+          class="h-10 px-5 rounded-lg border border-outline-variant font-label-md text-label-md text-on-surface hover:bg-surface-container-low transition-colors font-medium cursor-pointer">
+          Close
+        </button>
+        <button type="button" (click)="onEdit()"
+          class="h-10 px-5 rounded-lg bg-primary text-on-primary font-label-md text-label-md hover:bg-primary/90 transition-colors flex items-center gap-1.5 font-medium cursor-pointer">
+          <span class="material-symbols-outlined text-[18px]">edit</span>
+          Edit Profile
+        </button>
+      </div>
+    </div>
+    }
+  </div>
+</app-modal>

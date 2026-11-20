@@ -1,0 +1,142 @@
+<div class="max-w-[1440px] mx-auto p-gutter sm:p-container-padding py-8">
+
+  <!-- Page Header -->
+  <div class="mb-8">
+    <app-page-header title="Create Asset"
+      subtitle="Register an asset type to inventory. Individual units and serial numbers are assigned when a purchase is made." />
+  </div>
+
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-6">
+
+    <!-- Section 1: Identification & Asset Information -->
+    <app-form-section title="Identification & Asset Information" icon="badge">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
+
+
+
+        <!-- Asset Name -->
+        <div>
+          <label class="block font-label-sm text-label-sm text-on-surface font-semibold mb-1.5" for="asset_name">
+            Asset Name <span class="text-error">*</span>
+          </label>
+          <input id="asset_name" type="text" formControlName="name"
+            placeholder="e.g. Infinix Hot 40, MacBook Pro M2, Dell Optiplex"
+            class="w-full h-[40px] px-3 font-body-md text-body-md bg-surface-container-lowest text-on-surface border border-outline-variant rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 transition-shadow"
+            [class.border-error]="getFieldError('name')" />
+          @if (getFieldError('name')) {
+            <p class="text-error text-body-sm mt-1 flex items-center gap-1 font-medium">
+              <span class="material-symbols-outlined text-[15px]">error</span>
+              {{ getFieldError('name') }}
+            </p>
+          }
+        </div>
+
+        <!-- Category -->
+        <div>
+          <div class="flex items-center justify-between mb-1.5">
+            <label class="block font-label-sm text-label-sm text-on-surface font-semibold" for="category">
+              Category <span class="text-error">*</span>
+            </label>
+            <button type="button" (click)="onOpenAddCategoryModal()"
+              class="font-label-sm text-body-sm text-primary hover:underline flex items-center gap-1 font-medium">
+              <span class="material-symbols-outlined text-[16px]">add</span>
+              Add Category
+            </button>
+          </div>
+          <app-select
+            [options]="categoryOptions()"
+            [value]="form.get('category')?.value || ''"
+            placeholder="Select category..."
+            (selectionChange)="onCategorySelect($event)"
+            [hasError]="!!getFieldError('category')" />
+          @if (getFieldError('category')) {
+            <p class="text-error text-body-sm mt-1 flex items-center gap-1 font-medium">
+              <span class="material-symbols-outlined text-[15px]">error</span>
+              {{ getFieldError('category') }}
+            </p>
+          }
+        </div>
+
+        <!-- Brand -->
+        <div>
+          <label class="block font-label-sm text-label-sm text-on-surface font-semibold mb-1.5" for="brand">
+            Brand <span class="text-error">*</span>
+          </label>
+          <div class="relative">
+            <input id="brand" type="text" formControlName="brand" placeholder="e.g. Infinix, Apple, Dell, HP"
+              autocomplete="off"
+              class="w-full h-[40px] px-3 font-body-md text-body-md bg-surface-container-lowest text-on-surface border border-outline-variant rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 transition-shadow"
+              [class.border-error]="getFieldError('brand')"
+              [value]="form.get('brand')?.value || ''"
+              (input)="onBrandInput($any($event.target).value)"
+              (focus)="onFocusBrand()"
+              (blur)="onBlurBrand()" />
+
+            @if (showBrandDropdown() && filteredBrands().length > 0) {
+              <div class="absolute z-50 left-0 right-0 top-full mt-1 bg-surface-container-lowest border border-outline-variant rounded-lg shadow-xl max-h-48 overflow-y-auto">
+                @for (brand of filteredBrands(); track brand) {
+                  <button type="button"
+                    (mousedown)="onSelectBrand(brand)"
+                    class="w-full px-3 py-2 text-left font-body-sm text-body-sm text-on-surface hover:bg-surface-container-low transition-colors flex items-center gap-2">
+                    <span class="material-symbols-outlined text-[16px] text-on-surface-variant">label</span>
+                    {{ brand }}
+                  </button>
+                }
+              </div>
+            }
+          </div>
+          @if (getFieldError('brand')) {
+            <p class="text-error text-body-sm mt-1 flex items-center gap-1 font-medium">
+              <span class="material-symbols-outlined text-[15px]">error</span>
+              {{ getFieldError('brand') }}
+            </p>
+          }
+        </div>
+
+        <!-- Model -->
+        <div>
+          <label class="block font-label-sm text-label-sm text-on-surface font-semibold mb-1.5" for="model">
+            Model <span class="text-error">*</span>
+          </label>
+          <input id="model" type="text" formControlName="model" placeholder="e.g. Hot 40, M2 Pro, Optiplex 7090"
+            class="w-full h-[40px] px-3 font-body-md text-body-md bg-surface-container-lowest text-on-surface border border-outline-variant rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 transition-shadow"
+            [class.border-error]="getFieldError('model')" />
+          @if (getFieldError('model')) {
+            <p class="text-error text-body-sm mt-1 flex items-center gap-1 font-medium">
+              <span class="material-symbols-outlined text-[15px]">error</span>
+              {{ getFieldError('model') }}
+            </p>
+          }
+        </div>
+
+        <!-- Color -->
+        <div>
+          <label class="block font-label-sm text-label-sm text-on-surface font-semibold mb-1.5" for="color">
+            Color <span class="text-on-surface-variant font-normal text-xs">(Optional)</span>
+          </label>
+          <input id="color" type="text" formControlName="color" placeholder="e.g. Space Gray, Black, Silver"
+            class="w-full h-[40px] px-3 font-body-md text-body-md bg-surface-container-lowest text-on-surface border border-outline-variant rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 transition-shadow" />
+        </div>
+
+      </div>
+    </app-form-section>
+
+    <!-- Form Actions -->
+    <div class="flex items-center justify-end gap-4 pt-4">
+      <button type="button" (click)="onCancel()"
+        class="h-[40px] px-6 rounded-lg border border-outline-variant font-label-md text-label-md text-on-surface hover:bg-surface-container-low transition-all">
+        Cancel
+      </button>
+      <button type="submit" [disabled]="form.invalid"
+        class="h-[40px] px-6 rounded-lg bg-primary text-on-primary font-label-md text-label-md hover:bg-primary/90 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
+        Create Asset
+      </button>
+    </div>
+
+  </form>
+
+  <!-- Category Modal -->
+  <app-category-modal [isOpen]="isAddCategoryModalOpen()" title="Add Asset Category"
+    (close)="isAddCategoryModalOpen.set(false)" (save)="onSaveNewCategory($event)" />
+
+</div>

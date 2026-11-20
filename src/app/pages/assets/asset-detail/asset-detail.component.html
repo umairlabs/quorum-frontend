@@ -1,0 +1,451 @@
+<div class="max-w-[1440px] mx-auto p-gutter md:p-container-padding space-y-gutter">
+
+  @if (loading()) {
+    <div class="flex items-center justify-center py-20">
+      <div class="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+    </div>
+  }
+
+  @if (asset(); as cur) {
+
+    <!-- ═══ HEADER CARD ══════════════════════════════════════════════════════ -->
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-6 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-sm">
+      <div class="flex items-center gap-6">
+        <div class="w-16 h-16 bg-surface-container-low rounded-xl flex items-center justify-center shrink-0 border border-outline-variant">
+          <span class="material-symbols-outlined text-[32px] text-primary">{{ getCategoryIcon(cur.category) }}</span>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <button
+              (click)="goBack()"
+              class="md:hidden p-1.5 -ml-1.5 rounded-full hover:bg-surface-container-high text-on-surface-variant hover:text-primary transition-colors flex items-center justify-center shrink-0"
+              title="Go back"
+            >
+              <span class="material-symbols-outlined text-[22px]">arrow_back</span>
+            </button>
+            <h2 class="font-headline-md text-headline-md text-on-surface font-semibold mb-1">{{ cur.name }}</h2>
+          </div>
+          <p class="font-body-md text-body-md text-on-surface-variant">
+            Serial: <strong class="text-primary font-mono">{{ cur.serialNumber }}</strong>
+            &nbsp;·&nbsp;{{ getCategoryName(cur.category) }}
+          </p>
+          <div class="flex items-center gap-4 mt-1 text-body-sm text-on-surface-variant">
+            <span class="text-emerald-700 font-medium">{{ availableUnits }} available</span>
+            <span class="text-blue-700 font-medium">{{ assignedUnits }} assigned</span>
+            @if (maintenanceUnits > 0) {
+              <span class="text-amber-700 font-medium">{{ maintenanceUnits }} in maintenance</span>
+            }
+          </div>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2 no-print">
+        <button
+          (click)="onExportPdf()"
+          class="h-9 px-3 rounded-md border border-outline-variant text-on-surface font-label-md hover:bg-surface-container-low transition-colors flex items-center gap-1.5 text-sm"
+          title="Export as PDF"
+        >
+          <span class="material-symbols-outlined text-[18px] text-error">picture_as_pdf</span>Export PDF
+        </button>
+        @if (canManageMaintenance()) {
+          <button (click)="onMaintenance()"
+            class="h-9 px-3 rounded-md border border-outline-variant text-on-surface font-label-md hover:bg-surface-container-low transition-colors flex items-center gap-1.5 text-sm">
+            <span class="material-symbols-outlined text-[18px]">build</span>Maintenance
+          </button>
+        }
+        <button (click)="onEdit()"
+          class="h-9 px-3 rounded-md bg-primary text-on-primary font-label-md hover:bg-primary/90 transition-colors flex items-center gap-1.5 text-sm">
+          <span class="material-symbols-outlined text-[18px]">edit</span>Edit
+        </button>
+      </div>
+    </div>
+
+    <!-- ═══ BENTO GRID ═══════════════════════════════════════════════════════ -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-gutter">
+
+      <!-- Left Column -->
+      <div class="lg:col-span-1 space-y-gutter">
+
+        <!-- Asset Info Card -->
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-5 shadow-sm">
+          <h3 class="font-label-md text-on-surface font-semibold mb-4 pb-2 border-b border-outline-variant">Asset Details</h3>
+          <div class="space-y-3">
+            <div>
+              <p class="font-body-sm text-on-surface-variant">Serial Number</p>
+              <p class="font-body-md text-primary font-bold font-mono">{{ cur.serialNumber }}</p>
+            </div>
+            <div>
+              <p class="font-body-sm text-on-surface-variant">Category</p>
+              <p class="font-body-md text-on-surface font-medium">{{ getCategoryName(cur.category) }}</p>
+            </div>
+            <div>
+              <p class="font-body-sm text-on-surface-variant">Purchase Date</p>
+              <p class="font-body-md text-on-surface font-medium">{{ cur.purchaseDate | date:'mediumDate' }}</p>
+            </div>
+            <div>
+              <p class="font-body-sm text-on-surface-variant">Purchase Cost</p>
+              <p class="font-body-md text-on-surface font-semibold">{{ cur.purchaseCost | appCurrency }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quantity Summary Card -->
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-5 shadow-sm">
+          <h3 class="font-label-md text-on-surface font-semibold mb-4 pb-2 border-b border-outline-variant">Unit Summary</h3>
+          <div class="grid grid-cols-2 gap-3">
+            <div class="bg-surface-container-low p-3 rounded-lg text-center border border-outline-variant/40">
+              <p class="text-[11px] text-on-surface-variant">Total</p>
+              <p class="font-headline-sm font-bold text-primary">{{ totalUnits }}</p>
+            </div>
+            <div class="bg-emerald-50 p-3 rounded-lg text-center border border-emerald-200">
+              <p class="text-[11px] text-emerald-800">Available</p>
+              <p class="font-headline-sm font-bold text-emerald-600">{{ availableUnits }}</p>
+            </div>
+            <div class="bg-blue-50 p-3 rounded-lg text-center border border-blue-200">
+              <p class="text-[11px] text-blue-800">Assigned</p>
+              <p class="font-headline-sm font-bold text-blue-600">{{ assignedUnits }}</p>
+            </div>
+            <div class="bg-amber-50 p-3 rounded-lg text-center border border-amber-200">
+              <p class="text-[11px] text-amber-800">Maintenance</p>
+              <p class="font-headline-sm font-bold text-amber-600">{{ maintenanceUnits }}</p>
+            </div>
+          </div>
+          @if (cur.totalQuantity !== undefined) {
+            <p class="mt-2 text-[11px] text-on-surface-variant text-center">
+              Backend total: {{ cur.totalQuantity }}
+              @if (cur.availableQuantity !== undefined) { · Available: {{ cur.availableQuantity }} }
+            </p>
+          }
+        </div>
+
+      </div>
+
+      <!-- Right Column: Tabs -->
+      <div class="lg:col-span-2 space-y-gutter">
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden shadow-sm">
+          <app-tab-nav [tabs]="detailTabs" [activeTab]="activeTab()" (tabChange)="setTab($event)" />
+
+          <div class="p-6">
+
+            <!-- ─── OVERVIEW TAB ─────────────────────────────────────────── -->
+            @if (activeTab() === 'overview') {
+              <h3 class="font-label-md text-on-surface font-semibold mb-4">Asset Information</h3>
+              <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+                <div class="bg-surface-container-low p-3 rounded border border-outline-variant/50">
+                  <p class="text-[11px] text-on-surface-variant mb-1">Serial Number</p>
+                  <p class="font-body-md text-primary font-bold font-mono">{{ cur.serialNumber }}</p>
+                </div>
+                <div class="bg-surface-container-low p-3 rounded border border-outline-variant/50">
+                  <p class="text-[11px] text-on-surface-variant mb-1">Category</p>
+                  <p class="font-body-md text-on-surface font-medium">{{ getCategoryName(cur.category) }}</p>
+                </div>
+                <div class="bg-surface-container-low p-3 rounded border border-outline-variant/50">
+                  <p class="text-[11px] text-on-surface-variant mb-1">Purchase Date</p>
+                  <p class="font-body-md text-on-surface font-medium">{{ cur.purchaseDate | date:'mediumDate' }}</p>
+                </div>
+                <div class="bg-surface-container-low p-3 rounded border border-outline-variant/50">
+                  <p class="text-[11px] text-on-surface-variant mb-1">Purchase Cost</p>
+                  <p class="font-body-md text-on-surface font-medium">{{ cur.purchaseCost | appCurrency }}</p>
+                </div>
+                <div class="bg-surface-container-low p-3 rounded border border-outline-variant/50">
+                  <p class="text-[11px] text-on-surface-variant mb-1">Total Units</p>
+                  <p class="font-body-md text-on-surface font-medium">{{ totalUnits }}</p>
+                </div>
+                <div class="bg-surface-container-low p-3 rounded border border-outline-variant/50">
+                  <p class="text-[11px] text-on-surface-variant mb-1">Created</p>
+                  <p class="font-body-md text-on-surface font-medium">{{ cur.createdAt | date:'shortDate' }}</p>
+                </div>
+              </div>
+
+              <!-- Payment & Financial Information -->
+              @if (cur.purchaseNumber || cur.paidAmount !== undefined || cur.totalAmount !== undefined || cur.purchaseCost) {
+                <div class="flex items-center justify-between mb-4">
+                  <h3 class="font-label-md text-on-surface font-semibold flex items-center gap-2">
+                    <span class="material-symbols-outlined text-[18px] text-primary">payments</span>
+                    Payment & Financial Information
+                  </h3>
+                  @if (cur.purchaseNumber) {
+                    <span class="font-mono text-body-sm text-primary font-semibold bg-primary/10 px-2.5 py-0.5 rounded-full">
+                      PO: {{ cur.purchaseNumber }}
+                    </span>
+                  }
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                  <div class="bg-surface-container-low p-3 rounded border border-outline-variant/50">
+                    <p class="text-[11px] text-on-surface-variant mb-1">Total Amount</p>
+                    <p class="font-body-md text-on-surface font-bold">
+                      {{ getEffectiveTotalAmount(cur) | appCurrency }}
+                    </p>
+                  </div>
+                  <div class="bg-surface-container-low p-3 rounded border border-outline-variant/50">
+                    <p class="text-[11px] text-on-surface-variant mb-1">Paid Amount</p>
+                    <p class="font-body-md text-emerald-600 font-bold">
+                      {{ getEffectivePaidAmount(cur) | appCurrency }}
+                    </p>
+                  </div>
+                  <div class="bg-surface-container-low p-3 rounded border border-outline-variant/50">
+                    <p class="text-[11px] text-on-surface-variant mb-1">Remaining Amount</p>
+                    <p class="font-body-md font-bold" [ngClass]="getEffectiveRemainingAmount(cur) > 0 ? 'text-error' : 'text-primary'">
+                      {{ getEffectiveRemainingAmount(cur) | appCurrency }}
+                    </p>
+                  </div>
+                  <div class="bg-surface-container-low p-3 rounded border border-outline-variant/50">
+                    <p class="text-[11px] text-on-surface-variant mb-1">Payment Status</p>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold"
+                      [ngClass]="getPaymentStatusBadgeClass(cur)">
+                      {{ getEffectivePaymentStatus(cur) }}
+                    </span>
+                  </div>
+                </div>
+              }
+
+              <!-- Tech Specs -->
+              @if ((cur.techSpecs || []).length > 0) {
+                <h3 class="font-label-md text-on-surface font-semibold mb-4">Technical Specifications</h3>
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+                  @for (spec of cur.techSpecs || []; track spec.key) {
+                    <div class="bg-surface-container-low p-3 rounded border border-outline-variant/50">
+                      <p class="text-[11px] text-on-surface-variant mb-1">{{ spec.key }}</p>
+                      <p class="font-body-md text-on-surface font-medium">{{ spec.value || '—' }}</p>
+                    </div>
+                  }
+                </div>
+              }
+
+              <!-- Assignment History Preview -->
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="font-label-md text-on-surface font-semibold">Assignment History</h3>
+                <button (click)="setTab('units')" class="font-label-sm text-primary hover:underline">View Units →</button>
+              </div>
+              <div class="border border-outline-variant rounded-lg overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                  <thead>
+                    <tr class="bg-surface-container-low border-b border-outline-variant">
+                      <th class="p-3 font-label-sm text-on-surface-variant font-medium">Employee</th>
+                      <th class="p-3 font-label-sm text-on-surface-variant font-medium">Assigned</th>
+                      <th class="p-3 font-label-sm text-on-surface-variant font-medium">Returned</th>
+                      <th class="p-3 font-label-sm text-on-surface-variant font-medium">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-outline-variant/40 font-body-md">
+                    @for (h of cur.assignmentHistory || []; track h.id) {
+                      <tr class="hover:bg-surface-container-lowest">
+                        <td class="p-3 text-on-surface font-medium flex items-center gap-2">
+                          <div class="w-6 h-6 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center font-bold text-[10px]">{{ h.employeeName.charAt(0) }}</div>
+                          {{ h.employeeName }}
+                        </td>
+                        <td class="p-3 text-on-surface-variant">{{ h.assignedDate }}</td>
+                        <td class="p-3 text-on-surface-variant">{{ h.returnedDate || '—' }}</td>
+                        <td class="p-3">
+                          @if (h.status === 'Active') {
+                            <span class="bg-primary/10 text-primary px-2 py-0.5 rounded text-[11px] font-semibold uppercase">Active</span>
+                          } @else {
+                            <span class="bg-surface-container-high text-on-surface-variant px-2 py-0.5 rounded text-[11px] font-semibold uppercase">Returned</span>
+                          }
+                        </td>
+                      </tr>
+                    } @empty {
+                      <tr><td colspan="4" class="p-4 text-center text-on-surface-variant text-body-sm">No assignment history yet.</td></tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+
+            <!-- ─── UNITS TAB ─────────────────────────────────────────────── -->
+            } @else if (activeTab() === 'units') {
+              <div class="flex items-center justify-between mb-4">
+                <div>
+                  <h3 class="font-label-md text-on-surface font-semibold">Physical Units</h3>
+                  <p class="font-body-sm text-on-surface-variant mt-0.5">
+                    Individual serial-numbered copies from <code class="text-[11px] font-mono bg-surface-container-low px-1 rounded">GET /api/assets/{{ cur.id }}/</code>
+                  </p>
+                </div>
+              </div>
+
+              @if (units.length === 0) {
+                <div class="flex flex-col items-center justify-center py-12 text-center border border-dashed border-outline-variant rounded-lg">
+                  <span class="material-symbols-outlined text-[40px] text-on-surface-variant/30 mb-2">inventory_2</span>
+                  <p class="font-body-md text-on-surface-variant">No units found for this asset.</p>
+                  <p class="font-body-sm text-on-surface-variant/60 mt-1">Units are created when a purchase order is processed.</p>
+                </div>
+              } @else {
+                <div class="border border-outline-variant rounded-lg overflow-x-auto">
+                  <table class="w-full text-left border-collapse">
+                    <thead>
+                      <tr class="bg-surface-container-low border-b border-outline-variant">
+                        <th class="p-3 font-label-sm text-on-surface-variant font-medium">#</th>
+                        <th class="p-3 font-label-sm text-on-surface-variant font-medium">Serial Number</th>
+                        <th class="p-3 font-label-sm text-on-surface-variant font-medium">Status</th>
+                        <th class="p-3 font-label-sm text-on-surface-variant font-medium">Assigned To</th>
+                        <th class="p-3 font-label-sm text-on-surface-variant font-medium">Location</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-outline-variant/40 font-body-md">
+                      @for (unit of units; track unit.id) {
+                        <tr class="hover:bg-surface-container-lowest">
+                          <td class="p-3 text-on-surface-variant font-mono text-[12px]">{{ unit.unitNumber }}</td>
+                          <td class="p-3 font-mono font-bold text-primary">{{ unit.serialNumber }}</td>
+                          <td class="p-3"><app-status-badge [status]="unit.status" /></td>
+                          <td class="p-3 text-on-surface-variant">
+                            @if (unit.assignedUser) {
+                              <div class="flex items-center gap-2">
+                                <div class="w-6 h-6 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center text-[10px] font-bold">{{ unit.assignedUser.avatarInitials }}</div>
+                                {{ unit.assignedUser.name }}
+                              </div>
+                            } @else if (unit.assignedTo) {
+                              {{ unit.assignedTo }}
+                            } @else {
+                              <span class="text-on-surface-variant/50">—</span>
+                            }
+                          </td>
+                          <td class="p-3 text-on-surface-variant">{{ unit.location || '—' }}</td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+              }
+
+            <!-- ─── MAINTENANCE TAB ────────────────────────────────────────── -->
+            } @else if (activeTab() === 'maintenance') {
+              <div class="flex items-center justify-between mb-4">
+                <div>
+                  <h3 class="font-label-md text-on-surface font-semibold">Maintenance Records</h3>
+                  <p class="font-body-sm text-on-surface-variant">Maintenance tickets for asset <strong>{{ cur.serialNumber }}</strong>.</p>
+                </div>
+                <button (click)="onMaintenance()" class="h-8 px-3 rounded bg-primary text-on-primary font-label-sm hover:bg-primary/90 transition-colors flex items-center gap-1.5 shrink-0">
+                  <span class="material-symbols-outlined text-[16px]">add</span>New Ticket
+                </button>
+              </div>
+              <div class="border border-outline-variant rounded-lg overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                  <thead>
+                    <tr class="bg-surface-container-low border-b border-outline-variant">
+                      <th class="p-3 font-label-sm text-on-surface-variant font-medium">Ticket ID</th>
+                      <th class="p-3 font-label-sm text-on-surface-variant font-medium">Issue</th>
+                      <th class="p-3 font-label-sm text-on-surface-variant font-medium">Priority</th>
+                      <th class="p-3 font-label-sm text-on-surface-variant font-medium">Status</th>
+                      <th class="p-3 font-label-sm text-on-surface-variant font-medium">Date</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-outline-variant/40 font-body-md">
+                    @for (req of assetMaintenanceRequests; track req.id) {
+                      <tr class="hover:bg-surface-container-lowest">
+                        <td class="p-3 text-primary font-medium whitespace-nowrap">{{ req.requestId }}</td>
+                        <td class="p-3 text-on-surface max-w-[200px] truncate" [title]="req.issueDescription">{{ req.componentOrIssueType }}</td>
+                        <td class="p-3"><app-status-badge [status]="req.priority" /></td>
+                        <td class="p-3"><app-status-badge [status]="req.status" /></td>
+                        <td class="p-3 text-on-surface-variant whitespace-nowrap">{{ req.createdAt | date:'shortDate' }}</td>
+                      </tr>
+                    } @empty {
+                      <tr>
+                        <td colspan="5" class="p-8 text-center text-on-surface-variant text-body-sm">
+                          <span class="material-symbols-outlined text-[40px] text-on-surface-variant/30 block mb-2">build_circle</span>
+                          No maintenance records for this asset.
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+
+            <!-- ─── TIMELINE TAB ───────────────────────────────────────────── -->
+            } @else if (activeTab() === 'timeline') {
+              <div class="mb-6">
+                <h3 class="font-label-md text-on-surface font-semibold">Asset Lifecycle Timeline</h3>
+                <p class="font-body-sm text-on-surface-variant mt-0.5">Chronological history for <strong>{{ cur.serialNumber }}</strong></p>
+              </div>
+              @if (timelineEvents.length === 0) {
+                <div class="flex flex-col items-center justify-center py-16 text-center">
+                  <span class="material-symbols-outlined text-[48px] text-on-surface-variant/30 mb-3">timeline</span>
+                  <p class="font-body-md text-on-surface-variant font-medium">No timeline events yet.</p>
+                </div>
+              } @else {
+                <div class="relative">
+                  <div class="absolute left-5 top-0 bottom-0 w-0.5 bg-outline-variant"></div>
+                  <div class="space-y-6">
+                    @for (event of timelineEvents; track event.id) {
+                      <div class="relative flex items-start gap-4 pl-14">
+                        <div class="absolute left-0 w-10 h-10 rounded-full flex items-center justify-center border-2 border-surface-container-lowest shadow-sm {{ event.iconColor }}">
+                          <span class="material-symbols-outlined text-[18px]">{{ event.icon }}</span>
+                        </div>
+                        <div class="flex-1 bg-surface-container-low border border-outline-variant/50 rounded-lg p-4">
+                          <div class="flex items-start justify-between gap-2">
+                            <p class="font-label-md text-on-surface font-semibold">{{ event.label }}</p>
+                            <p class="text-[11px] text-on-surface-variant whitespace-nowrap">{{ event.date | date:'mediumDate' }}</p>
+                          </div>
+                          @if (event.employee) {
+                            <p class="mt-1 font-body-sm text-on-surface-variant">
+                              <span class="material-symbols-outlined text-[14px] align-text-bottom mr-0.5">person</span>{{ event.employee }}
+                            </p>
+                          }
+                          @if (event.notes) {
+                            <p class="mt-1 font-body-sm text-on-surface-variant/70 text-[12px]">{{ event.notes }}</p>
+                          }
+                          @if (event.newValue) {
+                            <p class="mt-1 font-body-sm text-on-surface-variant text-[12px]">Value: <strong>{{ event.newValue }}</strong></p>
+                          }
+                        </div>
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+
+            <!-- ─── DEPRECIATION TAB ───────────────────────────────────────── -->
+            } @else if (activeTab() === 'depreciation') {
+              <app-asset-depreciation-tab
+                [asset]="asset()"
+                [canEdit]="canEditDepreciation()"
+                [canViewFinancials]="canViewFinancials()"
+                (edit)="onOpenEditDepreciation()"
+              />
+            }
+
+          </div><!-- /tab content -->
+        </div><!-- /tabs card -->
+      </div><!-- /right col -->
+    </div><!-- /grid -->
+  }<!-- /asset block -->
+
+</div>
+
+<!-- Supplier Detail Modal -->
+<app-supplier-detail-modal
+  [isOpen]="isSupplierModalOpen()"
+  [supplierName]="selectedSupplierName()"
+  (close)="isSupplierModalOpen.set(false)" />
+
+<!-- Edit Depreciation Modal -->
+<app-edit-depreciation-modal
+  [isOpen]="isEditDepreciationModalOpen()"
+  [asset]="asset()"
+  (close)="isEditDepreciationModalOpen.set(false)"
+  (saved)="onDepreciationSaved($event)" />
+
+<!-- PDF Viewer Modal -->
+@if (pdfBlobUrl()) {
+  <div class="fixed inset-0 bg-black/75 flex items-center justify-center z-[3000] p-4">
+    <div class="bg-surface-container-lowest w-full max-w-4xl h-[90vh] border border-outline-variant rounded-xl shadow-2xl flex flex-col overflow-hidden relative animate-scale-in">
+
+      <div class="flex justify-between items-center border-b border-outline-variant p-4 bg-surface-container-low">
+        <h3 class="font-title-md text-title-md text-on-surface flex items-center gap-2 font-semibold">
+          <span class="material-symbols-outlined text-primary">description</span>
+          {{ pdfViewerTitle() }}
+        </h3>
+        <div class="flex items-center gap-2">
+          <a [href]="pdfBlobUrl()" [download]="pdfFileName()" class="btn bg-primary text-on-primary hover:bg-primary-container hover:text-on-primary-container px-4 py-2 rounded-md font-semibold text-body-sm flex items-center gap-1.5 focus:outline-none shadow-xs">
+            <span class="material-symbols-outlined text-[18px]">download</span> Download
+          </a>
+          <button (click)="closePdfViewer()" class="text-on-surface-variant hover:text-on-surface p-1.5 rounded-full hover:bg-surface-container-high focus:outline-none">
+            <span class="material-symbols-outlined text-[20px]">close</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="flex-1 bg-surface-container-high">
+        <iframe [src]="pdfBlobUrlSafe()" class="w-full h-full border-none"></iframe>
+      </div>
+    </div>
+  </div>
+}

@@ -1,0 +1,251 @@
+<div class="max-w-[1440px] mx-auto p-gutter sm:p-container-padding">
+
+  <!-- Page Header -->
+  <div class="mb-8">
+    <app-page-header
+      title="Create Purchase Order"
+      subtitle="Search and select an asset to create a purchase order or edit asset details."
+    >
+    </app-page-header>
+  </div>
+
+  <!-- Prominent Search Section -->
+  <div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-4 mb-8 shadow-sm">
+    <div class="text-center mb-4">
+      <div class="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mx-auto mb-3">
+        <span class="material-symbols-outlined text-[24px] text-primary">search</span>
+      </div>
+      <h2 class="font-headline-sm text-headline-sm text-on-surface font-semibold mb-1">
+        Find an Asset to Purchase or Edit
+      </h2>
+      <p class="font-body-sm text-body-sm text-on-surface-variant max-w-2xl mx-auto">
+        Search for any asset using Serial Number, Name, Brand, Model, Category, or Supplier.
+        Select an asset for a purchase order or click edit/view to manage its details.
+      </p>
+    </div>
+
+    <!-- Large Search Input -->
+    <div class="max-w-2xl mx-auto">
+      <div class="relative">
+        <div class="absolute inset-y-0 left-0 flex items-center pl-3">
+          <span class="material-symbols-outlined text-[20px] text-on-surface-variant">search</span>
+        </div>
+        <input
+          type="text"
+          [value]="searchQuery()"
+          (input)="onSearchChange($event.target.value)"
+          [placeholder]="getSearchPlaceholder()"
+          class="w-full h-11 pl-11 pr-4 font-body-md text-body-md bg-surface-container-lowest text-on-surface border-2 border-outline-variant rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all placeholder:text-on-surface-variant/60"
+        />
+        @if (isSearching()) {
+          <div class="absolute inset-y-0 right-0 flex items-center pr-4">
+            <div class="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        }
+      </div>
+
+      <!-- Search Hints -->
+      <div class="flex flex-wrap items-center justify-center gap-2 mt-3">
+        <span class="text-on-surface-variant text-body-sm">Quick search:</span>
+        <button 
+          (click)="onSearchChange('Laptop')"
+          class="px-3 py-1 bg-surface-container-high text-on-surface text-body-sm rounded-full hover:bg-surface-container-highest transition-colors"
+        >
+          "Laptop"
+        </button>
+        <button 
+          (click)="onSearchChange('Mobile')"
+          class="px-3 py-1 bg-surface-container-high text-on-surface text-body-sm rounded-full hover:bg-surface-container-highest transition-colors"
+        >
+          "Mobile"
+        </button>
+        <button 
+          (click)="onSearchChange('Monitor')"
+          class="px-3 py-1 bg-surface-container-high text-on-surface text-body-sm rounded-full hover:bg-surface-container-highest transition-colors"
+        >
+          "Monitor"
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search Results -->
+  @if (hasSearched()) {
+    @if (isSearching()) {
+      <!-- Loading State -->
+      <div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-8 text-center">
+        <div class="w-12 h-12 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+        <p class="font-body-md text-body-md text-on-surface-variant">Searching assets...</p>
+      </div>
+    } @else if (searchResults().length > 0) {
+      <!-- Results Found -->
+      <div class="bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden shadow-sm">
+        <div class="bg-surface-container-low px-6 py-4 border-b border-outline-variant flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h3 class="font-label-md text-label-md text-on-surface font-semibold">
+              Found {{ searchResults().length }} asset{{ searchResults().length === 1 ? '' : 's' }} 
+              for "{{ searchQuery() }}"
+            </h3>
+            <p class="text-body-sm text-on-surface-variant mt-0.5">
+              Available: <span class="font-semibold text-emerald-600 dark:text-emerald-400">{{ availableCount() }}</span> • 
+              Assigned: <span class="font-semibold text-blue-600 dark:text-blue-400">{{ assignedCount() }}</span> • 
+              Maintenance: <span class="font-semibold text-amber-600 dark:text-amber-400">{{ maintenanceCount() }}</span>
+            </p>
+          </div>
+          <span class="text-body-sm text-on-surface-variant bg-surface-container-high px-3 py-1 rounded-full">
+            Total Items: {{ searchResults().length }}
+          </span>
+        </div>
+
+        <div class="divide-y divide-outline-variant">
+          @for (asset of searchResults(); track asset.id) {
+            <div 
+              (click)="onSelectAsset(asset)"
+              class="px-6 py-4 hover:bg-surface-container-low cursor-pointer transition-colors group"
+            >
+              <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div class="flex items-start md:items-center gap-4 flex-1">
+                  <!-- Asset Icon -->
+                  <div class="w-12 h-12 bg-surface-container-high rounded-lg flex items-center justify-center group-hover:bg-primary/10 transition-colors shrink-0">
+                    <span class="material-symbols-outlined text-[24px] text-on-surface-variant group-hover:text-primary">
+                      {{ getCategoryIcon(asset.category) }}
+                    </span>
+                  </div>
+
+                  <!-- Asset Details -->
+                  <div class="flex-1">
+                    <div class="flex flex-wrap items-center gap-3 mb-1">
+                      <h4 class="font-label-md text-label-md text-on-surface font-semibold group-hover:text-primary transition-colors">
+                        {{ asset.name }}
+                      </h4>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-body-sm text-on-surface-variant">
+                      @if (asset.serialNumber) {
+                        <span>SN: <strong class="font-mono text-primary">{{ asset.serialNumber }}</strong></span>
+                        <span>•</span>
+                      }
+                      <span>{{ getCategoryName(asset.category) }}</span>
+                      @if (asset.brand) {
+                        <span>•</span>
+                        <span>{{ asset.brand }}</span>
+                      }
+                      @if (asset.model) {
+                        <span>•</span>
+                        <span>{{ asset.model }}</span>
+                      }
+                      @if ((asset.availableQuantity ?? 0) > 0) {
+                        <span>•</span>
+                        <span class="text-emerald-600 font-medium">{{ asset.availableQuantity }} available</span>
+                      }
+                      @if ((asset.assignedQuantity ?? 0) > 0) {
+                        <span>•</span>
+                        <span class="text-blue-600 font-medium">{{ asset.assignedQuantity }} assigned</span>
+                      }
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Price & Action Buttons -->
+                <div class="flex items-center gap-3 shrink-0 self-end md:self-center">
+                  @if (asset.purchaseCost) {
+                    <div class="text-right mr-2 hidden sm:block">
+                      <div class="font-label-sm text-label-sm text-on-surface-variant">Cost</div>
+                      <div class="font-label-md text-label-md text-on-surface font-semibold">
+                        {{ asset.purchaseCost | appCurrency }}
+                      </div>
+                    </div>
+                  }
+
+                  <!-- View Button -->
+                  <button 
+                    type="button"
+                    (click)="onViewAsset(asset, $event)"
+                    class="p-2 rounded-md border border-outline-variant hover:bg-surface-container-high text-on-surface-variant hover:text-primary transition-colors"
+                    title="View Asset Details"
+                  >
+                    <span class="material-symbols-outlined text-[18px]">visibility</span>
+                  </button>
+
+                  <!-- Edit Button -->
+                  <button 
+                    type="button"
+                    (click)="onEditAsset(asset, $event)"
+                    class="p-2 rounded-md border border-outline-variant hover:bg-surface-container-high text-on-surface-variant hover:text-primary transition-colors"
+                    title="Edit Asset Details"
+                  >
+                    <span class="material-symbols-outlined text-[18px]">edit</span>
+                  </button>
+
+                  <!-- Select Button -->
+                  <button 
+                    type="button"
+                    class="h-9 px-4 rounded-md bg-primary text-on-primary font-label-md text-label-md hover:bg-primary/90 transition-colors flex items-center gap-2"
+                  >
+                    <span class="material-symbols-outlined text-[18px]">shopping_cart</span>
+                    Select
+                  </button>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    } @else {
+      <!-- No Results -->
+      <div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-8">
+        <app-empty-state 
+          icon="search_off"
+          title="No assets found"
+          [description]="getNoResultsMessage()"
+          actionLabel="Clear Search"
+          (actionClick)="onSearchChange('')" />
+      </div>
+    }
+  } @else {
+    <!-- Initial State - Show Popular Categories -->
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-8">
+      <div class="text-center">
+        <span class="material-symbols-outlined text-[48px] text-on-surface-variant/50 mb-4 block">inventory</span>
+        <h3 class="font-headline-sm text-headline-sm text-on-surface font-semibold mb-2">
+          Start by searching for an asset
+        </h3>
+        <p class="font-body-md text-body-md text-on-surface-variant mb-6 max-w-md mx-auto">
+          Enter a Serial Number, Name, Brand, Model, Category, or Supplier in the search box above to view all matching items and manage them.
+        </p>
+        
+        <!-- Quick Category Buttons -->
+        <div class="flex flex-wrap items-center justify-center gap-3">
+          <button 
+            (click)="onSearchChange('Laptop')"
+            class="h-10 px-4 rounded-md border border-outline-variant text-on-surface hover:bg-surface-container-low transition-colors flex items-center gap-2"
+          >
+            <span class="material-symbols-outlined text-[18px]">laptop</span>
+            Laptops
+          </button>
+          <button 
+            (click)="onSearchChange('Mobile')"
+            class="h-10 px-4 rounded-md border border-outline-variant text-on-surface hover:bg-surface-container-low transition-colors flex items-center gap-2"
+          >
+            <span class="material-symbols-outlined text-[18px]">smartphone</span>
+            Mobiles
+          </button>
+          <button 
+            (click)="onSearchChange('Monitor')"
+            class="h-10 px-4 rounded-md border border-outline-variant text-on-surface hover:bg-surface-container-low transition-colors flex items-center gap-2"
+          >
+            <span class="material-symbols-outlined text-[18px]">monitor</span>
+            Monitors
+          </button>
+          <button 
+            (click)="onSearchChange('Desktop')"
+            class="h-10 px-4 rounded-md border border-outline-variant text-on-surface hover:bg-surface-container-low transition-colors flex items-center gap-2"
+          >
+            <span class="material-symbols-outlined text-[18px]">computer</span>
+            Desktops
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+</div>

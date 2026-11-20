@@ -1,0 +1,143 @@
+<div
+  class="characters-container w-full h-full flex items-center justify-center select-none cursor-pointer" (click)="triggerEntrance()"
+  [class.animate-shake-error]="hasError()"
+>
+  <svg
+    viewBox="0 0 450 400"
+    class="w-full max-w-[460px] h-auto drop-shadow-sm overflow-visible"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <!-- Ground / Base Shadow Platform -->
+    <ellipse
+      cx="225"
+      cy="366"
+      rx="205"
+      ry="20"
+      fill="#e2e8f0"
+      opacity="0.6"
+      class="origin-platform"
+      [class.animate-platform-pop]="isEntering()"
+    />
+
+    <!-- 1. PURPLE RECTANGLE CHARACTER (Back Center-Left) -->
+    <g [class.animate-idle-breath-purple]="!isEntering()" class="origin-purple">
+      <g
+        id="purple-character"
+        class="origin-purple transition-transform duration-[480ms] [transition-timing-function:cubic-bezier(0.28,1.45,0.55,1)] will-change-transform"
+        [class.animate-drop-purple]="isEntering()"
+        [style.transform]="isEntering() ? null : purpleTransform()"
+      >
+        <rect x="130" y="120" width="110" height="240" rx="28" fill="#5a3bf6" />
+        <rect x="134" y="124" width="102" height="232" rx="24" fill="none" stroke="#785dfa" stroke-width="2.5" opacity="0.3" />
+
+        @if (isHandsUp()) {
+          <path d="M 154,180 Q 165,170 176,180" stroke="#2e1687" stroke-width="4.5" stroke-linecap="round" fill="none" />
+          <path d="M 193,180 Q 205,170 216,180" stroke="#2e1687" stroke-width="4.5" stroke-linecap="round" fill="none" />
+        } @else {
+          <circle cx="165" cy="180" r="14" fill="#ffffff" />
+          <circle [attr.cx]="165 + purplePupilX()" [attr.cy]="180 + purplePupilY()" r="6.5" fill="#0f172a" class="transition-[cx,cy] duration-150 [transition-timing-function:cubic-bezier(0.25,1.25,0.5,1)] will-change-[cx,cy]" />
+          <circle [attr.cx]="163 + purplePupilX() * 0.8" [attr.cy]="178 + purplePupilY() * 0.8" r="2.2" fill="#ffffff" class="transition-[cx,cy] duration-150 [transition-timing-function:cubic-bezier(0.25,1.25,0.5,1)] will-change-[cx,cy]" />
+          <circle cx="205" cy="180" r="14" fill="#ffffff" />
+          <circle [attr.cx]="205 + purplePupilX()" [attr.cy]="180 + purplePupilY()" r="6.5" fill="#0f172a" class="transition-[cx,cy] duration-150 [transition-timing-function:cubic-bezier(0.25,1.25,0.5,1)] will-change-[cx,cy]" />
+          <circle [attr.cx]="203 + purplePupilX() * 0.8" [attr.cy]="178 + purplePupilY() * 0.8" r="2.2" fill="#ffffff" class="transition-[cx,cy] duration-150 [transition-timing-function:cubic-bezier(0.25,1.25,0.5,1)] will-change-[cx,cy]" />
+        }
+
+        <!-- Purple Mouth -->
+        <path [attr.d]="purpleMouthD()" stroke="#321ca8" stroke-width="4" stroke-linecap="round" fill="none" class="transition-[d] duration-[400ms] [transition-timing-function:cubic-bezier(0.34,1.56,0.64,1)]" />
+      </g>
+    </g>
+
+    <!-- 2. BLACK / DARK PILLAR CHARACTER (Center Right - Ninja Entrance) -->
+    <g [class.animate-idle-breath-black]="!isEntering()" class="origin-black-base">
+      <g [class.animate-ninja-flip-swoop]="isEntering()" class="origin-black-center">
+        <g
+          id="black-character"
+          class="origin-black-base transition-transform duration-[440ms] [transition-timing-function:cubic-bezier(0.3,1.4,0.55,1)] will-change-transform"
+          [class.animate-ninja-impact-squash]="isEntering()"
+          [style.transform]="isEntering() ? null : blackTransform()"
+        >
+          <path d="M 260,360 L 260,195 A 40,40 0 0,1 340,195 L 340,360 Z" fill="#111827" />
+
+          @if (isHandsUp()) {
+            <path d="M 273,225 Q 285,214 297,225" stroke="#9ca3af" stroke-width="5" stroke-linecap="round" fill="none" />
+            <path d="M 308,225 Q 320,214 332,225" stroke="#9ca3af" stroke-width="5" stroke-linecap="round" fill="none" />
+          } @else {
+            <circle cx="285" cy="225" r="15" fill="#ffffff" />
+            <circle cx="320" cy="225" r="15" fill="#ffffff" />
+            <circle [attr.cx]="285 + blackPupilX()" [attr.cy]="225 + blackPupilY()" r="7" fill="#0f172a" class="transition-[cx,cy] duration-150 [transition-timing-function:cubic-bezier(0.25,1.25,0.5,1)] will-change-[cx,cy]" />
+            <circle [attr.cx]="283 + blackPupilX() * 0.8" [attr.cy]="223 + blackPupilY() * 0.8" r="2.5" fill="#ffffff" class="transition-[cx,cy] duration-150 [transition-timing-function:cubic-bezier(0.25,1.25,0.5,1)] will-change-[cx,cy]" />
+            <circle [attr.cx]="320 + blackPupilX()" [attr.cy]="225 + blackPupilY()" r="7" fill="#0f172a" class="transition-[cx,cy] duration-150 [transition-timing-function:cubic-bezier(0.25,1.25,0.5,1)] will-change-[cx,cy]" />
+            <circle [attr.cx]="318 + blackPupilX() * 0.8" [attr.cy]="223 + blackPupilY() * 0.8" r="2.5" fill="#ffffff" class="transition-[cx,cy] duration-150 [transition-timing-function:cubic-bezier(0.25,1.25,0.5,1)] will-change-[cx,cy]" />
+            <ellipse cx="274" cy="245" rx="5" ry="3" fill="#374151" />
+            <ellipse cx="330" cy="245" rx="5" ry="3" fill="#374151" />
+          }
+        </g>
+      </g>
+    </g>
+
+    <!-- 3. ORANGE ROUNDED DOME CHARACTER (Front Left - Bean to Dome Jelly) -->
+    <g [class.animate-idle-breath-orange]="!isEntering()" class="origin-orange-base">
+      @if (isEntering()) {
+        <!-- Flying Kidney Bean Jelly (NO Eyes, NO Mouth) -->
+        <g class="animate-orange-bean-hop pointer-events-none">
+          <path
+            d="M -32,-8 C -16,-26 16,-26 32,-8 C 44,4 36,22 22,20 C 6,7 -6,7 -22,20 C -36,22 -44,4 -32,-8 Z"
+            fill="#f97316"
+          />
+        </g>
+      }
+
+      <g
+        id="orange-character"
+        class="origin-orange-base transition-transform duration-[460ms] [transition-timing-function:cubic-bezier(0.32,1.42,0.58,1)] will-change-transform"
+        [class.animate-orange-dome-inflate]="isEntering()"
+        [style.transform]="isEntering() ? null : orangeTransform()"
+      >
+        <path d="M 50,360 A 105,105 0 0,1 260,360 Z" fill="#f97316" />
+
+        <g [class.animate-face-pop]="isEntering()" class="origin-orange-face">
+          @if (isHandsUp()) {
+            <path d="M 125,295 Q 135,287 145,295" stroke="#7c2d12" stroke-width="4" stroke-linecap="round" fill="none" />
+            <path d="M 165,295 Q 175,287 185,295" stroke="#7c2d12" stroke-width="4" stroke-linecap="round" fill="none" />
+          } @else {
+            <circle cx="135" cy="290" r="10" fill="#ffffff" />
+            <circle [attr.cx]="135 + orangePupilX()" [attr.cy]="290 + orangePupilY()" r="5" fill="#1e1b4b" class="transition-[cx,cy] duration-150 [transition-timing-function:cubic-bezier(0.25,1.25,0.5,1)] will-change-[cx,cy]" />
+            <circle [attr.cx]="133 + orangePupilX() * 0.8" [attr.cy]="288 + orangePupilY() * 0.8" r="1.8" fill="#ffffff" class="transition-[cx,cy] duration-150 [transition-timing-function:cubic-bezier(0.25,1.25,0.5,1)] will-change-[cx,cy]" />
+            <circle cx="175" cy="290" r="10" fill="#ffffff" />
+            <circle [attr.cx]="175 + orangePupilX()" [attr.cy]="290 + orangePupilY()" r="5" fill="#1e1b4b" class="transition-[cx,cy] duration-150 [transition-timing-function:cubic-bezier(0.25,1.25,0.5,1)] will-change-[cx,cy]" />
+            <circle [attr.cx]="173 + orangePupilX() * 0.8" [attr.cy]="288 + orangePupilY() * 0.8" r="1.8" fill="#ffffff" class="transition-[cx,cy] duration-150 [transition-timing-function:cubic-bezier(0.25,1.25,0.5,1)] will-change-[cx,cy]" />
+          }
+
+          <!-- Orange Mouth -->
+          <path [attr.d]="orangeMouthD()" stroke="#7c2d12" stroke-width="3.5" stroke-linecap="round" fill="none" class="transition-[d] duration-[400ms] [transition-timing-function:cubic-bezier(0.34,1.56,0.64,1)]" />
+        </g>
+      </g>
+    </g>
+
+    <!-- 4. YELLOW ARCH CHARACTER (Front Right) -->
+    <g [class.animate-idle-breath-yellow]="!isEntering()" class="origin-yellow">
+      <g
+        id="yellow-character"
+        class="origin-yellow transition-transform duration-400 [transition-timing-function:cubic-bezier(0.34,1.55,0.6,1)] will-change-transform"
+        [class.animate-drop-yellow]="isEntering()"
+        [style.transform]="isEntering() ? null : yellowTransform()"
+      >
+        <path d="M 330,360 L 330,285 A 35,35 0 0,1 400,285 L 400,360 Z" fill="#facc15" />
+
+        @if (isHandsUp()) {
+          <path d="M 348,285 Q 355,278 362,285" stroke="#78350f" stroke-width="3.5" stroke-linecap="round" fill="none" />
+          <path d="M 372,285 Q 379,278 386,285" stroke="#78350f" stroke-width="3.5" stroke-linecap="round" fill="none" />
+        } @else {
+          <circle cx="355" cy="282" r="8" fill="#ffffff" />
+          <circle [attr.cx]="355 + yellowPupilX()" [attr.cy]="282 + yellowPupilY()" r="4" fill="#1e1b4b" class="transition-[cx,cy] duration-150 [transition-timing-function:cubic-bezier(0.25,1.25,0.5,1)] will-change-[cx,cy]" />
+          <circle cx="378" cy="282" r="8" fill="#ffffff" />
+          <circle [attr.cx]="378 + yellowPupilX()" [attr.cy]="282 + yellowPupilY()" r="4" fill="#1e1b4b" class="transition-[cx,cy] duration-150 [transition-timing-function:cubic-bezier(0.25,1.25,0.5,1)] will-change-[cx,cy]" />
+        }
+
+        <!-- Yellow Mouth -->
+        <path [attr.d]="yellowMouthD()" stroke="#78350f" stroke-width="2.5" stroke-linecap="round" fill="none" class="transition-[d] duration-[400ms] [transition-timing-function:cubic-bezier(0.34,1.56,0.64,1)]" />
+      </g>
+    </g>
+
+  </svg>
+</div>

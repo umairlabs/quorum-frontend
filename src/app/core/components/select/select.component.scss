@@ -1,0 +1,35 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+.select-trigger-btn {
+  border-width: 1px !important;
+  border-style: solid !important;
+  border-color: var(--color-outline-variant, #c5c6cd);
+  border-radius: 0.5rem;
+  background-color: var(--color-surface-container-lowest, #ffffff);
+  min-height: 40px;
+  height: 40px;
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  box-sizing: border-box;
+
+  &:hover {
+    border-color: #94a3b8;
+  }
+
+  &.is-open {
+    border-color: #000000 !important;
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.2);
+  }
+
+  &.has-error {
+    border-color: var(--color-error, #ba1a1a) !important;
+  }
+}

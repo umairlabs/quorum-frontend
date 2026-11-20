@@ -1,0 +1,175 @@
+/* Tailwind CSS Directives */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Core Ionic SCSS Styles */
+@import "@ionic/angular/css/core.css";
+@import "@ionic/angular/css/normalize.css";
+@import "@ionic/angular/css/structure.css";
+@import "@ionic/angular/css/typography.css";
+@import "@ionic/angular/css/display.css";
+
+/* Ionic Utility Classes */
+@import "@ionic/angular/css/padding.css";
+@import "@ionic/angular/css/float-elements.css";
+@import "@ionic/angular/css/text-alignment.css";
+@import "@ionic/angular/css/text-transformation.css";
+@import "@ionic/angular/css/flex-utils.css";
+
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0;
+}
+
+/* Ensure Angular component tags display block */
+app-auth-layout,
+app-main-layout,
+app-login,
+app-login-form,
+app-password-input,
+app-sidebar,
+app-header,
+app-dashboard,
+app-asset-list,
+app-asset-detail,
+app-asset-create,
+app-asset-edit,
+app-assignment-list,
+app-assignment-detail,
+app-assignment-create,
+app-assignment-edit,
+app-maintenance-list,
+app-maintenance-create,
+app-data-table {
+  display: block;
+  width: 100%;
+}
+
+/* Fix Ionic root overflow — allows standard browser scroll in web layout */
+ion-app {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+/* Hide scrollbar utility for scrollable containers */
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+
+  /* Firefox */
+  &::-webkit-scrollbar {
+    display: none;
+    /* Chrome, Safari, Opera */
+    width: 0;
+    height: 0;
+  }
+}
+
+/* Global Table Typography standard matching Audit Logs */
+table thead th {
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 600;
+  color: var(--color-on-surface-variant, #45474c);
+}
+
+table tbody td {
+  font-size: 13px;
+  line-height: 19px;
+}
+
+/* ── Print / PDF Export Styles ────────────────────────────────────────── */
+@media print {
+
+  app-sidebar,
+  app-header,
+  .no-print {
+    display: none !important;
+  }
+
+  html,
+  body,
+  ion-app {
+    background-color: #ffffff !important;
+    color: #1a1c1e !important;
+    overflow: visible !important;
+    height: auto !important;
+    width: 100% !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Reset main layout offsets on print */
+  .md\:pl-\[260px\],
+  [class*="md:pl-"] {
+    padding-left: 0 !important;
+  }
+
+  .pt-\[64px\],
+  [class*="pt-"] {
+    padding-top: 0 !important;
+  }
+
+  div[style*="height: 100vh"] {
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  /* Fixed overlays / drawers / modals expansion for PDF export */
+  .fixed {
+    position: static !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  main {
+    max-width: 100% !important;
+    padding: 12px 16px !important;
+    margin: 0 !important;
+    gap: 16px !important;
+  }
+
+  /* Ensure card backgrounds and borders remain clear in PDF */
+  .bg-surface,
+  .bg-surface-container,
+  .bg-surface-container-low,
+  .bg-surface-container-lowest,
+  .bg-surface-container-high {
+    background-color: #ffffff !important;
+    border-color: #e2e8f0 !important;
+    box-shadow: none !important;
+  }
+
+  /* Avoid breaking widgets across pages */
+  app-stat-cards-grid,
+  app-section-panel,
+  app-line-chart,
+  app-donut-chart,
+  app-data-table,
+  table,
+  tr {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+}
+
+/* ── Date Input Calendar Icon Color ───────────────────────────────────────── */
+input[type="date"]::-webkit-calendar-picker-indicator,
+.date-picker-primary::-webkit-calendar-picker-indicator {
+  filter: brightness(0);
+  cursor: pointer;
+  opacity: 0.85;
+  transition: opacity 0.15s ease;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator:hover,
+.date-picker-primary::-webkit-calendar-picker-indicator:hover {
+  filter: brightness(0);
+  opacity: 1;
+}

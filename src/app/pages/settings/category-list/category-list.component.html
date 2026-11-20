@@ -1,0 +1,240 @@
+<div class="p-gutter sm:p-container-padding py-6 max-w-[1400px] mx-auto space-y-6">
+
+  <!-- Page Header -->
+  <app-page-header
+    [showBack]="false"
+    title="Asset Categories"
+    subtitle="Manage asset types, equipment classifications, and categories across the organization"
+    actionLabel="Add Category"
+    actionIcon="add"
+    (actionClick)="onOpenAddModal()"
+  />
+
+  <!-- Summary Cards Grid -->
+  <div class="grid grid-cols-1 gap-4">
+
+    <!-- Total Categories -->
+    <div class="p-5 rounded-xl bg-surface-container-lowest border border-outline-variant shadow-xs flex items-center justify-between">
+      <div>
+        <span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider block mb-1">
+          Total Categories
+        </span>
+        <div class="font-display-lg text-display-lg text-on-surface font-bold">
+          {{ categoryService.totalCategories() }}
+        </div>
+        <p class="font-body-sm text-[11px] text-on-surface-variant mt-1">Classifications defined</p>
+      </div>
+      <div class="w-12 h-12 rounded-xl bg-surface-container-low text-on-surface flex items-center justify-center shrink-0">
+        <span class="material-symbols-outlined text-[26px]">category</span>
+      </div>
+    </div>
+
+
+
+  </div>
+
+  <!-- Toolbar & Filters -->
+  <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-4 rounded-xl bg-surface-container-lowest border border-outline-variant">
+    <!-- Search Input -->
+    <div class="w-full sm:w-80">
+      <app-search-input
+        [value]="categoryService.searchQuery()"
+        placeholder="Search category name or description..."
+        (valueChange)="onSearchChange($event)"
+      />
+    </div>
+  </div>
+
+  <!-- Desktop & Tablet Table View -->
+  <div class="hidden md:block rounded-xl border border-outline-variant bg-surface-container-lowest overflow-hidden shadow-xs">
+    @if (categoryService.filteredCategories().length > 0) {
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="bg-surface-container-low/60 border-b border-outline-variant text-on-surface-variant font-label-sm text-[11px] uppercase tracking-wider">
+              <th class="py-3 px-4 font-semibold">Category Name</th>
+              <th class="py-3 px-4 font-semibold">Description</th>
+              <th class="py-3 px-4 font-semibold text-center">Assets</th>
+              <th class="py-3 px-4 font-semibold">Created Date</th>
+              <th class="py-3 px-4 font-semibold text-center">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-outline-variant/60 font-body-md text-body-md">
+            @for (cat of categoryService.filteredCategories(); track cat.id) {
+              <tr class="hover:bg-surface-container-low/30 transition-colors">
+
+                <!-- Name with Icon -->
+                <td class="py-3.5 px-4">
+                  <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-lg bg-surface-container-low text-on-surface flex items-center justify-center shrink-0">
+                      <span class="material-symbols-outlined text-[20px]">{{ getCategoryIconName(cat) }}</span>
+                    </div>
+                    <span class="font-medium text-on-surface">{{ cat.name }}</span>
+                  </div>
+                </td>
+
+                <!-- Description -->
+                <td class="py-3.5 px-4 text-on-surface-variant max-w-xs truncate">
+                  {{ cat.description || '—' }}
+                </td>
+
+                <!-- Assets Count -->
+                <td class="py-3.5 px-4 text-center">
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-surface-container-high text-on-surface">
+                    {{ cat.assetCount ?? 0 }} assets
+                  </span>
+                </td>
+
+                <!-- Created Date -->
+                <td class="py-3.5 px-4 text-on-surface-variant text-body-sm">
+                  {{ cat.createdAt || 'N/A' }}
+                </td>
+
+                <!-- Actions -->
+                <td class="py-3.5 px-4 text-center">
+                  <div class="flex items-center justify-center gap-1 w-full">
+                    <!-- View -->
+                    <button
+                      type="button"
+                      (click)="onOpenViewModal(cat)"
+                      class="p-1.5 rounded-md hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-colors"
+                      title="View Details"
+                    >
+                      <span class="material-symbols-outlined text-[18px]">visibility</span>
+                    </button>
+
+                    <!-- Edit -->
+                    <button
+                      type="button"
+                      (click)="onOpenEditModal(cat)"
+                      class="p-1.5 rounded-md hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-colors"
+                      title="Edit Category"
+                    >
+                      <span class="material-symbols-outlined text-[18px]">edit</span>
+                    </button>
+                    <!-- Delete -->
+                    <button
+                      type="button"
+                      (click)="onOpenDeleteModal(cat)"
+                      class="p-1.5 rounded-md hover:bg-error-container/40 text-on-surface-variant hover:text-error transition-colors"
+                      title="Delete Category"
+                    >
+                      <span class="material-symbols-outlined text-[18px]">delete</span>
+                    </button>
+                  </div>
+                </td>
+
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    } @else {
+      <div class="py-12">
+        <app-empty-state
+          icon="category"
+          title="No categories found"
+          description="No asset categories match your search query or status filter."
+          actionLabel="Add Category"
+          (actionClick)="onOpenAddModal()"
+        />
+      </div>
+    }
+  </div>
+
+  <!-- Mobile Responsive Card View -->
+  <div class="md:hidden space-y-3">
+    @if (categoryService.filteredCategories().length > 0) {
+      @for (cat of categoryService.filteredCategories(); track cat.id) {
+        <div class="p-4 rounded-xl bg-surface-container-lowest border border-outline-variant space-y-3">
+          <div class="flex items-start gap-2">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-lg bg-surface-container-low text-on-surface flex items-center justify-center shrink-0">
+                <span class="material-symbols-outlined text-[22px]">{{ getCategoryIconName(cat) }}</span>
+              </div>
+              <div>
+                <h4 class="font-label-md text-label-md text-on-surface font-semibold">{{ cat.name }}</h4>
+                <p class="font-body-sm text-[11px] text-on-surface-variant">{{ cat.createdAt || 'N/A' }}</p>
+              </div>
+            </div>
+          </div>
+
+          @if (cat.description) {
+            <p class="font-body-sm text-body-sm text-on-surface-variant line-clamp-2">
+              {{ cat.description }}
+            </p>
+          }
+
+          <div class="flex items-center justify-between pt-2 border-t border-outline-variant/60">
+            <span class="font-body-sm text-body-sm text-on-surface font-medium">
+              {{ cat.assetCount ?? 0 }} assets
+            </span>
+
+            <div class="flex items-center gap-1">
+              <button
+                type="button"
+                (click)="onOpenViewModal(cat)"
+                class="p-1.5 rounded-md hover:bg-surface-container-high text-on-surface-variant"
+                title="View"
+              >
+                <span class="material-symbols-outlined text-[18px]">visibility</span>
+              </button>
+              <button
+                type="button"
+                (click)="onOpenEditModal(cat)"
+                class="p-1.5 rounded-md hover:bg-surface-container-high text-on-surface-variant"
+                title="Edit"
+              >
+                <span class="material-symbols-outlined text-[18px]">edit</span>
+              </button>
+              <button
+                type="button"
+                (click)="onOpenDeleteModal(cat)"
+                class="p-1.5 rounded-md hover:bg-error-container/40 text-error"
+                title="Delete"
+              >
+                <span class="material-symbols-outlined text-[18px]">delete</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+    } @else {
+      <div class="p-6 rounded-xl bg-surface-container-lowest border border-outline-variant">
+        <app-empty-state
+          icon="category"
+          title="No categories found"
+          description="No asset categories match your filter."
+          actionLabel="Add Category"
+          (actionClick)="onOpenAddModal()"
+        />
+      </div>
+    }
+  </div>
+
+  <!-- Reusable Modals & Dialogs -->
+  <app-category-modal
+    [isOpen]="isAddEditModalOpen()"
+    [category]="selectedCategory()"
+    [title]="modalTitle()"
+    (close)="isAddEditModalOpen.set(false)"
+    (save)="onSaveCategory($event)"
+  />
+
+  <app-category-detail-modal
+    [isOpen]="isViewModalOpen()"
+    [category]="selectedCategory()"
+    (close)="isViewModalOpen.set(false)"
+  />
+
+  <app-confirm-dialog
+    [isOpen]="isDeleteModalOpen()"
+    title="Delete Category"
+    [message]="'Are you sure you want to delete category \'' + (selectedCategory()?.name || '') + '\'? Assets under this category may need reassigning.'"
+    confirmLabel="Delete Category"
+    [dangerous]="true"
+    (confirm)="onConfirmDelete()"
+    (cancel)="isDeleteModalOpen.set(false)"
+  />
+
+</div>

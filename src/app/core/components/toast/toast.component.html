@@ -1,0 +1,32 @@
+<!-- Global Toast Container — Positioned at Bottom Right Corner -->
+<div class="fixed bottom-6 right-6 z-[99999] flex flex-col-reverse items-end gap-3 pointer-events-none w-full max-w-[390px] px-4 sm:px-0">
+  @for (toast of toastService.toasts(); track toast.id) {
+    <div
+      class="toast-item pointer-events-auto flex items-center gap-3.5 px-4 py-3.5 rounded-xl bg-white text-slate-800 w-full border border-slate-200/80 shadow-[0_10px_25px_-5px_rgba(0,0,0,0.08),0_8px_10px_-6px_rgba(0,0,0,0.04)] transition-all duration-300">
+
+      <!-- Icon badge -->
+      <div
+        class="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
+        [ngClass]="getIconBadgeClasses(toast.type)">
+        <span class="material-symbols-outlined text-[20px]">
+          {{ getIcon(toast.type) }}
+        </span>
+      </div>
+
+      <!-- Toast Message -->
+      <p class="font-body-md text-[13.5px] text-slate-800 flex-1 leading-snug font-medium break-words">
+        {{ toast.message }}
+      </p>
+
+      <!-- Dismiss button -->
+      <button
+        type="button"
+        (click)="toastService.dismiss(toast.id)"
+        class="shrink-0 p-1.5 rounded-lg hover:bg-slate-100 transition-colors text-slate-400 hover:text-slate-700 cursor-pointer flex items-center justify-center"
+        aria-label="Close notification">
+        <span class="material-symbols-outlined text-[18px]">close</span>
+      </button>
+
+    </div>
+  }
+</div>

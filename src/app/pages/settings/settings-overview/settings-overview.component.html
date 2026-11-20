@@ -1,0 +1,181 @@
+<div class="p-gutter sm:p-container-padding py-6 max-w-[1400px] mx-auto space-y-6">
+
+  <!-- Page Header -->
+  <app-page-header
+    [showBack]="false"
+    title="Settings"
+    subtitle="Configure system preferences and asset categories."
+  />
+
+  <!-- Settings Cards Grid -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+
+
+
+    <!-- Card 2: Notification Preferences -->
+    <div
+      (click)="onNavigate('/settings/notifications')"
+      class="group p-6 rounded-xl bg-surface-container-lowest border border-outline-variant hover:border-primary/50 shadow-xs hover:shadow-md transition-all cursor-pointer flex flex-col justify-between"
+    >
+      <div>
+        <div class="flex items-center justify-between gap-3 mb-4">
+          <div class="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center transition-colors group-hover:bg-primary group-hover:text-on-primary">
+            <span class="material-symbols-outlined text-[26px]">notifications_active</span>
+          </div>
+        </div>
+
+        <h3 class="font-headline-sm text-headline-sm text-on-surface font-semibold mb-1.5 group-hover:text-primary transition-colors">
+          Notification Preferences
+        </h3>
+        <p class="font-body-md text-body-md text-on-surface-variant line-clamp-2 mb-4">
+          Choose which notifications and alerts you want to receive.
+        </p>
+      </div>
+
+      <div class="pt-4 border-t border-outline-variant/60 flex items-center justify-between text-primary font-label-md text-label-md font-semibold">
+        <span>Configure Preferences</span>
+        <span class="material-symbols-outlined text-[18px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
+      </div>
+    </div>
+
+    <!-- Card 3: Notification Sound -->
+    <div
+      (click)="onNavigate('/settings/notification-sound')"
+      class="group p-6 rounded-xl bg-surface-container-lowest border border-outline-variant hover:border-primary/50 shadow-xs hover:shadow-md transition-all cursor-pointer flex flex-col justify-between"
+    >
+      <div>
+        <div class="flex items-center justify-between gap-3 mb-4">
+          <div class="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center transition-colors group-hover:bg-primary group-hover:text-on-primary">
+            <span class="material-symbols-outlined text-[26px]">volume_up</span>
+          </div>
+        </div>
+
+        <h3 class="font-headline-sm text-headline-sm text-on-surface font-semibold mb-1.5 group-hover:text-primary transition-colors">
+          Notification Sound
+        </h3>
+        <p class="font-body-md text-body-md text-on-surface-variant line-clamp-2 mb-4">
+          Choose the sound played when a new notification arrives.
+        </p>
+      </div>
+
+      <div class="pt-4 border-t border-outline-variant/60 flex items-center justify-between text-primary font-label-md text-label-md font-semibold">
+        <span>Select Sound</span>
+        <span class="material-symbols-outlined text-[18px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
+      </div>
+    </div>
+
+    <!-- Card 3: Asset Categories -->
+    <div
+      (click)="onNavigate('/settings/categories')"
+      class="group p-6 rounded-xl bg-surface-container-lowest border border-outline-variant hover:border-primary/50 shadow-xs hover:shadow-md transition-all cursor-pointer flex flex-col justify-between"
+    >
+      <div>
+        <div class="flex items-center justify-between gap-3 mb-4">
+          <div class="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center transition-colors group-hover:bg-primary group-hover:text-on-primary">
+            <span class="material-symbols-outlined text-[26px]">category</span>
+          </div>
+          <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-surface-container-high text-on-surface border border-outline-variant">
+            {{ categoryService.totalCategories() }} Categories
+          </span>
+        </div>
+
+        <h3 class="font-headline-sm text-headline-sm text-on-surface font-semibold mb-1.5 group-hover:text-primary transition-colors">
+          Asset Categories
+        </h3>
+        <p class="font-body-md text-body-md text-on-surface-variant line-clamp-2 mb-4">
+          Manage asset types and equipment classifications across the organization.
+        </p>
+      </div>
+
+      <div class="pt-4 border-t border-outline-variant/60 flex items-center justify-between text-primary font-label-md text-label-md font-semibold">
+        <span>Manage Categories</span>
+        <span class="material-symbols-outlined text-[18px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
+      </div>
+    </div>
+
+    <!-- Card: Departments -->
+    <div
+      (click)="onNavigate('/settings/departments')"
+      class="group p-6 rounded-xl bg-surface-container-lowest border border-outline-variant hover:border-primary/50 shadow-xs hover:shadow-md transition-all cursor-pointer flex flex-col justify-between"
+    >
+      <div>
+        <div class="flex items-center justify-between gap-3 mb-4">
+          <div class="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center transition-colors group-hover:bg-primary group-hover:text-on-primary">
+            <span class="material-symbols-outlined text-[26px]">domain</span>
+          </div>
+          <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-surface-container-high text-on-surface border border-outline-variant">
+            {{ departmentService.departments().length }} Departments
+          </span>
+        </div>
+
+        <h3 class="font-headline-sm text-headline-sm text-on-surface font-semibold mb-1.5 group-hover:text-primary transition-colors">
+          Departments
+        </h3>
+        <p class="font-body-md text-body-md text-on-surface-variant line-clamp-2 mb-4">
+          Manage departments used across employees and assignments.
+        </p>
+      </div>
+
+      <div class="pt-4 border-t border-outline-variant/60 flex items-center justify-between text-primary font-label-md text-label-md font-semibold">
+        <span>Manage Departments</span>
+        <span class="material-symbols-outlined text-[18px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
+      </div>
+    </div>
+
+    <!-- Card 4: Manage Users -->
+    <div
+      (click)="onNavigate('/settings/manage-users')"
+      class="group p-6 rounded-xl bg-surface-container-lowest border border-outline-variant hover:border-primary/50 shadow-xs hover:shadow-md transition-all cursor-pointer flex flex-col justify-between"
+    >
+      <div>
+        <div class="flex items-center justify-between gap-3 mb-4">
+          <div class="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center transition-colors group-hover:bg-primary group-hover:text-on-primary">
+            <span class="material-symbols-outlined text-[26px]">admin_panel_settings</span>
+          </div>
+        </div>
+
+        <h3 class="font-headline-sm text-headline-sm text-on-surface font-semibold mb-1.5 group-hover:text-primary transition-colors">
+          Manage Users
+        </h3>
+        <p class="font-body-md text-body-md text-on-surface-variant line-clamp-2 mb-4">
+          Create Manager or Technician accounts with system access.
+        </p>
+      </div>
+
+      <div class="pt-4 border-t border-outline-variant/60 flex items-center justify-between text-primary font-label-md text-label-md font-semibold">
+        <span>Manage Users</span>
+        <span class="material-symbols-outlined text-[18px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
+      </div>
+    </div>
+
+    <!-- Card 5: Company Information — Admin only -->
+    @if (isAdmin()) {
+      <div
+        (click)="onNavigate('/settings/company-information')"
+        class="group p-6 rounded-xl bg-surface-container-lowest border border-outline-variant hover:border-primary/50 shadow-xs hover:shadow-md transition-all cursor-pointer flex flex-col justify-between"
+      >
+        <div>
+          <div class="flex items-center justify-between gap-3 mb-4">
+            <div class="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center transition-colors group-hover:bg-primary group-hover:text-on-primary">
+              <span class="material-symbols-outlined text-[26px]">corporate_fare</span>
+            </div>
+          </div>
+
+          <h3 class="font-headline-sm text-headline-sm text-on-surface font-semibold mb-1.5 group-hover:text-primary transition-colors">
+            Company Information
+          </h3>
+          <p class="font-body-md text-body-md text-on-surface-variant line-clamp-2 mb-4">
+            Set company name, logo, contact details, currency, timezone, and date format.
+          </p>
+        </div>
+
+        <div class="pt-4 border-t border-outline-variant/60 flex items-center justify-between text-primary font-label-md text-label-md font-semibold">
+          <span>Edit Company Info</span>
+          <span class="material-symbols-outlined text-[18px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
+        </div>
+      </div>
+    }
+
+  </div>
+
+</div>

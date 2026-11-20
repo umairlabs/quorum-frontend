@@ -1,0 +1,266 @@
+@if (!canViewFinancials()) {
+  <!-- Restricted Employee / Unauthorized View -->
+  <div class="flex flex-col items-center justify-center py-16 px-4 text-center border border-dashed border-outline-variant rounded-2xl bg-surface-container-low">
+    <div class="w-14 h-14 rounded-2xl bg-surface-container-high flex items-center justify-center text-on-surface-variant mb-4">
+      <span class="material-symbols-outlined text-[28px]">lock</span>
+    </div>
+    <h3 class="font-headline-sm text-on-surface font-semibold text-base">Financial Access Restricted</h3>
+    <p class="font-body-sm text-on-surface-variant max-w-md mt-1 text-xs">
+      Asset financial valuation, salvage parameters, and depreciation schedules are restricted to Operations Managers and System Administrators.
+    </p>
+  </div>
+} @else {
+  <!-- Authorized Depreciation View -->
+  <div class="space-y-6">
+    <!-- Header with Action -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-1">
+      <div>
+        <h3 class="font-headline-sm text-on-surface font-semibold text-lg flex items-center gap-2">
+          <span>Depreciation & Valuation</span>
+          @if (hasData()) {
+            <span
+              class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold border {{ statusBadgeClass() }}"
+            >
+              <span class="w-1.5 h-1.5 rounded-full bg-current mr-1.5 opacity-80"></span>
+              {{ statusLabel() }}
+            </span>
+          }
+        </h3>
+        <p class="font-body-sm text-on-surface-variant text-xs mt-0.5">
+          Straight-line accounting schedule tracking the reduction in asset book value over time.
+        </p>
+      </div>
+
+      @if (canEdit()) {
+        <button
+          type="button"
+          (click)="onEdit()"
+          class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-surface hover:bg-surface-container border border-outline-variant text-on-surface rounded-xl text-xs font-semibold shadow-xs transition-all shrink-0"
+        >
+          <span class="material-symbols-outlined text-[16px] text-primary">edit</span>
+          <span>Edit Depreciation</span>
+        </button>
+      }
+    </div>
+
+    @if (!hasData()) {
+      <!-- Unconfigured / Initial State -->
+      <div class="p-5 bg-amber-500/10 border border-amber-500/30 rounded-2xl flex items-start gap-4">
+        <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-700 dark:text-amber-300 flex items-center justify-center shrink-0">
+          <span class="material-symbols-outlined text-[22px]">warning</span>
+        </div>
+        <div class="flex-1">
+          <h4 class="font-label-md text-amber-900 dark:text-amber-200 font-semibold text-sm">
+            Depreciation Schedule Pending Configuration
+          </h4>
+          <p class="font-body-sm text-amber-800 dark:text-amber-300/90 text-xs mt-1">
+            Useful life or salvage value is not yet configured for this asset. Configure depreciation parameters to generate the automated accounting schedule.
+          </p>
+          @if (canEdit()) {
+            <div class="mt-3">
+              <button
+                type="button"
+                (click)="onEdit()"
+                class="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-semibold transition-colors"
+              >
+                <span class="material-symbols-outlined text-[16px]">tune</span>
+                <span>Configure Depreciation</span>
+              </button>
+            </div>
+          }
+        </div>
+      </div>
+    } @else if (depreciation(); as dep) {
+      <!-- ─── 6 SUMMARY CARDS GRID ─────────────────────────────────────────── -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">
+        <!-- 1. Purchase Price -->
+        <div class="bg-surface-container-low border border-outline-variant rounded-xl p-3.5 md:p-4 flex flex-col justify-between shadow-xs">
+          <div class="flex items-center justify-between gap-2 text-on-surface-variant mb-2">
+            <span class="text-[11px] font-medium uppercase tracking-wider text-on-surface-variant">Purchase Price</span>
+            <div class="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+              <span class="material-symbols-outlined text-[16px]">shopping_bag</span>
+            </div>
+          </div>
+          <div>
+            <span class="font-headline-sm font-bold text-on-surface text-base md:text-lg block font-mono">
+              {{ dep.purchasePrice | appCurrency }}
+            </span>
+            <span class="text-[11px] text-on-surface-variant block mt-0.5">Original asset cost</span>
+          </div>
+        </div>
+
+        <!-- 2. Salvage Value -->
+        <div class="bg-surface-container-low border border-outline-variant rounded-xl p-3.5 md:p-4 flex flex-col justify-between shadow-xs">
+          <div class="flex items-center justify-between gap-2 text-on-surface-variant mb-2">
+            <span class="text-[11px] font-medium uppercase tracking-wider text-on-surface-variant">Salvage Value</span>
+            <div class="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+              <span class="material-symbols-outlined text-[16px]">savings</span>
+            </div>
+          </div>
+          <div>
+            <span class="font-headline-sm font-bold text-on-surface text-base md:text-lg block font-mono">
+              {{ dep.salvageValue | appCurrency }}
+            </span>
+            <span class="text-[11px] text-on-surface-variant block mt-0.5">Residual value</span>
+          </div>
+        </div>
+
+        <!-- 3. Useful Life -->
+        <div class="bg-surface-container-low border border-outline-variant rounded-xl p-3.5 md:p-4 flex flex-col justify-between shadow-xs">
+          <div class="flex items-center justify-between gap-2 text-on-surface-variant mb-2">
+            <span class="text-[11px] font-medium uppercase tracking-wider text-on-surface-variant">Useful Life</span>
+            <div class="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+              <span class="material-symbols-outlined text-[16px]">hourglass_top</span>
+            </div>
+          </div>
+          <div>
+            <span class="font-headline-sm font-bold text-on-surface text-base md:text-lg block">
+              {{ dep.usefulLifeYears }} <span class="text-xs font-medium text-on-surface-variant">Years</span>
+            </span>
+            <span class="text-[11px] text-on-surface-variant block mt-0.5">Straight-line period</span>
+          </div>
+        </div>
+
+        <!-- 4. Annual Depreciation -->
+        <div class="bg-surface-container-low border border-outline-variant rounded-xl p-3.5 md:p-4 flex flex-col justify-between shadow-xs">
+          <div class="flex items-center justify-between gap-2 text-on-surface-variant mb-2">
+            <span class="text-[11px] font-medium uppercase tracking-wider text-on-surface-variant">Annual Deprec.</span>
+            <div class="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+              <span class="material-symbols-outlined text-[16px]">trending_down</span>
+            </div>
+          </div>
+          <div>
+            <span class="font-headline-sm font-bold text-on-surface text-base md:text-lg block font-mono">
+              {{ dep.annualDepreciation | appCurrency }}
+            </span>
+            <span class="text-[11px] text-on-surface-variant block mt-0.5">
+              {{ dep.monthlyDepreciation | appCurrency }}/mo
+            </span>
+          </div>
+        </div>
+
+        <!-- 5. Current Book Value -->
+        <div class="bg-surface-container-low border border-outline-variant rounded-xl p-3.5 md:p-4 flex flex-col justify-between shadow-xs">
+          <div class="flex items-center justify-between gap-2 text-on-surface-variant mb-2">
+            <span class="text-[11px] font-medium uppercase tracking-wider text-on-surface-variant">Current Book Value</span>
+            <div class="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+              <span class="material-symbols-outlined text-[16px]">account_balance_wallet</span>
+            </div>
+          </div>
+          <div>
+            <span class="font-headline-sm font-bold text-on-surface text-base md:text-lg block font-mono">
+              {{ dep.currentBookValue | appCurrency }}
+            </span>
+            <div class="w-full bg-surface-container-highest h-1.5 rounded-full mt-2 overflow-hidden">
+              <div
+                class="bg-primary h-full rounded-full transition-all duration-500"
+                [style.width.%]="percentDepreciated()"
+              ></div>
+            </div>
+            <span class="text-[10px] text-on-surface-variant block mt-1">
+              {{ percentDepreciated() }}% Depreciated
+            </span>
+          </div>
+        </div>
+
+        <!-- 6. Depreciation Status -->
+        <div class="bg-surface-container-low border border-outline-variant rounded-xl p-3.5 md:p-4 flex flex-col justify-between shadow-xs">
+          <div class="flex items-center justify-between gap-2 text-on-surface-variant mb-2">
+            <span class="text-[11px] font-medium uppercase tracking-wider text-on-surface-variant">Status</span>
+            <div class="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+              <span class="material-symbols-outlined text-[16px]">verified</span>
+            </div>
+          </div>
+          <div>
+            <span
+              class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold border {{ statusBadgeClass() }}"
+            >
+              {{ statusLabel() }}
+            </span>
+            <span class="text-[11px] text-on-surface-variant block mt-1 font-mono">
+              Acc: {{ dep.accumulatedDepreciation | appCurrency }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Formula & Method Information Banner -->
+      <div class="p-3.5 bg-primary/5 border border-primary/20 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+        <div class="flex items-center gap-2 text-on-surface">
+          <span class="material-symbols-outlined text-primary text-[18px]">info</span>
+          <div>
+            <strong class="font-semibold text-on-surface">Straight-Line Method:</strong>
+            <span class="text-on-surface-variant ml-1">
+              Annual Depreciation = (Purchase Price − Salvage Value) ÷ Useful Life Years
+            </span>
+          </div>
+        </div>
+        <div class="text-[11px] text-on-surface-variant font-mono bg-surface px-2.5 py-1 rounded-lg border border-outline-variant/50 self-start sm:self-auto">
+          ({{ dep.purchasePrice | appCurrency }} − {{ dep.salvageValue | appCurrency }}) ÷ {{ dep.usefulLifeYears }} = <strong>{{ dep.annualDepreciation | appCurrency }}/yr</strong>
+        </div>
+      </div>
+
+      <!-- ─── DEPRECIATION SCHEDULE TABLE ─────────────────────────────────── -->
+      <div class="border border-outline-variant rounded-2xl overflow-hidden bg-surface shadow-xs">
+        <div class="px-5 py-3.5 bg-surface-container-low border-b border-outline-variant flex items-center justify-between">
+          <h4 class="font-label-md text-on-surface font-semibold text-xs uppercase tracking-wider flex items-center gap-2">
+            <span class="material-symbols-outlined text-[16px] text-on-surface-variant">table_chart</span>
+            <span>Yearly Depreciation Schedule</span>
+          </h4>
+          <span class="text-[11px] text-on-surface-variant font-medium">
+            {{ dep.depreciationSchedule.length }} Periods Total
+          </span>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-surface-container-low/60 border-b border-outline-variant text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">
+                <th class="py-3 px-4">Period</th>
+                <th class="py-3 px-4 text-right">Opening Book Value</th>
+                <th class="py-3 px-4 text-right">Depreciation Expense</th>
+                <th class="py-3 px-4 text-right">Accumulated Depreciation</th>
+                <th class="py-3 px-4 text-right">Closing Book Value</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-outline-variant/40 text-xs">
+              @for (row of dep.depreciationSchedule; track row.year) {
+                <tr class="hover:bg-surface-container-lowest transition-colors">
+                  <td class="py-3.5 px-4 font-semibold text-on-surface flex items-center gap-2">
+                    <span class="w-6 h-6 rounded-lg bg-surface-container flex items-center justify-center text-[11px] font-bold text-on-surface-variant">
+                      {{ row.year }}
+                    </span>
+                    <span>{{ row.yearLabel }}</span>
+                  </td>
+                  <td class="py-3.5 px-4 text-right font-mono text-on-surface">
+                    {{ row.openingBookValue | appCurrency }}
+                  </td>
+                  <td class="py-3.5 px-4 text-right font-mono font-medium text-rose-600 dark:text-rose-400">
+                    −{{ row.depreciationExpense | appCurrency }}
+                  </td>
+                  <td class="py-3.5 px-4 text-right font-mono text-on-surface-variant">
+                    {{ row.accumulatedDepreciation | appCurrency }}
+                  </td>
+                  <td class="py-3.5 px-4 text-right font-mono font-bold text-on-surface">
+                    {{ row.closingBookValue | appCurrency }}
+                  </td>
+                </tr>
+              }
+            </tbody>
+            <tfoot>
+              <tr class="bg-surface-container-low border-t border-outline-variant font-semibold text-xs">
+                <td class="py-3 px-4 text-on-surface">Final Salvage Value</td>
+                <td colspan="3" class="py-3 px-4 text-right text-on-surface-variant text-[11px]">
+                  Schedule completes at Salvage Baseline:
+                </td>
+                <td class="py-3 px-4 text-right font-mono text-primary font-bold">
+                  {{ dep.salvageValue | appCurrency }}
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    }
+  </div>
+}

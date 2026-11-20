@@ -1,0 +1,217 @@
+<div class="max-w-[1440px] mx-auto p-gutter sm:p-container-padding">
+
+  <!-- Page Header -->
+  <div class="mb-8">
+    <app-page-header [showBack]="false" title="Maintenance Management"
+      subtitle="Track and manage asset repairs, servicing, and maintenance activities."
+      [actionLabel]="canCreate() ? 'New Maintenance Request' : ''" actionIcon="add" (actionClick)="onNewRequest()" />
+  </div>
+
+  <!-- Summary Cards -->
+  <div class="mb-6">
+    <app-maintenance-stats [stats]="maintenanceService.computedStats()" />
+  </div>
+
+  <!-- Filters Bar -->
+  <div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-4 mb-6 shadow-sm">
+    <div class="flex flex-col lg:flex-row gap-3 items-start lg:items-center">
+
+      <!-- Search -->
+      <div class="w-full lg:w-80 xl:w-96 shrink-0">
+        <app-search-input [value]="maintenanceService.searchQuery()"
+          placeholder="Search by Request ID, Asset ID, or Technician..."
+          (valueChange)="maintenanceService.setSearchQuery($event)" />
+      </div>
+
+      <!-- Dropdowns using app-select -->
+      <div class="flex flex-wrap items-center gap-3 flex-1">
+
+        <!-- Status Filter -->
+        <div class="w-40">
+          <app-select
+            [options]="statusOptions"
+            [value]="maintenanceService.selectedStatus() || ''"
+            placeholder="All Statuses"
+            (selectionChange)="onStatusSelect($event)"
+          />
+        </div>
+
+        <!-- Priority Filter -->
+        <div class="w-40">
+          <app-select
+            [options]="priorityOptions"
+            [value]="maintenanceService.selectedPriority() || ''"
+            placeholder="All Priorities"
+            (selectionChange)="onPrioritySelect($event)"
+          />
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Clear Filters -->
+    @if (hasActiveFilters()) {
+    <div class="mt-3 pt-3 border-t border-outline-variant">
+      <button (click)="clearFilters()"
+        class="font-label-sm text-label-sm text-primary hover:underline flex items-center gap-1">
+        <span class="material-symbols-outlined text-[14px]">close</span>
+        Clear Filters
+      </button>
+    </div>
+    }
+  </div>
+
+  <!-- Loading State -->
+  @if (maintenanceService.loading()) {
+  <div class="flex items-center justify-center py-20">
+    <div class="flex flex-col items-center gap-3">
+      <div class="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+      <p class="font-body-md text-body-md text-on-surface-variant">Loading maintenance requests...</p>
+    </div>
+  </div>
+  }
+
+  <!-- Error State -->
+  @if (!maintenanceService.loading() && maintenanceService.errorMessage()) {
+  <div class="bg-error-container/20 border border-error/30 rounded-lg p-4 mb-6 flex items-center gap-3">
+    <span class="material-symbols-outlined text-error text-[20px]">error</span>
+    <p class="font-body-md text-body-md text-error">{{ maintenanceService.errorMessage() }}</p>
+  </div>
+  }
+
+  <!-- Data Table -->
+  @if (!maintenanceService.loading() && maintenanceService.totalFilteredCount() > 0) {
+
+  <app-data-table [data]="maintenanceService.paginatedRequests()" [columns]="maintenanceColumns"
+    [pagination]="paginationConfig" [trackByFn]="maintenanceTrackBy" [getRowClass]="getMaintenanceRowClass"
+    tableClass="min-w-[850px]"
+    [paginationWrapperClass]="'flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3'">
+    <ng-template #cellTemplate let-request let-column="column">
+
+      @switch (column.key) {
+
+      @case ('requestId') {
+      {{ request.displayId || request.requestId }}
+      }
+
+      @case ('asset') {
+      <div class="flex items-center gap-2">
+        <span class="material-symbols-outlined text-[18px] text-on-surface-variant">{{ request.assetIcon || 'devices'
+          }}</span>
+        <div>
+          <div class="font-label-md whitespace-nowrap">{{ request.assetName }}</div>
+          <div class="text-on-surface-variant text-[10px]">{{ request.serialNumber }}</div>
+        </div>
+      </div>
+      }
+
+      @case ('issue') {
+      <div class="max-w-[200px] truncate text-on-surface-variant" [title]="request.componentOrIssueType">
+        {{ request.componentOrIssueType }}
+      </div>
+      }
+
+      @case ('priority') {
+      <app-status-badge [status]="request.priority" />
+      }
+
+      @case ('status') {
+      <app-status-badge [status]="request.status" />
+      }
+
+      @case ('createdAt') {
+      <div class="text-on-surface-variant text-body-sm whitespace-nowrap">
+        {{ request.createdAt | date:'shortDate' }}
+      </div>
+      }
+
+      @case ('actions') {
+      <div class="flex items-center justify-center w-full relative">
+
+        @if (isTechnicianRole()) {
+        <button (click)="onViewRequest(request)"
+          class="p-1 hover:bg-surface-container-high text-on-surface-variant hover:text-primary rounded transition-colors"
+          title="View Ticket Details">
+          <span class="material-symbols-outlined text-[18px]">visibility</span>
+        </button>
+        <button (click)="onUpdateWork(request)"
+          class="p-1 hover:bg-surface-container-high text-on-surface-variant hover:text-primary rounded transition-colors"
+          title="Update Maintenance Work">
+          <span class="material-symbols-outlined text-[18px]">build</span>
+        </button>
+        } @else {
+        <!-- Three dots trigger -->
+        <button (click)="toggleActionMenu($event, request.id)"
+          class="p-1.5 hover:bg-surface-container-high rounded-lg transition-colors text-on-surface-variant"
+          [ngClass]="{ 'bg-surface-container-high text-primary': activeMenuRequestId() === request.id }"
+          title="Actions">
+          <span class="material-symbols-outlined text-[20px]">more_vert</span>
+        </button>
+
+        <!-- Dropdown -->
+        @if (activeMenuRequestId() === request.id) {
+        <div
+          class="absolute right-0 top-full mt-1 w-44 bg-surface-container-lowest border border-outline-variant rounded-lg shadow-xl py-1 z-50 text-left"
+          (click)="$event.stopPropagation()">
+
+          <button (click)="onViewRequest(request); closeActionMenu()"
+            class="w-full px-3 py-2 font-body-sm text-body-sm text-on-surface hover:bg-surface-container-low flex items-center gap-2.5 transition-colors">
+            <span class="material-symbols-outlined text-[17px] text-on-surface-variant">visibility</span>
+            View
+          </button>
+
+          @if (canEdit()) {
+          <button (click)="onEditRequest(request); closeActionMenu()"
+            class="w-full px-3 py-2 font-body-sm text-body-sm text-on-surface hover:bg-surface-container-low flex items-center gap-2.5 transition-colors">
+            <span class="material-symbols-outlined text-[17px] text-on-surface-variant">edit</span>
+            Edit
+          </button>
+          }
+
+          @if (canDelete()) {
+          <div class="border-t border-outline-variant/40 my-0.5"></div>
+          <button (click)="onDeleteRequest(request); closeActionMenu()"
+            class="w-full px-3 py-2 font-body-sm text-body-sm text-error hover:bg-error/5 flex items-center gap-2.5 transition-colors">
+            <span class="material-symbols-outlined text-[17px]">delete</span>
+            Delete
+          </button>
+          }
+
+        </div>
+        }
+        }
+      </div>
+      }
+
+      }
+
+    </ng-template>
+  </app-data-table>
+
+  }
+
+  <!-- Empty State -->
+  @if (!maintenanceService.loading() && maintenanceService.totalFilteredCount() === 0 &&
+  !maintenanceService.errorMessage()) {
+  <div class="mt-8">
+    <app-empty-state icon="build_circle" title="No maintenance requests found"
+      description="We couldn't find any maintenance requests matching your current filters. Try adjusting your search or create a new request."
+      [actionLabel]="hasActiveFilters() ? 'Clear Filters' : ''" (actionClick)="clearFilters()" />
+  </div>
+  }
+
+</div>
+
+<!-- Detail Drawer -->
+<app-maintenance-detail-drawer [request]="selectedRequest()" [isOpen]="isDrawerOpen()" (close)="closeDrawer()"
+  (editRequest)="onEditRequest($event)" (statusUpdated)="onStatusUpdated()" />
+
+<!-- Create / Edit Form Modal -->
+<app-maintenance-form [isOpen]="isFormOpen()" [editRequest]="editingRequest()"
+  [preselectedAssetId]="preselectedAssetId()" (close)="closeForm()" (saved)="onFormSaved()" />
+
+<!-- Delete Confirm Dialog -->
+<app-confirm-dialog [isOpen]="!!pendingDeleteRequest()" title="Delete Maintenance Request" [message]="pendingDeleteRequest()
+    ? 'Are you sure you want to delete request ' + pendingDeleteRequest()!.requestId + '? This action cannot be undone.'
+    : ''" confirmLabel="Delete" cancelLabel="Cancel" [dangerous]="true" (confirm)="onConfirmDelete()"
+  (cancel)="onCancelDelete()" />

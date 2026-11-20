@@ -1,0 +1,26 @@
+<div class="flex flex-col gap-1.5 sm:gap-2">
+  <!-- Top Row: Title, then on mobile actions wrap below; on sm+ side by side -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 w-full">
+    <h1 class="font-headline-sm text-headline-sm font-bold text-on-surface">{{ title() }}</h1>
+
+    <!-- Actions -->
+    <div class="flex items-center gap-2 sm:gap-3 shrink-0">
+      @if (actionLabel()) {
+        <button
+          class="h-9 px-3.5 sm:px-4 rounded-lg font-label-md text-label-md bg-primary text-on-primary hover:bg-primary/90 transition-colors flex items-center gap-1.5 sm:gap-2 shrink-0 shadow-xs"
+          (click)="onActionClick()"
+        >
+          <span class="material-symbols-outlined text-[18px]">{{ actionIcon() }}</span>
+          <span>{{ actionLabel() }}</span>
+        </button>
+      }
+      <!-- Slot for custom right-side actions -->
+      <ng-content select="[pageActions]" />
+    </div>
+  </div>
+
+  <!-- Bottom Row: Subtitle (spanning full width below) -->
+  @if (subtitle()) {
+    <p class="font-body-sm text-body-sm text-on-surface-variant">{{ subtitle() }}</p>
+  }
+</div>

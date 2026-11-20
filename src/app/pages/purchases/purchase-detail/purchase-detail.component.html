@@ -1,0 +1,229 @@
+
+<div class="page-container p-6 flex flex-col gap-6 max-w-[1440px] mx-auto">
+
+  @if (loading()) {
+    <div class="flex items-center justify-center py-20">
+      <div class="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+    </div>
+  }
+
+  @if (purchase(); as p) {
+
+    <!-- Header Section -->
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-6 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-sm">
+      <div class="flex items-center gap-5">
+        <div class="w-14 h-14 bg-primary/10 rounded-xl flex items-center justify-center shrink-0 border border-primary/20">
+          <span class="material-symbols-outlined text-[28px] text-primary">receipt_long</span>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <button
+              (click)="goBack()"
+              class="md:hidden p-1.5 -ml-1.5 rounded-full hover:bg-surface-container-high text-on-surface-variant hover:text-primary transition-colors flex items-center justify-center shrink-0"
+              title="Go back"
+            >
+              <span class="material-symbols-outlined text-[22px]">arrow_back</span>
+            </button>
+            <h1 class="text-headline-md font-headline-md text-on-surface">{{ p.displayId || p.purchaseNumber }}</h1>
+          </div>
+          <p class="text-body-md font-body-md text-on-surface-variant mt-0.5">
+            {{ getAssetName(p.asset) }} &middot; {{ getSupplierCompany(p.supplier) }}
+          </p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 no-print">
+        <button
+          (click)="onExportPdf()"
+          class="h-9 px-3.5 rounded-md border border-outline-variant text-on-surface hover:bg-surface-container-low font-label-md text-label-md flex items-center gap-2"
+          title="Export as PDF"
+        >
+          <span class="material-symbols-outlined text-[18px] text-error">picture_as_pdf</span>
+          Export PDF
+        </button>
+        <button (click)="goBack()" class="btn btn-outlined border-outline text-on-surface-variant hover:bg-surface-container-low px-4 py-2 rounded-md font-label-md text-label-md flex items-center gap-2">
+          <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+          Back
+        </button>
+      </div>
+    </div>
+
+    <!-- Summary Amounts Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-5 flex items-center gap-4">
+        <div class="bg-surface-container-low p-3 rounded-full flex items-center justify-center border border-outline-variant">
+          <span class="material-symbols-outlined text-[24px] text-on-surface-variant">account_balance_wallet</span>
+        </div>
+        <div>
+          <div class="text-body-sm font-body-sm text-on-surface-variant">Total Cost</div>
+          <div class="text-title-lg font-bold text-on-surface mt-0.5">{{ p.totalAmount | appCurrency }}</div>
+        </div>
+      </div>
+      <div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-5 flex items-center gap-4">
+        <div class="bg-primary/10 p-3 rounded-full flex items-center justify-center border border-primary/20">
+          <span class="material-symbols-outlined text-[24px] text-primary">inventory_2</span>
+        </div>
+        <div>
+          <div class="text-body-sm font-body-sm text-on-surface-variant">Units Procured</div>
+          <div class="text-title-lg font-bold text-on-surface mt-0.5">{{ p.quantity }} unit(s)</div>
+        </div>
+      </div>
+      <div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-5 flex items-center gap-4">
+        <div class="bg-surface-container-low p-3 rounded-full flex items-center justify-center border border-outline-variant">
+          <span class="material-symbols-outlined text-[24px] text-on-surface-variant">sell</span>
+        </div>
+        <div>
+          <div class="text-body-sm font-body-sm text-on-surface-variant">Unit Price</div>
+          <div class="text-title-lg font-bold text-on-surface mt-0.5">{{ p.purchasePrice | appCurrency }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Two-column layout -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+      <!-- Acquisition Information Card -->
+      <div class="bg-surface-container-lowest border border-outline-variant rounded-lg shadow-sm">
+        <div class="border-b border-outline-variant px-6 py-4">
+          <h3 class="font-title-sm text-title-sm text-on-surface flex items-center gap-2">
+            <span class="material-symbols-outlined text-[18px] text-on-surface-variant">info</span>
+            Acquisition Information
+          </h3>
+        </div>
+        <div class="p-6 grid grid-cols-2 gap-5 text-body-md">
+          <div>
+            <span class="text-on-surface-variant block text-body-sm">Procured Asset</span>
+            <span class="font-semibold text-on-surface mt-1 block">{{ getAssetName(p.asset) }}</span>
+          </div>
+          <div>
+            <span class="text-on-surface-variant block text-body-sm">Linked Supplier</span>
+            <span class="font-semibold text-on-surface mt-1 block">{{ getSupplierCompany(p.supplier) }}</span>
+          </div>
+          <div>
+            <span class="text-on-surface-variant block text-body-sm">Acquisition Date</span>
+            <span class="text-on-surface font-semibold mt-1 block">{{ p.purchaseDate }}</span>
+          </div>
+          <div>
+            <span class="text-on-surface-variant block text-body-sm">Procurement Qty</span>
+            <span class="text-on-surface font-semibold mt-1 block">{{ p.quantity }} unit(s)</span>
+          </div>
+          <div>
+            <span class="text-on-surface-variant block text-body-sm">Unit Price</span>
+            <span class="text-on-surface font-semibold mt-1 block">{{ p.purchasePrice | appCurrency }}</span>
+          </div>
+          <div>
+            <span class="text-on-surface-variant block text-body-sm">Total Amount</span>
+            <span class="text-on-surface font-semibold mt-1 block">{{ p.totalAmount | appCurrency }}</span>
+          </div>
+          @if (p.paymentMethod || p.payment_method) {
+            <div class="col-span-2 pt-3 border-t border-outline-variant/60">
+              <span class="text-on-surface-variant block text-body-sm">Initial Payment Method</span>
+              <div class="mt-1 flex items-center gap-2 flex-wrap">
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-primary/10 text-primary font-semibold text-xs">
+                  <span class="material-symbols-outlined text-[16px]">{{ getPaymentMethodIcon(p) }}</span>
+                  <span>{{ formatMethod(p) }}</span>
+                </span>
+                @if (getPaymentDetailSummary(p)) {
+                  <span class="text-xs text-on-surface font-mono bg-surface-container-low border border-outline-variant/60 rounded px-2 py-1">
+                    {{ getPaymentDetailSummary(p) }}
+                  </span>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Payment Installments Card -->
+      <div class="bg-surface-container-lowest border border-outline-variant rounded-lg shadow-sm">
+        <div class="border-b border-outline-variant px-6 py-4 flex justify-between items-center">
+          <h3 class="font-title-sm text-title-sm text-on-surface flex items-center gap-2">
+            <span class="material-symbols-outlined text-[18px] text-on-surface-variant">payments</span>
+            Payment Invoices & History
+          </h3>
+        </div>
+        <div class="p-6">
+          @if (paymentLoading()) {
+            <div class="p-4 text-center text-on-surface-variant font-body-md flex items-center justify-center gap-1.5">
+              <span class="material-symbols-outlined animate-spin">sync</span> Loading payment records...
+            </div>
+          } @else if (payments().length === 0) {
+            <div class="p-6 text-center text-on-surface-variant font-body-md border border-dashed border-outline rounded-lg bg-surface-container-lowest">
+              No payment transactions allocated to this purchase yet.
+            </div>
+          } @else {
+            <div class="flex flex-col gap-3">
+              @for (pay of payments(); track pay.id; let idx = $index) {
+                <div class="bg-surface-container-low border border-outline-variant rounded-lg p-4 flex items-center justify-between hover:border-primary transition-colors">
+                  <div class="flex items-start gap-3">
+                    <div class="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0 mt-0.5">
+                      <span class="material-symbols-outlined text-[20px]">{{ getPaymentMethodIcon(pay) }}</span>
+                    </div>
+                    <div>
+                      <div class="flex items-center gap-2 flex-wrap">
+                        <span class="font-bold text-on-surface text-base">{{ pay.amount | appCurrency }}</span>
+                        <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full"
+                          [ngClass]="idx === 0 ? 'bg-primary/10 text-primary' : 'bg-secondary/10 text-secondary'">
+                          {{ idx === 0 ? 'Paid Price' : 'Remaining Price' }}
+                        </span>
+                      </div>
+                      <div class="text-body-sm text-on-surface-variant mt-0.5 flex items-center gap-1.5 flex-wrap">
+                        <span>{{ pay.paymentDate }}</span>
+                        <span>&bull;</span>
+                        <span class="font-medium text-on-surface">{{ formatMethod(pay) }}</span>
+                      </div>
+                      @if (getPaymentDetailSummary(pay)) {
+                        <div class="text-xs text-on-surface-variant font-mono bg-surface-container-lowest border border-outline-variant/60 rounded px-2 py-1 mt-1.5 inline-block">
+                          {{ getPaymentDetailSummary(pay) }}
+                        </div>
+                      }
+                      @if (pay.invoiceNumber) {
+                        <div class="text-xs text-primary font-semibold mt-1 flex items-center gap-1">
+                          <span class="material-symbols-outlined text-[14px]">receipt</span>
+                          <span>{{ pay.invoiceNumber }}</span>
+                        </div>
+                      }
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-2 shrink-0 ml-2">
+                    <button (click)="viewInvoicePDF(pay.id)" title="View Invoice" class="p-2 text-on-surface-variant hover:text-primary hover:bg-surface-container rounded-full transition-colors focus:outline-none">
+                      <span class="material-symbols-outlined text-[20px]">file_open</span>
+                    </button>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  }
+</div>
+
+<!-- ========================================== -->
+<!-- PDF INVOICE VIEWER                          -->
+<!-- ========================================== -->
+@if (invoicePdfBlobUrl()) {
+  <div class="fixed inset-0 bg-black/75 flex items-center justify-center z-[3000] p-4">
+    <div class="bg-surface-container-lowest w-full max-w-4xl h-[90vh] border border-outline-variant rounded-xl shadow-2xl flex flex-col overflow-hidden relative animate-scale-in">
+
+      <div class="flex justify-between items-center border-b border-outline-variant p-4 bg-surface-container-low">
+        <h3 class="font-title-md text-title-md text-on-surface flex items-center gap-2">
+          <span class="material-symbols-outlined text-primary">description</span>
+          Procurement Billing Invoice
+        </h3>
+        <div class="flex items-center gap-2">
+          <button (click)="downloadInvoiceFile()" class="btn bg-primary text-on-primary hover:bg-primary/90 px-4 py-2 rounded-md font-semibold text-body-sm flex items-center gap-1.5 focus:outline-none transition-colors">
+            <span class="material-symbols-outlined text-[18px]">download</span> Download Invoice
+          </button>
+          <button (click)="closeInvoicePDF()" class="text-on-surface-variant hover:text-on-surface p-1.5 rounded-full hover:bg-surface-container-high focus:outline-none">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="flex-1 bg-surface-container-high">
+        <iframe [src]="invoicePdfBlobUrlSafe()" class="w-full h-full border-none"></iframe>
+      </div>
+    </div>
+  </div>
+}

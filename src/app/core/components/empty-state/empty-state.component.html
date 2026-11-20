@@ -1,0 +1,23 @@
+<div class="bg-surface-container-lowest border border-outline-variant border-dashed rounded-lg p-12 flex flex-col items-center justify-center text-center">
+  <div class="w-16 h-16 rounded-full bg-surface-container-high flex items-center justify-center mb-4">
+    <span class="material-symbols-outlined text-[32px] text-on-surface-variant">{{ icon() }}</span>
+  </div>
+
+  <h3 class="font-headline-sm text-headline-sm text-on-surface mb-2">{{ title() }}</h3>
+
+  @if (description()) {
+    <p class="font-body-md text-body-md text-on-surface-variant mb-6 max-w-sm">{{ description() }}</p>
+  }
+
+  <!-- Slot for custom actions below the description -->
+  <ng-content />
+
+  @if (actionLabel()) {
+    <button
+      class="bg-primary text-on-primary font-label-md text-label-md px-4 py-2 rounded flex items-center gap-2 hover:bg-primary/90 transition-colors h-9 mt-2"
+      (click)="onActionClick()"
+    >
+      {{ actionLabel() }}
+    </button>
+  }
+</div>

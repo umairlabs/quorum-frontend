@@ -1,0 +1,228 @@
+<div class="max-w-[1440px] mx-auto p-gutter sm:p-container-padding">
+
+  <!-- Page Header -->
+  <div class="mb-8">
+    <app-page-header [showBack]="false" title="Employees" subtitle="Manage company employees, contact information, and departments.">
+      <div pageActions class="flex items-center gap-3">
+        <button
+          class="h-9 px-4 rounded font-label-md text-label-md bg-primary text-on-primary hover:bg-primary/90 transition-colors flex items-center gap-2 shrink-0 font-medium"
+          (click)="onAddEmployee()">
+          <span class="material-symbols-outlined text-[18px]">person_add</span>
+          Add Employee
+        </button>
+      </div>
+    </app-page-header>
+  </div>
+
+
+  <!-- Controls (Search & Filters) -->
+  <div
+    class="bg-surface-container-lowest border border-outline-variant rounded-lg p-4 mb-6 shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between">
+
+    <div class="w-full md:w-80 lg:w-96">
+      <app-search-input [value]="userService.searchQuery()" placeholder="Search employees by name or phone..."
+        (valueChange)="userService.setSearchQuery($event)" />
+    </div>
+
+    <div class="flex flex-wrap items-center gap-3 w-full md:w-auto justify-start md:justify-end">
+      <!-- Role Filter -->
+
+
+    </div>
+
+  </div>
+
+  <!-- Content Section -->
+  @if (userService.totalFilteredCount() > 0) {
+
+  <!-- Data Table -->
+  <div class="bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden shadow-sm">
+    <div class="overflow-x-auto">
+      <table class="w-full min-w-[700px] text-left border-collapse">
+        <thead>
+          <tr class="bg-surface-container-low border-b border-outline-variant h-12">
+            <th
+              class="px-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold whitespace-nowrap">
+              Employee Name</th>
+            <th
+              class="px-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold whitespace-nowrap">
+              Employee ID</th>
+            <th
+              class="px-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold whitespace-nowrap">
+              Phone Number</th>
+            <th
+              class="px-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold whitespace-nowrap">
+              Department</th>
+            <th
+              class="px-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold whitespace-nowrap hidden md:table-cell">
+              Joining Date</th>
+            <th
+              class="px-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold whitespace-nowrap text-center">
+              Actions</th>
+          </tr>
+        </thead>
+        <tbody class="font-body-sm text-body-sm text-on-surface divide-y divide-outline-variant">
+          @for (user of userService.paginatedUsers(); track user.id) {
+          <tr class="hover:bg-surface-container-lowest/50 h-14 transition-colors">
+            <!-- Employee Name -->
+            <td class="px-4 font-label-md">
+              <div class="flex items-center gap-3">
+                <div
+                  class="w-8 h-8 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center font-bold text-[11px] shrink-0 border border-outline-variant">
+                  {{ user.avatarInitials || (user.firstName ? user.firstName.charAt(0) : 'E') }}
+                </div>
+                <div class="font-medium text-on-surface">{{ user.fullName || (user.firstName + ' ' + user.lastName) }}
+                </div>
+              </div>
+            </td>
+
+            <!-- Employee ID -->
+            <td class="px-4">
+              <span class="font-mono text-primary text-[12px] font-semibold">{{ user.employeeId || '—' }}</span>
+            </td>
+
+            <!-- Phone Number -->
+            <td class="px-4 font-body-md text-on-surface">
+              {{ user.phoneNumber || '—' }}
+            </td>
+
+            <!-- Department -->
+            <td class="px-4 font-body-md text-on-surface">
+              {{ user.department || 'Not Assigned' }}
+            </td>
+
+            <!-- Joining Date -->
+            <td class="px-4 hidden md:table-cell text-on-surface-variant whitespace-nowrap">
+              {{ user.joiningDate || user.createdAt || '—' }}
+            </td>
+
+            <!-- Actions -->
+            <!-- Actions -->
+            <td class="px-4 text-center">
+              <div class="flex items-center justify-center gap-1 text-on-surface-variant w-full">
+
+                <button (click)="onViewUser(user)"
+                  class="p-1.5 hover:bg-surface-container-high rounded transition-colors" title="View User Details">
+                  <span class="material-symbols-outlined text-[18px]">visibility</span>
+                </button>
+
+                <button (click)="onEditUser(user)"
+                  class="p-1.5 hover:bg-surface-container-high rounded transition-colors" title="Edit User">
+                  <span class="material-symbols-outlined text-[18px]">edit</span>
+                </button>
+
+                <button (click)="onDeleteUser(user)"
+                  class="p-1.5 hover:bg-error-container/20 rounded transition-colors text-error" title="Delete User">
+                  <span class="material-symbols-outlined text-[18px]">delete</span>
+                </button>
+
+              </div>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="px-4 py-3 border-t border-outline-variant bg-surface-container-low sm:px-6">
+
+      <!-- Mobile pagination -->
+      <div class="flex sm:hidden items-center justify-between">
+        <p class="font-body-sm text-body-sm text-on-surface-variant">
+          Page <span class="font-medium text-on-surface">{{ userService.currentPage() }}</span>
+          of
+          <span class="font-medium text-on-surface">{{ userService.totalPages() }}</span>
+        </p>
+        <div class="flex items-center gap-2">
+          <button (click)="userService.setPage(userService.currentPage() - 1)"
+            [disabled]="userService.currentPage() === 1"
+            class="inline-flex items-center px-3 py-1.5 rounded-md border border-outline-variant bg-surface-container-lowest font-body-sm text-body-sm font-medium text-on-surface-variant hover:bg-surface-container-high disabled:opacity-50 disabled:cursor-not-allowed">
+            <span class="material-symbols-outlined text-[18px]">chevron_left</span>
+          </button>
+          <button (click)="userService.setPage(userService.currentPage() + 1)"
+            [disabled]="userService.currentPage() >= userService.totalPages()"
+            class="inline-flex items-center px-3 py-1.5 rounded-md border border-outline-variant bg-surface-container-lowest font-body-sm text-body-sm font-medium text-on-surface-variant hover:bg-surface-container-high disabled:opacity-50 disabled:cursor-not-allowed">
+            <span class="material-symbols-outlined text-[18px]">chevron_right</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Desktop pagination -->
+      <div class="hidden sm:flex sm:items-center sm:justify-between">
+        <p class="font-body-sm text-body-sm text-on-surface-variant">
+          Showing
+          <span class="font-medium text-on-surface">{{ (userService.currentPage() - 1) * userService.pageSize() + 1
+            }}</span>
+          to
+          <span class="font-medium text-on-surface">
+            {{ userService.currentPage() * userService.pageSize() > userService.totalFilteredCount()
+            ? userService.totalFilteredCount()
+            : userService.currentPage() * userService.pageSize() }}
+          </span>
+          of
+          <span class="font-medium text-on-surface">{{ userService.totalFilteredCount() }}</span>
+          results
+        </p>
+
+        <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+          <button (click)="userService.setPage(userService.currentPage() - 1)"
+            [disabled]="userService.currentPage() === 1"
+            class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-outline-variant bg-surface-container-lowest font-body-sm text-body-sm font-medium text-on-surface-variant hover:bg-surface-container-high disabled:opacity-50 disabled:cursor-not-allowed">
+            <span class="sr-only">Previous</span>
+            <span class="material-symbols-outlined text-[18px]">chevron_left</span>
+          </button>
+
+          <button (click)="userService.setPage(1)" [class.bg-primary-fixed]="userService.currentPage() === 1"
+            [class.text-on-primary-fixed]="userService.currentPage() === 1"
+            [class.bg-surface-container-lowest]="userService.currentPage() !== 1"
+            class="relative inline-flex items-center px-4 py-2 border border-outline-variant font-body-sm text-body-sm font-medium">
+            1
+          </button>
+
+          @if (userService.totalPages() > 1) {
+          <button (click)="userService.setPage(2)" [class.bg-primary-fixed]="userService.currentPage() === 2"
+            [class.text-on-primary-fixed]="userService.currentPage() === 2"
+            [class.bg-surface-container-lowest]="userService.currentPage() !== 2"
+            class="relative inline-flex items-center px-4 py-2 border border-outline-variant font-body-sm text-body-sm font-medium">
+            2
+          </button>
+          }
+
+          <button (click)="userService.setPage(userService.currentPage() + 1)"
+            [disabled]="userService.currentPage() >= userService.totalPages()"
+            class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-outline-variant bg-surface-container-lowest font-body-sm text-body-sm font-medium text-on-surface-variant hover:bg-surface-container-high disabled:opacity-50 disabled:cursor-not-allowed">
+            <span class="sr-only">Next</span>
+            <span class="material-symbols-outlined text-[18px]">chevron_right</span>
+          </button>
+        </nav>
+      </div>
+    </div>
+  </div>
+
+  } @else {
+
+  <!-- Empty State -->
+  <div class="mt-8">
+    <app-empty-state icon="person_off" title="No employees found"
+      description="We couldn't find any employees matching your search or filters. Try adjusting your search query or clear active filters."
+      actionLabel="Clear Filters" (actionClick)="clearFilters()" />
+  </div>
+
+  }
+
+</div>
+
+<!-- Add/Edit Employee Form Modal -->
+<app-employee-form-modal [isOpen]="isFormModalOpen()" [mode]="formModalMode()" [initialEmployee]="selectedUserForForm()"
+  (close)="onFormModalClose()" (save)="onFormModalSave($event)" />
+
+<!-- View User Detail Modal -->
+<app-user-detail-modal [isOpen]="isDetailModalOpen()" [user]="selectedUserForDetail()" (close)="onDetailModalClose()"
+  (edit)="onDetailModalEdit($event)" />
+
+<!-- Delete Confirmation Dialog -->
+<app-confirm-dialog [isOpen]="!!pendingDeleteUser()" title="Delete User Account"
+  [message]="pendingDeleteUser() ? 'Are you sure you want to remove user account for ' + (pendingDeleteUser()!.fullName || pendingDeleteUser()!.email) + '? This action cannot be undone.' : ''"
+  confirmLabel="Delete User" cancelLabel="Cancel" [dangerous]="true" (confirm)="onConfirmDeleteUser()"
+  (cancel)="onCancelDeleteUser()" />

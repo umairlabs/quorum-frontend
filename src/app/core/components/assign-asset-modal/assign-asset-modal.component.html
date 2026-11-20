@@ -1,0 +1,136 @@
+@if (isOpen()) {
+  <!-- Modal positioned to only cover main content area, not header or sidebar -->
+  <div class="fixed z-[9999]" style="top: 64px; left: 200px; right: 0; bottom: 0; position: fixed !important;">
+    
+    <!-- Modal Content Area - Styled like Edit Page -->
+    <div class="w-full h-full bg-surface overflow-y-auto">
+      <!-- Breadcrumb Header -->
+      <div class="bg-surface-container-lowest border-b border-outline-variant">
+        <div class="max-w-[1440px] mx-auto px-6 py-3">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2 text-sm">
+              <!-- Breadcrumb -->
+              <span class="text-on-surface-variant">AssetFlow</span>
+              <span class="material-symbols-outlined text-[16px] text-on-surface-variant">chevron_right</span>
+              <span class="text-on-surface-variant">Assets</span>
+              <span class="material-symbols-outlined text-[16px] text-on-surface-variant">chevron_right</span>
+              <span class="text-on-surface-variant">{{ assetName() }}</span>
+              <span class="material-symbols-outlined text-[16px] text-on-surface-variant">chevron_right</span>
+              <span class="text-on-surface font-medium">Assign</span>
+            </div>
+            <!-- Close Button -->
+            <button (click)="onClose()" class="p-1.5 rounded-md hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-colors">
+              <span class="material-symbols-outlined text-[20px]">close</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Page Content -->
+      <div class="max-w-[1440px] mx-auto px-6 py-8">
+        
+        <!-- Page Header -->
+        <div class="mb-6">
+          <h1 class="text-xl font-semibold text-on-surface mb-1">
+            Assign "{{ assetName() }}"
+          </h1>
+          <p class="text-sm text-on-surface-variant">
+            Assign this asset to an employee and update assignment details.
+          </p>
+        </div>
+
+        <form (ngSubmit)="onSubmit()" class="space-y-6">
+
+          <!-- Assignment Information Section -->
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-lg shadow-sm overflow-hidden">
+            <!-- Section Header -->
+            <div class="flex items-center gap-3 px-5 py-4 bg-surface-container-low border-b border-outline-variant">
+              <div class="w-8 h-8 rounded-md bg-primary/10 text-primary flex items-center justify-center">
+                <span class="material-symbols-outlined text-[18px]">assignment_ind</span>
+              </div>
+              <h3 class="text-base font-medium text-on-surface">Assignment Information</h3>
+            </div>
+
+            <!-- Section Content -->
+            <div class="p-5">
+              <div class="space-y-5">
+
+                <!-- Employee Name - Full Width -->
+                <div>
+                  <label class="block text-sm font-medium text-on-surface mb-1.5" for="employee_name">
+                    Employee Name <span class="text-error">*</span>
+                  </label>
+                  <input
+                    id="employee_name"
+                    type="text"
+                    [ngModel]="employeeName()"
+                    (ngModelChange)="employeeName.set($event)"
+                    name="employeeName"
+                    placeholder="e.g. John Doe"
+                    class="w-full h-10 px-3 text-sm bg-surface-container-lowest border border-outline-variant rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all placeholder:text-on-surface-variant/60"
+                  />
+                  @if (submitAttempted() && !employeeName().trim()) {
+                    <p class="text-error text-xs mt-1">Employee name is required.</p>
+                  }
+                </div>
+
+                <!-- Department & Assigned Date - Side by Side -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div>
+                    <label class="block text-sm font-medium text-on-surface mb-1.5" for="department">
+                      Department <span class="text-on-surface-variant text-xs font-normal">(Optional)</span>
+                    </label>
+                    <input
+                      id="department"
+                      type="text"
+                      [ngModel]="department()"
+                      (ngModelChange)="department.set($event)"
+                      name="department"
+                      placeholder="e.g. Engineering"
+                      class="w-full h-10 px-3 text-sm bg-surface-container-lowest border border-outline-variant rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all placeholder:text-on-surface-variant/60"
+                    />
+                  </div>
+
+                  <div>
+                    <label class="block text-sm font-medium text-on-surface mb-1.5" for="assigned_date">
+                      Assigned Date
+                    </label>
+                    <input
+                      id="assigned_date"
+                      type="date"
+                      min="1900-01-01"
+                      max="9999-12-31"
+                      [ngModel]="assignedDate()"
+                      (ngModelChange)="assignedDate.set($event)"
+                      name="assignedDate"
+                      class="w-full h-10 px-3 text-sm bg-surface-container-lowest border border-outline-variant rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+                    />
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+          <!-- Form Actions -->
+          <div class="flex items-center justify-end gap-3 pt-4">
+            <button 
+              type="button" 
+              (click)="onClose()"
+              class="px-5 py-2 text-sm font-medium text-on-surface border border-outline-variant rounded-md hover:bg-surface-container-low transition-colors"
+            >
+              Cancel
+            </button>
+            <button 
+              type="submit"
+              class="px-5 py-2 text-sm font-medium bg-primary text-on-primary rounded-md hover:bg-primary/90 transition-colors"
+            >
+              Assign Asset
+            </button>
+          </div>
+
+        </form>
+      </div>
+    </div>
+  </div>
+}

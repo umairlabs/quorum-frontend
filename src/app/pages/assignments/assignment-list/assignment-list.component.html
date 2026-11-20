@@ -1,0 +1,367 @@
+<div class="max-w-[1440px] mx-auto p-gutter sm:p-container-padding">
+
+  <!-- Page Header -->
+  <div class="mb-6">
+    <app-page-header
+      [showBack]="false"
+      title="Assignments"
+      subtitle="Track and manage physical asset assignments across your organization."
+    >
+      <div pageActions class="flex items-center gap-3">
+
+        <!-- New Assignment (Admin / Manager only) -->
+        @if (canManageAssignments()) {
+          <button
+            (click)="onNewAssignment()"
+            class="h-9 px-4 rounded-lg bg-primary text-on-primary font-label-md hover:bg-primary/90 transition-colors flex items-center gap-2 shrink-0">
+            <span class="material-symbols-outlined text-[18px]">add</span>
+            Assign Asset
+          </button>
+        }
+      </div>
+    </app-page-header>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-6">
+
+    <!-- Card 1: Total Active Assignments -->
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-xs p-3 flex flex-col gap-1">
+      <div class="flex items-center justify-between">
+        <span class="font-label-md text-label-md text-on-surface-variant">Total Active Assignments</span>
+        <div class="w-9 h-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+          <span class="material-symbols-outlined text-[20px]">assignment_turned_in</span>
+        </div>
+      </div>
+      <span class="font-headline-sm text-xl text-on-surface font-bold">
+        {{ assignmentService.totalActiveAssignments() }}
+      </span>
+    </div>
+
+    <!-- Card 2: Pending Returns -->
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-xs p-3 flex flex-col gap-1">
+      <div class="flex items-center justify-between">
+        <span class="font-label-md text-label-md text-on-surface-variant">Pending Returns</span>
+        <div class="w-9 h-9 rounded-lg bg-tertiary-fixed/20 text-on-tertiary-fixed-variant flex items-center justify-center shrink-0">
+          <span class="material-symbols-outlined text-[20px]">assignment_return</span>
+        </div>
+      </div>
+      <span class="font-headline-sm text-xl text-on-surface font-bold">
+        {{ assignmentService.pendingReturns() }}
+      </span>
+      <span class="font-label-sm text-label-sm text-on-surface-variant">Awaiting return date</span>
+    </div>
+
+    <!-- Card 3: Returned This Month -->
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-xs p-3 flex flex-col gap-1">
+      <div class="flex items-center justify-between">
+        <span class="font-label-md text-label-md text-on-surface-variant">Returned This Month</span>
+        <div class="w-9 h-9 rounded-lg bg-secondary-container/40 text-primary flex items-center justify-center shrink-0">
+          <span class="material-symbols-outlined text-[20px]">task_alt</span>
+        </div>
+      </div>
+      <span class="font-headline-sm text-xl text-on-surface font-bold">
+        {{ assignmentService.returnedThisMonth() }}
+      </span>
+    </div>
+
+  </div>
+
+  <!-- Controls / Filter Bar -->
+  <div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-4 mb-6 shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between">
+
+    <div class="w-full md:w-80 lg:w-96">
+      <app-search-input
+        [value]="assignmentService.searchQuery()"
+        placeholder="Search by Asset ID, Serial No, Asset Name, Employee..."
+        (valueChange)="assignmentService.setSearchQuery($event)"
+      />
+    </div>
+
+    <div class="flex flex-wrap items-center gap-3 w-full md:w-auto justify-start md:justify-end">
+
+      <!-- Status Filter -->
+      <div class="w-36">
+        <app-select
+          [options]="statusOptions"
+          [value]="assignmentService.statusFilter() || 'All'"
+          placeholder="Status: All"
+          (selectionChange)="onStatusSelect($event)"
+        />
+      </div>
+
+      <!-- Department Filter -->
+      <div class="w-44">
+        <app-select
+          [options]="departmentOptions"
+          [value]="assignmentService.selectedDepartment() || ''"
+          placeholder="Department: All"
+          (selectionChange)="onDepartmentSelect($event)"
+        />
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  @if (assignmentService.isLoading()) {
+    <div class="p-12 text-center bg-surface-container-lowest border border-outline-variant rounded-lg">
+      <span class="material-symbols-outlined text-[36px] text-primary animate-spin mb-2">progress_activity</span>
+      <p class="font-body-md text-on-surface-variant">Loading assignments from backend...</p>
+    </div>
+  } @else if (assignmentService.totalFilteredCount() > 0) {
+
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden shadow-sm">
+      <div class="overflow-x-auto">
+        <table class="w-full min-w-[1050px] text-left border-collapse">
+          <thead>
+            <tr class="bg-surface-container-low border-b border-outline-variant h-12">
+              <th class="px-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold whitespace-nowrap">Asset</th>
+              <th class="px-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold whitespace-nowrap">Serial Number</th>
+              <th class="px-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold whitespace-nowrap">Employee Name</th>
+              <th class="px-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold whitespace-nowrap">Employee ID</th>
+              <th class="px-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold whitespace-nowrap">Department</th>
+              <th class="px-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold whitespace-nowrap">Assigned Date</th>
+              <th class="px-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold whitespace-nowrap">Return Date</th>
+              <th class="px-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold whitespace-nowrap">Status</th>
+              <th class="px-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold whitespace-nowrap text-center">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="font-body-sm text-body-sm text-on-surface divide-y divide-outline-variant">
+            @for (assignment of assignmentService.paginatedAssignments(); track assignment.id) {
+              <tr class="hover:bg-surface-container-low/50 h-12 transition-colors">
+
+                <!-- Asset Column -->
+                <td class="px-4 whitespace-nowrap">
+                  <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-[18px] text-on-surface-variant shrink-0">{{ assignment.assetIcon || 'devices' }}</span>
+                    <div>
+                      <div class="font-label-md font-semibold whitespace-nowrap">{{ assignment.assetName }}</div>
+                      @if (assignment.displayId || assignment.assetId) {
+                        <div class="text-[10px] font-mono text-on-surface-variant">
+                          {{ assignment.displayId }}@if (assignment.displayId && assignment.assetId) { · }{{ assignment.assetId }}
+                        </div>
+                      }
+                    </div>
+                  </div>
+                </td>
+
+                <!-- Serial Number -->
+                <td class="px-4 font-mono text-body-sm text-on-surface font-medium whitespace-nowrap">
+                  {{ assignment.serialNumber || 'Not assigned yet' }}
+                </td>
+
+                <!-- Employee Name -->
+                <td class="px-4 whitespace-nowrap">
+                  <div class="flex items-center gap-2">
+                    <div class="w-6 h-6 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center font-bold text-[10px] shrink-0">
+                      {{ assignment.employeeInitials || 'AU' }}
+                    </div>
+                    <div class="font-label-md whitespace-nowrap">{{ assignment.employeeName }}</div>
+                  </div>
+                </td>
+
+                <!-- Employee ID -->
+                <td class="px-4 font-mono text-primary text-[12px] font-semibold whitespace-nowrap">
+                  {{ assignment.employeeId || '—' }}
+                </td>
+
+                <!-- Department -->
+                <td class="px-4 whitespace-nowrap">
+                  <div class="font-label-md">{{ assignment.department || '—' }}</div>
+                </td>
+
+                <!-- Assigned Date -->
+                <td class="px-4 text-on-surface-variant text-[11px] whitespace-nowrap">
+                  {{ assignment.assignedDate || '—' }}
+                </td>
+
+                <!-- Return Date -->
+                <td class="px-4 text-on-surface-variant text-[11px] whitespace-nowrap">
+                  @if (assignment.status === 'Returned') {
+                    <span class="text-success font-medium">{{ assignment.returnedDate || 'Returned' }}</span>
+                  } @else {
+                    {{ assignment.expectedReturnDate || '—' }}
+                  }
+                </td>
+
+                <!-- Status -->
+                <td class="px-4 whitespace-nowrap">
+                  <app-status-badge [status]="assignment.status" />
+                </td>
+
+                <!-- Actions -->
+                <td class="px-4 text-center whitespace-nowrap relative">
+                  <!-- Three dots trigger -->
+                  <button
+                    (click)="toggleMenu($event, assignment.id)"
+                    class="p-1.5 hover:bg-surface-container-high rounded-lg transition-colors text-on-surface-variant focus:outline-none"
+                    [class.bg-surface-container-high]="activeMenuId() === assignment.id"
+                    [class.text-primary]="activeMenuId() === assignment.id"
+                    title="Actions"
+                  >
+                    <span class="material-symbols-outlined text-[20px] block">more_vert</span>
+                  </button>
+
+                  <!-- Dropdown Menu -->
+                  @if (activeMenuId() === assignment.id) {
+                    <div
+                      class="absolute right-4 top-full mt-1 w-48 bg-surface-container-lowest border border-outline-variant rounded-xl shadow-xl py-1 z-50 text-left"
+                      (click)="$event.stopPropagation()"
+                    >
+                      <!-- View Action -->
+                      <button
+                        (click)="onViewAssignment(assignment); closeMenu()"
+                        class="w-full px-3.5 py-2 font-body-sm text-body-sm text-on-surface hover:bg-surface-container-low flex items-center gap-2.5 transition-colors"
+                      >
+                        <span class="material-symbols-outlined text-[18px] text-on-surface-variant">visibility</span>
+                        <span>View Details</span>
+                      </button>
+
+                      <!-- Transfer Action (Active & Admin/Manager only) -->
+                      @if (canManageAssignments() && assignment.status === 'Assigned') {
+                        <button
+                          (click)="onTransferAssignment(assignment)"
+                          class="w-full px-3.5 py-2 font-body-sm text-body-sm text-on-surface hover:bg-surface-container-low flex items-center gap-2.5 transition-colors"
+                        >
+                          <span class="material-symbols-outlined text-[18px] text-primary">swap_horiz</span>
+                          <span>Transfer Asset</span>
+                        </button>
+                      }
+
+                      <!-- Return Action (Active & Admin/Manager only) -->
+                      @if (canManageAssignments() && assignment.status === 'Assigned') {
+                        <button
+                          (click)="onReturnAssignment(assignment)"
+                          class="w-full px-3.5 py-2 font-body-sm text-body-sm text-on-surface hover:bg-surface-container-low flex items-center gap-2.5 transition-colors"
+                        >
+                          <span class="material-symbols-outlined text-[18px] text-tertiary">assignment_return</span>
+                          <span>Return Asset</span>
+                        </button>
+                      }
+
+                      <!-- Delete Action (Admin/Manager only) -->
+                      @if (canManageAssignments()) {
+                        <div class="border-t border-outline-variant/50 my-1"></div>
+                        <button
+                          (click)="onDelete(assignment)"
+                          class="w-full px-3.5 py-2 font-body-sm text-body-sm text-error hover:bg-error/10 flex items-center gap-2.5 transition-colors"
+                        >
+                          <span class="material-symbols-outlined text-[18px] text-error">delete</span>
+                          <span>Delete Record</span>
+                        </button>
+                      }
+                    </div>
+                  }
+                </td>
+
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div class="px-4 py-3 border-t border-outline-variant bg-surface-container-low sm:px-6">
+        <div class="hidden sm:flex sm:items-center sm:justify-between">
+          <p class="font-body-sm text-body-sm text-on-surface-variant">
+            Showing
+            <span class="font-medium text-on-surface">
+              {{ (assignmentService.currentPage() - 1) * assignmentService.pageSize() + 1 }}
+            </span>
+            to
+            <span class="font-medium text-on-surface">
+              {{ assignmentService.currentPage() * assignmentService.pageSize() > assignmentService.totalFilteredCount()
+                  ? assignmentService.totalFilteredCount()
+                  : assignmentService.currentPage() * assignmentService.pageSize() }}
+            </span>
+            of
+            <span class="font-medium text-on-surface">{{ assignmentService.totalFilteredCount() }}</span>
+            results
+          </p>
+
+          <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+            <button
+              (click)="assignmentService.setPage(assignmentService.currentPage() - 1)"
+              [disabled]="assignmentService.currentPage() === 1"
+              class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-outline-variant bg-surface-container-lowest font-body-sm text-body-sm text-on-surface-variant hover:bg-surface-container-high disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <span class="sr-only">Previous</span>
+              <span class="material-symbols-outlined text-[18px]">chevron_left</span>
+            </button>
+
+            <button
+              (click)="assignmentService.setPage(1)"
+              [class.bg-primary-fixed]="assignmentService.currentPage() === 1"
+              [class.text-on-primary-fixed]="assignmentService.currentPage() === 1"
+              [class.bg-surface-container-lowest]="assignmentService.currentPage() !== 1"
+              class="relative inline-flex items-center px-4 py-2 border border-outline-variant font-body-sm text-body-sm font-medium"
+            >
+              1
+            </button>
+
+            @if (assignmentService.totalPages() > 1) {
+              <button
+                (click)="assignmentService.setPage(2)"
+                [class.bg-primary-fixed]="assignmentService.currentPage() === 2"
+                [class.text-on-primary-fixed]="assignmentService.currentPage() === 2"
+                [class.bg-surface-container-lowest]="assignmentService.currentPage() !== 2"
+                class="relative inline-flex items-center px-4 py-2 border border-outline-variant font-body-sm text-body-sm font-medium"
+              >
+                2
+              </button>
+            }
+
+            <button
+              (click)="assignmentService.setPage(assignmentService.currentPage() + 1)"
+              [disabled]="assignmentService.currentPage() >= assignmentService.totalPages()"
+              class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-outline-variant bg-surface-container-lowest font-body-sm text-body-sm text-on-surface-variant hover:bg-surface-container-high disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <span class="sr-only">Next</span>
+              <span class="material-symbols-outlined text-[18px]">chevron_right</span>
+            </button>
+          </nav>
+        </div>
+      </div>
+    </div>
+
+  } @else {
+
+    <div class="mt-8">
+      <app-empty-state
+        icon="assignment"
+        title="No assignments found"
+        description="We couldn't find any assignments matching your filters. Try adjusting your search or create a new assignment."
+        actionLabel="Clear Filters"
+        (actionClick)="clearFilters()"
+      />
+    </div>
+
+  }
+
+</div>
+
+<!-- Return Confirm Dialog -->
+<app-confirm-dialog
+  [isOpen]="!!pendingReturnAssignment()"
+  title="Return Asset"
+  [message]="pendingReturnAssignment() ? 'Are you sure you want to return ' + pendingReturnAssignment()!.assetName + ' (' + pendingReturnAssignment()!.serialNumber + ')? This will release the asset unit back to available inventory.' : ''"
+  confirmLabel="Confirm Return"
+  cancelLabel="Cancel"
+  [dangerous]="false"
+  (confirm)="onConfirmReturn()"
+  (cancel)="onCancelReturn()"
+/>
+
+<!-- Delete Confirm Dialog -->
+<app-confirm-dialog
+  [isOpen]="!!pendingDeleteAssignment()"
+  title="Delete Assignment Record"
+  [message]="pendingDeleteAssignment() ? 'Are you sure you want to delete the assignment for ' + pendingDeleteAssignment()!.assetName + '? This action cannot be undone.' : ''"
+  confirmLabel="Delete"
+  cancelLabel="Cancel"
+  [dangerous]="true"
+  (confirm)="onConfirmDelete()"
+  (cancel)="onCancelDelete()"
+/>
+

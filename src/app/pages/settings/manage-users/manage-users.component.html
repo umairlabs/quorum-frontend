@@ -1,0 +1,199 @@
+<div class="max-w-[1440px] mx-auto p-gutter sm:p-container-padding">
+
+  <!-- Page Header -->
+  <div class="mb-8">
+    <app-page-header [showBack]="false" title="Manage Users" subtitle="Create and manage Manager and Technician accounts with system access.">
+      <div pageActions class="flex items-center gap-3">
+        <button
+          class="h-9 px-4 rounded font-label-md text-label-md bg-primary text-on-primary hover:bg-primary/90 transition-colors flex items-center gap-2 shrink-0 font-medium"
+          (click)="onAddUser()">
+          <span class="material-symbols-outlined text-[18px]">person_add</span>
+          Add User
+        </button>
+      </div>
+    </app-page-header>
+  </div>
+
+  <!-- Controls (Search) -->
+  <div
+    class="bg-surface-container-lowest border border-outline-variant rounded-lg p-4 mb-6 shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between">
+
+    <div class="w-full md:w-80 lg:w-96">
+      <app-search-input
+        [value]="searchQuery()"
+        placeholder="Search users by name or email..."
+        (valueChange)="searchQuery.set($event)" />
+    </div>
+
+  </div>
+
+  <!-- Content Section -->
+  @if (totalFilteredCount() > 0) {
+
+  <div class="bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden shadow-sm">
+    <div class="overflow-x-auto">
+      <table class="w-full min-w-[600px] text-left border-collapse">
+        <thead>
+          <tr class="bg-surface-container-low border-b border-outline-variant h-12">
+            <th class="px-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold whitespace-nowrap">Name</th>
+            <th class="px-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold whitespace-nowrap">Email</th>
+            <th class="px-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold whitespace-nowrap">Role</th>
+            <th class="px-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold whitespace-nowrap text-center w-48">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="font-body-sm text-body-sm text-on-surface divide-y divide-outline-variant">
+          @for (user of filteredUsers(); track user.id) {
+          <tr class="hover:bg-surface-container-lowest/50 h-14 transition-colors">
+            <td class="px-4 font-label-md">
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center font-bold text-[11px] shrink-0 border border-outline-variant">
+                  {{ user.avatarInitials || (user.firstName ? user.firstName.charAt(0) : 'U') }}
+                </div>
+                <div class="font-medium text-on-surface">{{ user.fullName || (user.firstName + ' ' + user.lastName) }}</div>
+              </div>
+            </td>
+
+            <td class="px-4 font-body-md text-on-surface">
+              {{ user.email }}
+            </td>
+
+            <td class="px-4">
+              <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs {{ getRoleBadgeClass(user.role) }}">
+                {{ getRoleDisplayName(user.role) }}
+              </span>
+            </td>
+
+            <td class="px-4 text-center w-48">
+              <div class="flex items-center justify-center gap-2 text-on-surface-variant w-full">
+
+                <button (click)="onEditUser(user)"
+                  class="px-2 py-1 hover:bg-surface-container-high rounded transition-colors text-label-sm font-label-sm font-medium flex items-center gap-1" title="Edit User">
+                  <span class="material-symbols-outlined text-[16px]">edit</span>
+                  Edit
+                </button>
+
+                <button (click)="onManagePermissions(user)"
+                  class="px-2 py-1 hover:bg-primary/10 text-primary rounded transition-colors text-label-sm font-label-sm font-semibold flex items-center gap-1" title="Manage Permissions">
+                  <span class="material-symbols-outlined text-[16px]">key</span>
+                  Permissions
+                </button>
+
+                <button (click)="onDeleteUser(user)"
+                  class="p-1 hover:bg-error-container/20 rounded transition-colors text-error" title="Delete User">
+                  <span class="material-symbols-outlined text-[16px]">delete</span>
+                </button>
+
+              </div>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  } @else {
+
+  <!-- Empty State -->
+  <div class="mt-8">
+    <app-empty-state icon="person_off" title="No users found"
+      description="We couldn't find any admin users matching your search. Try adjusting your search query or add a new user."
+      actionLabel="Clear Search" (actionClick)="clearFilters()" />
+  </div>
+
+  }
+
+</div>
+
+<!-- View User Detail Modal -->
+<app-modal
+  [isOpen]="isViewModalOpen()"
+  title="User Details"
+  maxWidth="max-w-md"
+  (close)="onViewModalClose()">
+  <div modalBody>
+    @if (selectedUserForView(); as u) {
+    <div class="space-y-5">
+
+      <!-- Avatar + Name + Role -->
+      <div class="flex items-center gap-4 pb-5 border-b border-outline-variant">
+        <div class="w-14 h-14 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center font-bold text-[16px] shrink-0 border border-outline-variant">
+          {{ u.avatarInitials || (u.firstName ? u.firstName.charAt(0) : 'U') }}
+        </div>
+        <div>
+          <p class="font-title-md text-title-md text-on-surface font-semibold">
+            {{ u.fullName || (u.firstName + ' ' + u.lastName) }}
+          </p>
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs mt-1 {{ getRoleBadgeClass(u.role) }}">
+            {{ getRoleDisplayName(u.role) }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Email -->
+      <div class="bg-surface-container-low p-4 rounded-lg border border-outline-variant/60">
+        <p class="font-label-sm text-label-sm text-on-surface-variant font-medium mb-1">Email Address</p>
+        <p class="font-body-md text-body-md text-on-surface font-semibold">{{ u.email }}</p>
+      </div>
+
+      <!-- Password -->
+      <div class="bg-surface-container-low p-4 rounded-lg border border-outline-variant/60">
+        <p class="font-label-sm text-label-sm text-on-surface-variant font-medium mb-1">Password</p>
+        <div class="flex items-center justify-between gap-2">
+          <span class="font-mono text-body-md text-on-surface font-semibold">
+            {{ showViewPassword() ? (u.plainPassword || '—') : (u.plainPassword ? '••••••••' : '—') }}
+          </span>
+          @if (u.plainPassword) {
+          <button type="button" (click)="showViewPassword.set(!showViewPassword())"
+            class="p-1 rounded hover:bg-surface-container-high transition-colors text-on-surface-variant"
+            [title]="showViewPassword() ? 'Hide password' : 'Show password'">
+            <span class="material-symbols-outlined text-[18px]">{{ showViewPassword() ? 'visibility_off' : 'visibility' }}</span>
+          </button>
+          }
+        </div>
+      </div>
+
+    </div>
+    }
+  </div>
+
+  <div modalFooter>
+    <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-outline-variant">
+      <button type="button" (click)="onViewModalClose()"
+        class="h-10 px-5 rounded-lg border border-outline-variant font-label-md text-label-md text-on-surface hover:bg-surface-container-low transition-colors font-medium cursor-pointer">
+        Close
+      </button>
+      <button type="button" (click)="onViewModalClose(); onEditUser(selectedUserForView()!)"
+        class="h-10 px-5 rounded-lg bg-primary text-on-primary font-label-md text-label-md hover:bg-primary/90 transition-colors flex items-center gap-1.5 font-medium cursor-pointer">
+        <span class="material-symbols-outlined text-[18px]">edit</span>
+        Edit
+      </button>
+    </div>
+  </div>
+</app-modal>
+
+<!-- Add/Edit User Form Modal -->
+<app-user-form-modal
+  [isOpen]="isFormModalOpen()"
+  [mode]="formModalMode()"
+  [initialUser]="selectedUserForForm()"
+  (close)="onFormClose()"
+  (save)="onFormSave($event)" />
+
+<!-- Delete Confirmation Dialog -->
+<app-confirm-dialog
+  [isOpen]="!!pendingDeleteUser()"
+  title="Delete User Account"
+  [message]="pendingDeleteUser() ? 'Are you sure you want to remove user account for ' + (pendingDeleteUser()!.fullName || pendingDeleteUser()!.email) + '? This action cannot be undone.' : ''"
+  confirmLabel="Delete User"
+  cancelLabel="Cancel"
+  [dangerous]="true"
+  (confirm)="onConfirmDeleteUser()"
+  (cancel)="onCancelDeleteUser()" />
+
+<!-- User Permissions Modal -->
+<app-user-permissions-modal
+  [isOpen]="isPermissionsModalOpen()"
+  [user]="selectedUserForPermissions()"
+  (close)="onPermissionsModalClose()"
+  (saved)="onPermissionsSaved($event)" />

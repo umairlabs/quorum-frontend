@@ -1,0 +1,580 @@
+
+<div class="page-container p-3 sm:p-6 flex flex-col gap-4 sm:gap-6 max-w-[1440px] mx-auto">
+  <!-- Header Section -->
+  <app-page-header [showBack]="false" title="Purchase Ledger" subtitle="Manage acquisitions, supplier installments, and auto-generated billing documentation.">
+    <div pageActions class="flex items-center gap-1.5 sm:gap-2">
+      @if (canCreatePurchase()) {
+        <button (click)="openAddSupplierModal()" class="btn btn-outlined border-outline text-primary hover:bg-surface-container-low px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-md font-label-sm sm:font-label-md text-xs sm:text-label-md flex items-center gap-1 sm:gap-2 shrink-0">
+          <span class="material-symbols-outlined text-[16px] sm:text-[18px]">person_add</span>
+          <span class="hidden xs:inline">Add</span> Supplier
+        </button>
+        <button (click)="navigateCreatePurchase()" class="btn bg-primary text-on-primary hover:bg-primary-container hover:text-on-primary-container px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-md font-label-sm sm:font-label-md text-xs sm:text-label-md flex items-center gap-1 sm:gap-2 shrink-0">
+          <span class="material-symbols-outlined text-[16px] sm:text-[18px]">add_shopping_cart</span>
+          <span class="hidden xs:inline">New</span> Purchase
+        </button>
+      }
+    </div>
+  </app-page-header>
+
+  <!-- Tabs Navigation -->
+  <div class="bg-surface-container-low border border-outline-variant rounded-xl p-1 flex gap-1 w-full overflow-x-auto scrollbar-none">
+    <button
+      (click)="setActiveTab('purchases')"
+      [class]="activeTab() === 'purchases'
+        ? 'flex-1 min-w-[100px] px-3 sm:px-5 py-2 rounded-lg bg-surface text-on-surface font-semibold text-xs sm:text-label-md shadow-sm border border-outline-variant/60 transition-all text-center whitespace-nowrap'
+        : 'flex-1 min-w-[100px] px-3 sm:px-5 py-2 rounded-lg text-on-surface-variant font-medium text-xs sm:text-label-md hover:text-on-surface transition-all text-center whitespace-nowrap'">
+      All Purchases
+    </button>
+    <button
+      (click)="setActiveTab('outstanding')"
+      [class]="activeTab() === 'outstanding'
+        ? 'flex-1 min-w-[125px] px-3 sm:px-5 py-2 rounded-lg bg-surface text-on-surface font-semibold text-xs sm:text-label-md shadow-sm border border-outline-variant/60 transition-all flex items-center justify-center gap-1.5 text-center whitespace-nowrap'
+        : 'flex-1 min-w-[125px] px-3 sm:px-5 py-2 rounded-lg text-on-surface-variant font-medium text-xs sm:text-label-md hover:text-on-surface transition-all flex items-center justify-center gap-1.5 text-center whitespace-nowrap'">
+      Outstanding Dues
+      @if (outstandingCount() > 0) {
+        <span class="bg-primary/10 text-primary text-[10px] sm:text-[11px] font-semibold px-2 py-0.5 rounded-full">
+          {{ outstandingCount() }}
+        </span>
+      }
+    </button>
+    <button
+      (click)="setActiveTab('suppliers')"
+      [class]="activeTab() === 'suppliers'
+        ? 'flex-1 min-w-[90px] px-3 sm:px-5 py-2 rounded-lg bg-surface text-on-surface font-semibold text-xs sm:text-label-md shadow-sm border border-outline-variant/60 transition-all text-center whitespace-nowrap'
+        : 'flex-1 min-w-[90px] px-3 sm:px-5 py-2 rounded-lg text-on-surface-variant font-medium text-xs sm:text-label-md hover:text-on-surface transition-all text-center whitespace-nowrap'">
+      Suppliers
+    </button>
+  </div>
+
+  <!-- Active Tab Content -->
+  @if (activeTab() === 'purchases') {
+    <!-- ALL PURCHASES TAB -->
+    <div class="flex flex-col gap-4">
+      <!-- Search and Filters Bar -->
+      <div class="flex flex-wrap gap-4 items-center justify-between bg-surface-container-lowest border border-outline-variant rounded-lg p-4">
+        <div class="flex items-center gap-2 bg-surface-container-low border border-outline rounded-md px-3 py-2 w-full max-w-sm">
+          <span class="material-symbols-outlined text-on-surface-variant text-[20px]">search</span>
+          <input type="text" [value]="searchQuery()" (input)="onSearchInput($event)" placeholder="Search PO #, asset or vendor..." class="bg-transparent border-none outline-none text-body-md font-body-md text-on-surface w-full">
+        </div>
+
+      </div>
+
+      <!-- Purchases List Table -->
+      <div class="bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden shadow-sm">
+        @if (isLoading()) {
+          <div class="p-8 text-center text-on-surface-variant flex items-center justify-center gap-2 font-body-md">
+            <span class="material-symbols-outlined animate-spin">sync</span> Loading purchases...
+          </div>
+        } @else if (purchases().length === 0) {
+          <div class="p-12 text-center text-on-surface-variant flex flex-col items-center gap-2">
+            <span class="material-symbols-outlined text-[48px]">receipt_long</span>
+            <p class="font-title-md text-title-md">No Purchases Recorded</p>
+            <p class="font-body-md text-body-md max-w-md">Record transaction orders to begin tracking asset acquisitions and invoices.</p>
+          </div>
+        } @else {
+          <div class="overflow-x-auto w-full">
+            <table class="w-full min-w-[800px] text-left border-collapse">
+              <thead>
+                <tr class="bg-surface-container-low border-b border-outline-variant h-12">
+                  <th class="px-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold whitespace-nowrap">PO Number</th>
+                  <th class="px-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold whitespace-nowrap">Asset</th>
+                  <th class="px-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold whitespace-nowrap">Supplier</th>
+                  <th class="px-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold whitespace-nowrap text-center">Qty</th>
+                  <th class="px-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold whitespace-nowrap">Unit Price</th>
+                  <th class="px-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold whitespace-nowrap">Total Price</th>
+                  <th class="px-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold whitespace-nowrap">Purchase Date</th>
+                  <th class="px-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold whitespace-nowrap"></th>
+                </tr>
+              </thead>
+              <tbody class="font-body-sm text-body-sm text-on-surface divide-y divide-outline-variant">
+                @for (p of purchases(); track p.id) {
+                  <tr class="hover:bg-surface-container-low/60 h-12 transition-colors align-middle">
+                    <td class="px-4 py-2 font-semibold text-primary whitespace-nowrap">{{ p.displayId || p.purchaseNumber }}</td>
+                    <td class="px-4 py-2 font-semibold text-on-surface whitespace-nowrap">{{ getAssetName(p.asset) }}</td>
+                    <td class="px-4 py-2 text-on-surface-variant whitespace-nowrap">{{ getSupplierCompany(p.supplier) }}</td>
+                    <td class="px-4 py-2 text-on-surface text-center">{{ p.quantity }}</td>
+                    <td class="px-4 py-2 text-on-surface font-semibold whitespace-nowrap">{{ p.purchasePrice | appCurrency }}</td>
+                    <td class="px-4 py-2 text-on-surface font-semibold whitespace-nowrap">{{ p.totalAmount | appCurrency }}</td>
+                    <td class="px-4 py-2 text-on-surface-variant whitespace-nowrap">{{ p.purchaseDate }}</td>
+                    <td class="px-4 py-2 text-right whitespace-nowrap">
+                      <button (click)="viewPurchaseDetail(p)" class="text-primary hover:text-primary-container inline-flex items-center font-semibold gap-1 focus:outline-none">
+                        Manage <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+                      </button>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  @if (activeTab() === 'outstanding') {
+    <!-- OUTSTANDING DUES TAB -->
+    <div class="flex flex-col gap-6">
+      <!-- Summary Statistics Widget Banner -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-5 flex items-center gap-4 hover:border-primary transition-all">
+          <div class="bg-error-container/40 text-error p-3 rounded-full flex items-center justify-center">
+            <span class="material-symbols-outlined text-[32px]">payments</span>
+          </div>
+          <div>
+            <div class="text-headline-sm font-headline-sm text-on-surface">{{ totalOutstanding() | appCurrency }}</div>
+            <div class="text-body-sm font-body-sm text-on-surface-variant mt-0.5">Total Outstanding Balance Owed</div>
+          </div>
+        </div>
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-5 flex items-center gap-4 hover:border-primary transition-all">
+          <div class="bg-tertiary-fixed/30 text-on-tertiary-fixed-variant p-3 rounded-full flex items-center justify-center">
+            <span class="material-symbols-outlined text-[32px]">pending_actions</span>
+          </div>
+          <div>
+            <div class="text-headline-sm font-headline-sm text-on-surface">{{ outstandingCount() }}</div>
+            <div class="text-body-sm font-body-sm text-on-surface-variant mt-0.5">Unpaid / Partially Paid Orders</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Outstanding Ledger Table -->
+      <div class="bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden shadow-sm">
+        @if (isLoading()) {
+          <div class="p-8 text-center text-on-surface-variant flex items-center justify-center gap-2 font-body-md">
+            <span class="material-symbols-outlined animate-spin">sync</span> Loading outstanding dues...
+          </div>
+        } @else if (outstandingPurchases().length === 0) {
+          <div class="p-12 text-center text-on-surface-variant flex flex-col items-center gap-2">
+            <span class="material-symbols-outlined text-[48px] text-primary">check_circle</span>
+            <p class="font-title-md text-title-md text-on-surface">No Outstanding Dues!</p>
+            <p class="font-body-md text-body-md max-w-md">All billing acquisitions have been fully resolved and processed.</p>
+          </div>
+        } @else {
+          <div class="overflow-x-auto w-full">
+            <table class="w-full min-w-[800px] text-left border-collapse">
+              <thead>
+                <tr class="bg-surface-container-low border-b border-outline-variant h-12">
+                  <th class="px-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold whitespace-nowrap">Company Name</th>
+                  <th class="px-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold whitespace-nowrap">Contact Person</th>
+                  <th class="px-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold whitespace-nowrap">Email Address</th>
+                  <th class="px-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold whitespace-nowrap">Phone Number</th>
+                  <th class="px-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold whitespace-nowrap text-center">Active Dues Count</th>
+                  <th class="px-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold whitespace-nowrap">Outstanding Balance</th>
+                  <th class="px-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold whitespace-nowrap"></th>
+                </tr>
+              </thead>
+              <tbody class="font-body-sm text-body-sm text-on-surface divide-y divide-outline-variant">
+                @for (item of outstandingPurchases(); track item.supplier.id) {
+                  <tr class="hover:bg-surface-container-low/60 h-12 transition-colors align-middle">
+                    <td class="px-4 py-2 font-semibold text-on-surface whitespace-nowrap">{{ item.supplier.company }}</td>
+                    <td class="px-4 py-2 text-on-surface whitespace-nowrap">{{ item.supplier.name || '—' }}</td>
+                    <td class="px-4 py-2 text-on-surface-variant whitespace-nowrap">{{ item.supplier.email || '—' }}</td>
+                    <td class="px-4 py-2 text-on-surface-variant whitespace-nowrap">{{ item.supplier.phone || '—' }}</td>
+                    <td class="px-4 py-2 text-center text-on-surface font-semibold">{{ item.activeDuesCount }}</td>
+                    <td class="px-4 py-2 font-bold whitespace-nowrap" [class.text-error]="item.outstandingBalance > 0" [class.text-primary]="item.outstandingBalance === 0">{{ item.outstandingBalance | appCurrency }}</td>
+                    <td class="px-4 py-2 text-right whitespace-nowrap">
+                      <div class="flex items-center justify-end gap-2">
+                        <button (click)="navigatePaySupplier(item.supplier.id)" class="p-1.5 rounded-full hover:bg-surface-container-high text-on-surface-variant hover:text-primary transition-colors" title="View Payment History">
+                          <span class="material-symbols-outlined text-[20px]">visibility</span>
+                        </button>
+                        @if (item.outstandingBalance > 0) {
+                          <button (click)="openSupplierPayModal(item)" class="btn bg-primary text-on-primary hover:bg-primary-container hover:text-on-primary-container px-3 py-1 rounded-md font-semibold text-[12px] flex items-center gap-1 focus:outline-none">
+                            <span class="material-symbols-outlined text-[15px]">credit_card</span> Pay
+                          </button>
+                        }
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  @if (activeTab() === 'suppliers') {
+    <!-- SUPPLIERS TAB -->
+    <div class="flex flex-col gap-4">
+      <div class="bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden shadow-sm">
+        @if (isLoadingSuppliers()) {
+          <div class="p-8 text-center text-on-surface-variant flex items-center justify-center gap-2 font-body-md">
+            <span class="material-symbols-outlined animate-spin">sync</span> Loading suppliers...
+          </div>
+        } @else if (suppliers().length === 0) {
+          <div class="p-12 text-center text-on-surface-variant flex flex-col items-center gap-2">
+            <span class="material-symbols-outlined text-[48px]">group</span>
+            <p class="font-title-md text-title-md text-on-surface">No Suppliers Registered</p>
+            <p class="font-body-md text-body-md max-w-md">Register vendors to track your procurement lines, spent, and invoices.</p>
+          </div>
+        } @else {
+          <div class="overflow-x-auto w-full">
+            <table class="w-full min-w-[850px] text-left border-collapse">
+              <thead>
+                <tr class="bg-surface-container-low border-b border-outline-variant h-12">
+                  <th class="px-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold whitespace-nowrap">Company Name</th>
+                  <th class="px-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold whitespace-nowrap">Contact Person</th>
+                  <th class="px-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold whitespace-nowrap">Email Address</th>
+                  <th class="px-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold whitespace-nowrap">Phone Number</th>
+                  <th class="px-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold whitespace-nowrap text-center">Orders</th>
+                  <th class="px-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold whitespace-nowrap">Total Spent</th>
+                  <th class="px-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold whitespace-nowrap text-center">Status</th>
+                  <th class="px-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold whitespace-nowrap"></th>
+                </tr>
+              </thead>
+              <tbody class="font-body-sm text-body-sm text-on-surface divide-y divide-outline-variant">
+                @for (s of suppliers(); track s.id) {
+                  <tr class="hover:bg-surface-container-low/60 h-12 transition-colors align-middle">
+                    <td class="px-4 py-2 font-semibold text-on-surface whitespace-nowrap">{{ s.company }}</td>
+                    <td class="px-4 py-2 text-on-surface whitespace-nowrap">{{ s.name || '—' }}</td>
+                    <td class="px-4 py-2 text-on-surface-variant whitespace-nowrap">{{ s.email || '—' }}</td>
+                    <td class="px-4 py-2 text-on-surface-variant whitespace-nowrap">{{ s.phone || '—' }}</td>
+                    <td class="px-4 py-2 text-center text-on-surface font-semibold">{{ s.totalPurchases || 0 }}</td>
+                    <td class="px-4 py-2 text-primary font-bold whitespace-nowrap">{{ (s.totalAmount || 0) | appCurrency }}</td>
+                    <td class="px-4 py-2 text-center align-middle whitespace-nowrap">
+                      <app-status-badge [status]="s.status" />
+                    </td>
+                    <td class="px-4 py-2 text-right whitespace-nowrap">
+                      <button (click)="openSupplierDetailModal(s)" class="text-primary hover:text-primary-container inline-flex items-center font-semibold gap-1 focus:outline-none">
+                        Ledger <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+                      </button>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </div>
+    </div>
+  }
+</div>
+
+<!-- ========================================== -->
+<!-- 2. MAKE PAYMENT MODAL                      -->
+<!-- ========================================== -->
+@if (activePaymentPurchase()) {
+  <div class="fixed inset-0 bg-black/60 flex items-center justify-center z-[2000] p-4">
+    <div class="bg-surface-container-lowest w-full max-w-md border border-outline-variant rounded-xl shadow-2xl p-6 relative animate-scale-in">
+      <h3 class="text-headline-sm font-headline-sm text-on-surface border-b border-outline-variant pb-3 mb-4">Record Installment Payment</h3>
+      
+      <form [formGroup]="paymentForm" (ngSubmit)="onSubmitPayment()" class="flex flex-col gap-4">
+        <div>
+          <span class="text-body-sm text-on-surface-variant block">Remaining Balance</span>
+          <span class="text-title-lg font-bold text-error block mt-0.5">{{ activePaymentPurchase()?.remainingAmount | appCurrency }}</span>
+        </div>
+
+        <div class="flex flex-col gap-1.5">
+          <label class="font-label-md text-label-md text-on-surface-variant">Payment Amount</label>
+          <input type="number" formControlName="amount" placeholder="0.00" step="0.01" class="bg-surface-container-low border border-outline rounded-md px-3.5 py-2 text-body-md text-on-surface outline-none focus:border-primary">
+          @if (paymentForm.get('amount')?.touched && paymentForm.get('amount')?.errors) {
+            <span class="text-xs text-error font-semibold">Enter a valid amount (maximum: {{ activePaymentPurchase()?.remainingAmount }})</span>
+          }
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div class="flex flex-col gap-1.5">
+            <label class="font-label-md text-label-md text-on-surface-variant">Payment Date</label>
+            <input type="date" formControlName="paymentDate" min="1900-01-01" max="9999-12-31" class="bg-surface-container-low border border-outline rounded-md px-3.5 py-2 text-body-md text-on-surface outline-none focus:border-primary">
+          </div>
+          <div class="flex flex-col gap-1.5">
+            <label class="font-label-md text-label-md text-on-surface-variant">Payment Method</label>
+            <app-select
+              [options]="purchasePaymentMethodOptions"
+              [value]="paymentForm.get('method')?.value"
+              (selectionChange)="onPurchasePaymentMethodSelect($event)"
+              placeholder="Select Payment Method" />
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-1.5">
+          <label class="font-label-md text-label-md text-on-surface-variant">Transaction Reference (Optional)</label>
+          <input type="text" formControlName="reference" placeholder="e.g. TXN-92841" class="bg-surface-container-low border border-outline rounded-md px-3.5 py-2 text-body-md text-on-surface outline-none focus:border-primary">
+        </div>
+
+        <div class="flex flex-col gap-1.5">
+          <label class="font-label-md text-label-md text-on-surface-variant">Internal Notes (Optional)</label>
+          <textarea formControlName="notes" rows="2" placeholder="Record reference info..." class="bg-surface-container-low border border-outline rounded-md px-3.5 py-2 text-body-md text-on-surface outline-none focus:border-primary resize-none"></textarea>
+        </div>
+
+        <div class="flex justify-end gap-2.5 mt-2 border-t border-outline-variant pt-4">
+          <button type="button" (click)="closePaymentModal()" class="px-4 py-2 border border-outline text-on-surface-variant hover:bg-surface-container-low rounded-md font-semibold text-body-md focus:outline-none">
+            Cancel
+          </button>
+          <button type="submit" [disabled]="paymentForm.invalid || isSubmittingPayment()" class="px-5 py-2 bg-primary text-on-primary hover:bg-primary-container hover:text-on-primary-container disabled:opacity-50 rounded-md font-semibold text-body-md flex items-center gap-1.5 focus:outline-none">
+            @if (isSubmittingPayment()) {
+              <span class="material-symbols-outlined animate-spin text-[18px]">sync</span>
+            } @else {
+              <span class="material-symbols-outlined text-[18px]">check</span>
+            }
+            Record Payment
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+
+<!-- ========================================== -->
+<!-- 3. ADD SUPPLIER MODAL                      -->
+<!-- ========================================== -->
+@if (isAddSupplierOpen()) {
+  <div class="fixed inset-0 bg-black/60 flex items-center justify-center z-[2000] p-4">
+    <div class="bg-surface-container-lowest w-full max-w-md border border-outline-variant rounded-xl shadow-2xl p-6 relative animate-scale-in">
+      <h3 class="text-headline-sm font-headline-sm text-on-surface border-b border-outline-variant pb-3 mb-4">Add New Supplier</h3>
+      
+      <form [formGroup]="supplierForm" (ngSubmit)="onSubmitSupplier()" class="flex flex-col gap-4">
+        <div class="flex flex-col gap-1.5">
+          <label class="font-label-md text-label-md text-on-surface-variant">Company Name</label>
+          <input type="text" formControlName="company" placeholder="e.g. Dell Inc." class="bg-surface-container-low border border-outline rounded-md px-3.5 py-2 text-body-md text-on-surface outline-none focus:border-primary">
+          @if (supplierForm.get('company')?.touched && supplierForm.get('company')?.errors?.['required']) {
+            <span class="text-xs text-error font-semibold">Company Name is required</span>
+          }
+        </div>
+
+        <div class="flex flex-col gap-1.5">
+          <label class="font-label-md text-label-md text-on-surface-variant">Contact Person Name</label>
+          <input type="text" formControlName="name" placeholder="Contact person..." class="bg-surface-container-low border border-outline rounded-md px-3.5 py-2 text-body-md text-on-surface outline-none focus:border-primary">
+        </div>
+
+        <div class="flex flex-col gap-1.5">
+          <label class="font-label-md text-label-md text-on-surface-variant">Email Address</label>
+          <input type="email" formControlName="email" placeholder="vendor@example.com" class="bg-surface-container-low border border-outline rounded-md px-3.5 py-2 text-body-md text-on-surface outline-none focus:border-primary">
+          @if (supplierForm.get('email')?.touched && supplierForm.get('email')?.errors?.['email']) {
+            <span class="text-xs text-error font-semibold">Enter a valid email address</span>
+          }
+        </div>
+
+        <div class="flex flex-col gap-1.5">
+          <label class="font-label-md text-label-md text-on-surface-variant">Phone Number</label>
+          <input type="text" formControlName="phone" placeholder="e.g. +92 300 1234567" class="bg-surface-container-low border border-outline rounded-md px-3.5 py-2 text-body-md text-on-surface outline-none focus:border-primary">
+        </div>
+
+        <div class="flex flex-col gap-1.5">
+          <label class="font-label-md text-label-md text-on-surface-variant">Address Location</label>
+          <textarea formControlName="address" rows="2" placeholder="Supplier corporate address..." class="bg-surface-container-low border border-outline rounded-md px-3.5 py-2 text-body-md text-on-surface outline-none focus:border-primary resize-none"></textarea>
+        </div>
+
+        <div class="flex justify-end gap-2.5 mt-2 border-t border-outline-variant pt-4">
+          <button type="button" (click)="closeAddSupplierModal()" class="px-4 py-2 border border-outline text-on-surface-variant hover:bg-surface-container-low rounded-md font-semibold text-body-md focus:outline-none">
+            Cancel
+          </button>
+          <button type="submit" [disabled]="supplierForm.invalid || isSubmittingSupplier()" class="px-5 py-2 bg-primary text-on-primary hover:bg-primary-container hover:text-on-primary-container disabled:opacity-50 rounded-md font-semibold text-body-md flex items-center gap-1.5 focus:outline-none">
+            @if (isSubmittingSupplier()) {
+              <span class="material-symbols-outlined animate-spin text-[18px]">sync</span>
+            } @else {
+              <span class="material-symbols-outlined text-[18px]">check</span>
+            }
+            Create Supplier
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+
+<!-- ========================================== -->
+<!-- 5. PDF INVOICE DRAWER / VIEWER             -->
+<!-- ========================================== -->
+@if (invoicePdfBlobUrl()) {
+  <div class="fixed inset-0 bg-black/75 flex items-center justify-center z-[3000] p-4">
+    <div class="bg-surface-container-lowest w-full max-w-4xl h-[90vh] border border-outline-variant rounded-xl shadow-2xl flex flex-col overflow-hidden relative animate-scale-in">
+      
+      <!-- Invoice Header -->
+      <div class="flex justify-between items-center border-b border-outline-variant p-4 bg-surface-container-low">
+        <h3 class="font-title-md text-title-md text-on-surface flex items-center gap-2">
+          <span class="material-symbols-outlined text-primary">description</span>
+          Procurement Billing Invoice
+        </h3>
+        <div class="flex items-center gap-2">
+          <button (click)="downloadInvoiceFile()" class="btn bg-primary text-on-primary hover:bg-primary/90 px-4 py-2 rounded-md font-semibold text-body-sm flex items-center gap-1.5 focus:outline-none transition-colors">
+            <span class="material-symbols-outlined text-[18px]">download</span> Download Invoice
+          </button>
+          <button (click)="closeInvoicePDF()" class="text-on-surface-variant hover:text-on-surface p-1.5 rounded-full hover:bg-surface-container-high focus:outline-none">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- PDF Frame View -->
+      <div class="flex-1 bg-surface-container-high">
+        <iframe [src]="invoicePdfBlobUrlSafe()" class="w-full h-full border-none"></iframe>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ========================================== -->
+<!-- 6. SUPPLIER PAY MODAL                      -->
+<!-- ========================================== -->
+@if (activeSupplierPay()) {
+  <div class="fixed inset-0 bg-black/60 flex items-center justify-center z-[2000] p-4">
+    <div class="bg-surface-container-lowest w-full max-w-md border border-outline-variant rounded-xl shadow-2xl p-6 relative animate-scale-in">
+
+      <!-- Header -->
+      <div class="flex items-center border-b border-outline-variant pb-3 mb-4">
+        <h3 class="text-headline-sm font-headline-sm text-on-surface">Record Payment</h3>
+      </div>
+
+      <!-- Supplier info + balance -->
+      <div class="mb-4 p-3 bg-surface-container-low rounded-lg flex items-center justify-between">
+        <div>
+          <p class="font-semibold text-on-surface text-body-md">{{ activeSupplierPay()?.supplier?.company }}</p>
+          <p class="text-body-sm text-on-surface-variant mt-0.5">{{ activeSupplierPay()?.supplier?.name || '' }}</p>
+        </div>
+        <div class="text-right">
+          <p class="text-body-sm text-on-surface-variant">Outstanding</p>
+          <p class="font-bold text-error text-title-sm">{{ activeSupplierPay()?.outstandingBalance | appCurrency }}</p>
+        </div>
+      </div>
+
+      <form [formGroup]="supplierPayForm" (ngSubmit)="onSubmitSupplierPay()" class="flex flex-col gap-4">
+
+        <!-- Payment Amount -->
+        <div class="flex flex-col gap-1.5">
+          <label class="font-label-md text-label-md text-on-surface-variant">Payment Amount <span class="text-error">*</span></label>
+          <input type="number" formControlName="amount" placeholder="0.00" step="0.01"
+            class="bg-surface-container-low border border-outline rounded-md px-3.5 py-2 text-body-md text-on-surface outline-none focus:border-primary" />
+          @if (supplierPayForm.get('amount')?.touched && supplierPayForm.get('amount')?.errors) {
+            <span class="text-xs text-error font-semibold">Enter a valid amount (max: {{ activeSupplierPay()?.outstandingBalance | appCurrency }})</span>
+          }
+        </div>
+
+        <!-- Payment Date + Payment Method -->
+        <div class="grid grid-cols-2 gap-4">
+          <div class="flex flex-col gap-1.5">
+            <label class="font-label-md text-label-md text-on-surface-variant">Payment Date <span class="text-error">*</span></label>
+            <input type="date" formControlName="paymentDate" min="1900-01-01" max="9999-12-31"
+              class="bg-surface-container-low border border-outline rounded-md px-3.5 py-2 text-body-md text-on-surface outline-none focus:border-primary" />
+          </div>
+          <div class="flex flex-col gap-1.5">
+            <label class="font-label-md text-label-md text-on-surface-variant">Payment Method <span class="text-error">*</span></label>
+            <app-select
+              [options]="supplierPayMethodOptions"
+              [value]="supplierPayForm.get('method')?.value"
+              (selectionChange)="onSupplierPayMethodSelect($event)"
+              placeholder="Select Payment Method" />
+          </div>
+        </div>
+
+        <!-- Bank Transfer Details -->
+        @if (supplierPayForm.get('method')?.value === 'BANK_TRANSFER') {
+          <div class="border border-outline-variant rounded-lg p-4 bg-surface-container-low space-y-3">
+            <p class="font-label-sm text-label-sm text-on-surface-variant font-semibold flex items-center gap-1.5">
+              <span class="material-symbols-outlined text-[16px] text-primary">account_balance</span>
+              Bank Transfer Details
+            </p>
+            <div class="grid grid-cols-2 gap-3">
+              <div class="flex flex-col gap-1">
+                <label class="font-label-sm text-[12px] text-on-surface-variant font-semibold">Bank Name <span class="text-error">*</span></label>
+                <input type="text" formControlName="bankName" placeholder="e.g. Meezan Bank, HBL, UBL"
+                  class="bg-surface-container-lowest border border-outline-variant rounded-lg px-3 h-9 text-body-sm text-on-surface outline-none focus:ring-2 focus:ring-primary" />
+              </div>
+              <div class="flex flex-col gap-1">
+                <label class="font-label-sm text-[12px] text-on-surface-variant font-semibold">Account / IBAN <span class="text-error">*</span></label>
+                <input type="text" formControlName="accountNumber" placeholder="e.g. PK36MEZN0001234567890101" maxlength="24"
+                  class="bg-surface-container-lowest border border-outline-variant rounded-lg px-3 h-9 text-body-sm text-on-surface outline-none focus:ring-2 focus:ring-primary font-mono uppercase" />
+              </div>
+            </div>
+            <div class="flex flex-col gap-1">
+              <label class="font-label-sm text-[12px] text-on-surface-variant font-semibold">Transaction Reference <span class="text-error">*</span></label>
+              <input type="text" formControlName="transactionReference" placeholder="e.g. FT260115009841" maxlength="50"
+                class="bg-surface-container-lowest border border-outline-variant rounded-lg px-3 h-9 text-body-sm text-on-surface outline-none focus:ring-2 focus:ring-primary font-mono" />
+            </div>
+          </div>
+        }
+
+        <!-- Cheque Details -->
+        @if (supplierPayForm.get('method')?.value === 'CHEQUE') {
+          <div class="border border-outline-variant rounded-lg p-4 bg-surface-container-low space-y-3">
+            <p class="font-label-sm text-label-sm text-on-surface-variant font-semibold flex items-center gap-1.5">
+              <span class="material-symbols-outlined text-[16px] text-primary">payments</span>
+              Cheque Details
+            </p>
+            <div class="grid grid-cols-2 gap-3">
+              <div class="flex flex-col gap-1">
+                <label class="font-label-sm text-[12px] text-on-surface-variant font-semibold">Bank Name <span class="text-error">*</span></label>
+                <input type="text" formControlName="bankName" placeholder="e.g. Meezan Bank, Allied Bank"
+                  class="bg-surface-container-lowest border border-outline-variant rounded-lg px-3 h-9 text-body-sm text-on-surface outline-none focus:ring-2 focus:ring-primary" />
+              </div>
+              <div class="flex flex-col gap-1">
+                <label class="font-label-sm text-[12px] text-on-surface-variant font-semibold">Cheque Number <span class="text-error">*</span></label>
+                <input type="text" formControlName="chequeNumber" placeholder="e.g. 00492817" maxlength="30"
+                  class="bg-surface-container-lowest border border-outline-variant rounded-lg px-3 h-9 text-body-sm text-on-surface outline-none focus:ring-2 focus:ring-primary font-mono" />
+              </div>
+            </div>
+            <div class="flex flex-col gap-1">
+              <label class="font-label-sm text-[12px] text-on-surface-variant font-semibold">Cheque Date <span class="text-error">*</span></label>
+              <input type="date" formControlName="chequeDate" min="1900-01-01" max="9999-12-31"
+                class="bg-surface-container-lowest border border-outline-variant rounded-lg px-3 h-9 text-body-sm text-on-surface outline-none focus:ring-2 focus:ring-primary" />
+            </div>
+          </div>
+        }
+
+        <!-- Mobile Wallet Details -->
+        @if (supplierPayForm.get('method')?.value === 'MOBILE_WALLET') {
+          <div class="border border-outline-variant rounded-lg p-4 bg-surface-container-low space-y-3">
+            <p class="font-label-sm text-label-sm text-on-surface-variant font-semibold flex items-center gap-1.5">
+              <span class="material-symbols-outlined text-[16px] text-primary">phone_android</span>
+              Mobile Wallet Details
+            </p>
+            <!-- Provider Toggle -->
+            <div class="grid grid-cols-2 gap-2">
+              <button type="button" (click)="supplierPayForm.patchValue({ walletProvider: 'JazzCash' })"
+                class="h-9 rounded-lg border flex items-center justify-center gap-1.5 font-semibold text-xs transition-all"
+                [ngClass]="supplierPayForm.get('walletProvider')?.value === 'JazzCash'
+                  ? 'border-primary bg-primary/10 text-primary ring-2 ring-primary/20'
+                  : 'border-outline-variant text-on-surface hover:bg-surface-container'">
+                <span class="w-2 h-2 rounded-full" [ngClass]="supplierPayForm.get('walletProvider')?.value === 'JazzCash' ? 'bg-primary' : 'bg-outline-variant'"></span>
+                JazzCash
+              </button>
+              <button type="button" (click)="supplierPayForm.patchValue({ walletProvider: 'Easypaisa' })"
+                class="h-9 rounded-lg border flex items-center justify-center gap-1.5 font-semibold text-xs transition-all"
+                [ngClass]="supplierPayForm.get('walletProvider')?.value === 'Easypaisa'
+                  ? 'border-primary bg-primary/10 text-primary ring-2 ring-primary/20'
+                  : 'border-outline-variant text-on-surface hover:bg-surface-container'">
+                <span class="w-2 h-2 rounded-full" [ngClass]="supplierPayForm.get('walletProvider')?.value === 'Easypaisa' ? 'bg-primary' : 'bg-outline-variant'"></span>
+                Easypaisa
+              </button>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div class="flex flex-col gap-1">
+                <label class="font-label-sm text-[12px] text-on-surface-variant font-semibold">Mobile Number <span class="text-error">*</span></label>
+                <input type="tel" formControlName="mobileNumber" placeholder="03001234567" maxlength="11"
+                  class="bg-surface-container-lowest border border-outline-variant rounded-lg px-3 h-9 text-body-sm text-on-surface outline-none focus:ring-2 focus:ring-primary font-mono" />
+              </div>
+              <div class="flex flex-col gap-1">
+                <label class="font-label-sm text-[12px] text-on-surface-variant font-semibold">Account Holder <span class="font-normal text-on-surface-variant">(Optional)</span></label>
+                <input type="text" formControlName="accountHolderName" placeholder="e.g. Muhammad Ali"
+                  class="bg-surface-container-lowest border border-outline-variant rounded-lg px-3 h-9 text-body-sm text-on-surface outline-none focus:ring-2 focus:ring-primary" />
+              </div>
+            </div>
+            <div class="flex flex-col gap-1">
+              <label class="font-label-sm text-[12px] text-on-surface-variant font-semibold">Transaction ID <span class="text-error">*</span></label>
+              <input type="text" formControlName="transactionId" placeholder="e.g. TID-982410842"
+                class="bg-surface-container-lowest border border-outline-variant rounded-lg px-3 h-9 text-body-sm text-on-surface outline-none focus:ring-2 focus:ring-primary font-mono" />
+            </div>
+          </div>
+        }
+
+        <!-- Actions -->
+        <div class="flex justify-end gap-2.5 mt-2 border-t border-outline-variant pt-4">
+          <button type="button" (click)="closeSupplierPayModal()"
+            class="px-4 py-2 border border-outline text-on-surface-variant hover:bg-surface-container-low rounded-md font-semibold text-body-md focus:outline-none">
+            Cancel
+          </button>
+          <button type="submit" [disabled]="supplierPayForm.invalid || isSubmittingSupplierPay()"
+            class="px-5 py-2 bg-primary text-on-primary hover:bg-primary/90 disabled:opacity-50 rounded-md font-semibold text-body-md flex items-center gap-1.5 focus:outline-none">
+            @if (isSubmittingSupplierPay()) {
+              <span class="material-symbols-outlined animate-spin text-[18px]">sync</span>
+            } @else {
+              <span class="material-symbols-outlined text-[18px]">check</span>
+            }
+            Record Payment
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+}

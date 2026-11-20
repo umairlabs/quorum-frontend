@@ -1,0 +1,169 @@
+<div class="p-gutter sm:p-container-padding py-6 max-w-[1400px] mx-auto space-y-6">
+
+  <!-- Page Header -->
+  <div class="flex items-center justify-between gap-4">
+    <div class="flex items-center gap-3">
+      <button
+        (click)="goBack()"
+        class="p-1.5 rounded-full hover:bg-surface-container-high text-on-surface-variant hover:text-primary transition-colors"
+        title="Go back">
+        <span class="material-symbols-outlined text-[22px]">arrow_back</span>
+      </button>
+      <div>
+        <h1 class="font-headline-md text-headline-md font-bold text-on-surface">Departments</h1>
+        <p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">
+          Manage departments used across employees and assignments.
+        </p>
+      </div>
+    </div>
+    <button
+      (click)="openAdd()"
+      class="h-9 px-4 rounded-lg font-label-md text-label-md bg-primary text-on-primary hover:bg-primary/90 transition-colors flex items-center gap-2 shadow-xs">
+      <span class="material-symbols-outlined text-[18px]">add</span>
+      Add Department
+    </button>
+  </div>
+
+  <!-- Department Count Badge -->
+  <div class="flex items-center gap-2">
+    <span class="px-3 py-1 rounded-full bg-surface-container-high text-on-surface font-label-sm text-label-sm border border-outline-variant">
+      {{ departmentService.departments().length }} department{{ departmentService.departments().length !== 1 ? 's' : '' }}
+    </span>
+  </div>
+
+  <!-- Empty State -->
+  @if (departmentService.departments().length === 0) {
+    <div class="bg-surface rounded-2xl border border-outline-variant p-12 flex flex-col items-center justify-center text-center">
+      <div class="w-16 h-16 rounded-full bg-surface-container-high flex items-center justify-center mb-4">
+        <span class="material-symbols-outlined text-[32px] text-on-surface-variant">domain</span>
+      </div>
+      <h3 class="font-title-md text-title-md font-bold text-on-surface">No departments yet</h3>
+      <p class="font-body-sm text-body-sm text-on-surface-variant mt-1 max-w-sm">
+        Add your first department to start organising employees and assignments.
+      </p>
+      <button
+        (click)="openAdd()"
+        class="mt-5 h-9 px-5 rounded-lg font-label-md bg-primary text-on-primary hover:bg-primary/90 transition-colors flex items-center gap-2">
+        <span class="material-symbols-outlined text-[18px]">add</span>
+        Add Department
+      </button>
+    </div>
+  }
+
+  <!-- Departments Grid -->
+  @if (departmentService.departments().length > 0) {
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      @for (dept of departmentService.departments(); track dept.id) {
+        <div class="group bg-surface-container-lowest border border-outline-variant rounded-xl p-5 shadow-xs hover:shadow-md hover:border-primary/40 transition-all flex flex-col gap-3">
+
+          <!-- Header -->
+          <div class="flex items-start justify-between gap-2">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                <span class="material-symbols-outlined text-[20px]">domain</span>
+              </div>
+              <div>
+                <h3 class="font-title-sm text-title-sm font-semibold text-on-surface group-hover:text-primary transition-colors">
+                  {{ dept.name }}
+                </h3>
+                @if (dept.code) {
+                  <span class="text-[11px] font-mono text-on-surface-variant">{{ dept.code }}</span>
+                }
+              </div>
+            </div>
+
+            <!-- Status badge -->
+            <span [class]="(dept.status || 'ACTIVE') === 'ACTIVE'
+              ? 'px-2 py-0.5 rounded-full text-[11px] font-semibold bg-success/10 text-success border border-success/20'
+              : 'px-2 py-0.5 rounded-full text-[11px] font-semibold bg-warning/10 text-warning border border-warning/20'">
+              {{ dept.status || 'ACTIVE' }}
+            </span>
+          </div>
+
+          <!-- Description -->
+          @if (dept.description) {
+            <p class="font-body-sm text-body-sm text-on-surface-variant line-clamp-2">
+              {{ dept.description }}
+            </p>
+          }
+
+          <!-- Footer: created date + actions -->
+          <div class="flex items-center justify-between pt-2 border-t border-outline-variant/50 mt-auto">
+            @if (dept.createdAt) {
+              <span class="text-[11px] text-on-surface-variant">{{ dept.createdAt }}</span>
+            } @else {
+              <span></span>
+            }
+            <div class="flex items-center gap-1">
+              <button
+                (click)="openEdit(dept)"
+                class="p-1.5 rounded-lg hover:bg-surface-container-high text-on-surface-variant hover:text-primary transition-colors"
+                title="Edit">
+                <span class="material-symbols-outlined text-[18px]">edit</span>
+              </button>
+              <button
+                (click)="confirmDelete(dept.id)"
+                class="p-1.5 rounded-lg hover:bg-error/10 text-on-surface-variant hover:text-error transition-colors"
+                title="Delete">
+                <span class="material-symbols-outlined text-[18px]">delete</span>
+              </button>
+            </div>
+          </div>
+
+        </div>
+      }
+    </div>
+  }
+
+</div>
+
+<!-- Add / Edit Modal -->
+<app-department-modal
+  [isOpen]="isAddModalOpen()"
+  [department]="editTarget()"
+  [title]="editTarget() ? 'Edit Department' : 'Add Department'"
+  (save)="onSaveDepartment($event)"
+  (close)="closeModal()"
+/>
+
+<!-- Delete Confirmation Modal -->
+@if (pendingDeleteId()) {
+  <div
+    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+    (click)="cancelDelete()">
+    <div
+      class="bg-surface rounded-2xl shadow-2xl w-full max-w-sm border border-outline-variant overflow-hidden"
+      (click)="$event.stopPropagation()">
+
+      <div class="flex items-center gap-3 px-6 py-4 border-b border-outline-variant">
+        <div class="w-10 h-10 rounded-xl bg-error/10 flex items-center justify-center shrink-0">
+          <span class="material-symbols-outlined text-[22px] text-error">delete</span>
+        </div>
+        <h2 class="text-title-md font-bold text-on-surface">Delete Department</h2>
+      </div>
+
+      <div class="px-6 py-5">
+        <p class="text-body-md text-on-surface">
+          Are you sure you want to delete this department? This action cannot be undone.
+        </p>
+      </div>
+
+      <div class="px-6 py-4 border-t border-outline-variant flex items-center justify-end gap-3">
+        <button
+          type="button"
+          (click)="cancelDelete()"
+          class="h-9 px-5 rounded-lg font-label-md border border-outline-variant text-on-surface hover:bg-surface-container-high transition-colors">
+          Cancel
+        </button>
+        <button
+          type="button"
+          (click)="onConfirmDelete()"
+          class="h-9 px-5 rounded-lg font-label-md bg-error text-on-error hover:bg-error/90 transition-colors flex items-center gap-2">
+          <span class="material-symbols-outlined text-[18px]">delete</span>
+          Delete
+        </button>
+      </div>
+
+    </div>
+  </div>
+}

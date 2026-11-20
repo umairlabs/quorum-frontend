@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>AssetFlow - Login</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet">
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0;
+        }
+    </style>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-secondary-container": "#54647a",
+                        "primary-container": "#1e293b",
+                        "outline": "#75777d",
+                        "on-primary-fixed": "#111c2d",
+                        "outline-variant": "#c5c6cd",
+                        "on-tertiary-fixed-variant": "#564427",
+                        "tertiary-fixed-dim": "#ddc39d",
+                        "surface-tint": "#545f73",
+                        "on-secondary-fixed-variant": "#38485d",
+                        "surface-variant": "#e0e3e5",
+                        "primary-fixed": "#d8e3fb",
+                        "on-tertiary-fixed": "#271902",
+                        "on-surface": "#191c1e",
+                        "surface-container-highest": "#e0e3e5",
+                        "on-secondary-fixed": "#0b1c30",
+                        "surface": "#f7f9fb",
+                        "surface-container-low": "#f2f4f6",
+                        "secondary-container": "#d0e1fb",
+                        "inverse-on-surface": "#eff1f3",
+                        "surface-bright": "#f7f9fb",
+                        "primary": "#091426",
+                        "secondary": "#505f76",
+                        "on-surface-variant": "#45474c",
+                        "surface-container-lowest": "#ffffff",
+                        "background": "#f7f9fb",
+                        "on-primary-fixed-variant": "#3c475a",
+                        "on-tertiary-container": "#a38c6a",
+                        "on-error-container": "#93000a",
+                        "on-primary-container": "#8590a6",
+                        "error-container": "#ffdad6",
+                        "error": "#ba1a1a",
+                        "surface-container-high": "#e6e8ea",
+                        "tertiary-container": "#35260c",
+                        "secondary-fixed-dim": "#b7c8e1",
+                        "surface-container": "#eceef0",
+                        "on-tertiary": "#ffffff",
+                        "on-secondary": "#ffffff",
+                        "on-primary": "#ffffff",
+                        "on-background": "#191c1e",
+                        "inverse-primary": "#bcc7de",
+                        "tertiary-fixed": "#fadfb8",
+                        "inverse-surface": "#2d3133",
+                        "on-error": "#ffffff",
+                        "primary-fixed-dim": "#bcc7de",
+                        "tertiary": "#1e1200",
+                        "secondary-fixed": "#d3e4fe",
+                        "surface-dim": "#d8dadc"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "sidebar-width": "260px",
+                        "unit": "4px",
+                        "gutter": "16px",
+                        "header-height": "64px",
+                        "container-padding": "24px"
+                    },
+                    "fontFamily": {
+                        "label-sm": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "body-md": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "label-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-sm": ["Inter"]
+                    },
+                    "fontSize": {
+                        "label-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "500" }],
+                        "body-sm": ["12px", { "lineHeight": "18px", "fontWeight": "400" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "display-lg": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "fontWeight": "600" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-sm": ["20px", { "lineHeight": "28px", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+
+<body class="bg-background text-on-background h-screen w-screen overflow-hidden flex font-body-md">
+    <!-- Left Side: Login Form -->
+    <div
+        class="w-full md:w-1/2 lg:w-5/12 h-full flex flex-col justify-center items-center px-container-padding bg-surface-container-lowest z-10 relative shadow-[1px_0_0_0_theme('colors.surface-container-high')]">
+        <div class="w-full max-w-[400px]">
+            <!-- Logo -->
+            <div class="mb-[48px] flex items-center gap-[8px]">
+                <div class="w-[32px] h-[32px] bg-primary rounded-lg flex items-center justify-center text-on-primary">
+                    <span class="material-symbols-outlined text-[20px]" data-icon="dashboard">dashboard</span>
+                </div>
+                <span class="font-headline-sm text-headline-sm text-primary">AssetFlow</span>
+            </div>
+            <!-- Header -->
+            <div class="mb-[32px]">
+                <h1 class="font-display-lg text-display-lg text-on-surface mb-[8px]">Welcome back</h1>
+                <p class="font-body-md text-body-md text-on-surface-variant">Please enter your details to sign in.</p>
+            </div>
+            <!-- Form -->
+            <form class="flex flex-col gap-[20px]" id="loginForm">
+                <!-- Email Input -->
+                <div class="flex flex-col gap-[6px]">
+                    <label class="font-label-md text-label-md text-on-surface" for="email">Email</label>
+                    <div class="relative">
+                        <span
+                            class="material-symbols-outlined absolute left-[12px] top-1/2 -translate-y-1/2 text-on-surface-variant"
+                            data-icon="mail">mail</span>
+                        <input
+                            class="w-full pl-[40px] pr-[12px] py-[10px] bg-surface-container-lowest border border-outline-variant rounded-DEFAULT font-body-md text-body-md text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-[2px] focus:ring-primary focus:ring-offset-[1px] focus:border-transparent transition-shadow"
+                            id="email" placeholder="Enter your email" required="" type="email">
+                    </div>
+                </div>
+                <!-- Password Input -->
+                <div class="flex flex-col gap-[6px]">
+                    <label class="font-label-md text-label-md text-on-surface" for="password">Password</label>
+                    <div class="relative">
+                        <span
+                            class="material-symbols-outlined absolute left-[12px] top-1/2 -translate-y-1/2 text-on-surface-variant"
+                            data-icon="lock">lock</span>
+                        <input
+                            class="w-full pl-[40px] pr-[40px] py-[10px] bg-surface-container-lowest border border-outline-variant rounded-DEFAULT font-body-md text-body-md text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-[2px] focus:ring-primary focus:ring-offset-[1px] focus:border-transparent transition-shadow"
+                            id="password" placeholder="••••••••" required="" type="password">
+                        <button
+                            class="absolute right-[12px] top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface focus:outline-none"
+                            id="togglePassword" type="button">
+                            <span class="material-symbols-outlined" data-icon="visibility"
+                                id="visibilityIcon">visibility</span>
+                        </button>
+                    </div>
+                </div>
+                <!-- Options Row -->
+                <div class="flex items-center justify-between mt-[4px]">
+                    <label class="flex items-center gap-[8px] cursor-pointer">
+                        <input
+                            class="w-[16px] h-[16px] rounded-[4px] border-outline-variant text-primary focus:ring-primary focus:ring-offset-0 bg-surface-container-lowest"
+                            type="checkbox">
+                        <span class="font-body-sm text-body-sm text-on-surface-variant">Remember me</span>
+                    </label>
+                    <a class="font-label-sm text-label-sm text-primary hover:underline underline-offset-2"
+                        href="#">Forgot password?</a>
+                </div>
+                <!-- Submit Button -->
+                <button
+                    class="mt-[12px] w-full h-[44px] bg-primary text-on-primary rounded-DEFAULT font-label-md text-label-md flex items-center justify-center gap-[8px] hover:bg-primary/90 focus:outline-none focus:ring-[2px] focus:ring-primary focus:ring-offset-[2px] transition-all relative overflow-hidden group"
+                    id="submitBtn" type="submit">
+                    <span class="relative z-10 transition-opacity duration-200" id="btnText">Login</span>
+                    <!-- Loading Spinner (Hidden by default) -->
+                    <span
+                        class="material-symbols-outlined absolute animate-spin opacity-0 transition-opacity duration-200"
+                        data-icon="progress_activity" id="btnSpinner">progress_activity</span>
+                </button>
+            </form>
+          
+        </div>
+    </div>
+    <!-- Right Side: Hero Visual -->
+    <div class="hidden md:flex md:w-1/2 lg:w-7/12 h-full relative bg-surface-container">
+        <!-- Abstract Tech Background Image -->
+        <div class="absolute inset-0 z-0">
+            <div class="bg-cover bg-center bg-no-repeat w-full h-full opacity-80"
+                data-alt="A sophisticated macro photograph of server racks and modern enterprise  in a clean, bright data center. The scene is illuminated by soft, high-key lighting, emphasizing the geometric precision of the hardware. The color palette is composed of cool slate grays, pristine whites, and subtle accents of muted blue light from LED indicators, creating an aesthetic of robust, modern corporate technology and structured asset management."
+                style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCESo4yMz_Sa9ZR0M2aUVsJ9dIP_gS_ScKFwceJJ2ZgyvnzL4TuI6P84RAmhnLiZJGMB5FJ6QPuSx-vFzas70qW7lCdOjfJ-4QFuA1Vy6WmV79ZPukxM7hSgr2v9ZEftguvpAejTUGC3DVO4r9Xoww3Mhpd8Cl4PpTf2I9I58je1A50VAf_3zPpYCZmtBDaVnAcGLs-oqR9gwVtVNcuIok0lspQ_E2ARu7C_k67Bt6OxqhHIRY_XeiokQ')">
+            </div>
+            <!-- Overlay Gradient -->
+            <div
+                class="absolute inset-0 bg-gradient-to-br from-surface-container-high/80 to-surface-container/20 mix-blend-multiply">
+            </div>
+        </div>
+        <!-- Content Overlay -->
+        <div class="relative z-10 p-[64px] flex flex-col justify-end h-full w-full">
+            <div
+                class="max-w-[480px] bg-surface-container-lowest/90 backdrop-blur-md p-[32px] rounded-lg border border-surface-container-high shadow-sm">
+                <div class="w-[48px] h-[48px] bg-primary-fixed rounded-full flex items-center justify-center mb-[24px]">
+                    <span class="material-symbols-outlined text-primary text-[24px]" data-icon="inventory_2"
+                        style="font-variation-settings: 'FILL' 1;">inventory_2</span>
+                </div>
+                <h2 class="font-headline-md text-headline-md text-on-surface mb-[12px]">Manage your assets. Track their
+                    lifecycle. Stay in control.</h2>
+                <p class="font-body-lg text-body-lg text-on-surface-variant">AssetFlow provides enterprise-grade
+                    oversight for your entire hardware and software inventory, ensuring compliance and maximizing
+                    utilization.</p>
+            </div>
+        </div>
+    </div>
+    <script>
+        // Password Visibility Toggle
+        const toggleBtn = document.getElementById('togglePassword');
+        const passwordInput = document.getElementById('password');
+        const visibilityIcon = document.getElementById('visibilityIcon');
+
+        toggleBtn.addEventListener('click', () => {
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                visibilityIcon.textContent = 'visibility_off';
+            } else {
+                passwordInput.type = 'password';
+                visibilityIcon.textContent = 'visibility';
+            }
+        });
+
+        // Form Submit Loading State Simulation
+        const loginForm = document.getElementById('loginForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const btnText = document.getElementById('btnText');
+        const btnSpinner = document.getElementById('btnSpinner');
+
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            // Set loading state
+            submitBtn.disabled = true;
+            submitBtn.classList.add('cursor-not-allowed', 'opacity-90');
+            btnText.classList.add('opacity-0');
+            btnSpinner.classList.remove('opacity-0');
+
+            // Simulate API call
+            setTimeout(() => {
+                // Reset loading state
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('cursor-not-allowed', 'opacity-90');
+                btnText.classList.remove('opacity-0');
+                btnSpinner.classList.add('opacity-0');
+
+                // Optional: redirect or show success
+                console.log('Login simulated');
+            }, 1500);
+        });
+    </script>
+</body>
+
+</html>

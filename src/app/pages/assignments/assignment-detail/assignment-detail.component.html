@@ -1,0 +1,149 @@
+@if (assignment(); as a) {
+  <div class="max-w-[1440px] mx-auto p-gutter sm:p-container-padding py-8 space-y-6">
+
+    <!-- Header Card -->
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-sm">
+
+      <!-- Left: Asset + Employee -->
+      <div class="flex flex-col sm:flex-row gap-6">
+
+        <!-- Asset -->
+        <div class="flex items-center gap-4">
+          <div class="w-14 h-14 rounded-xl bg-surface-container-high border border-outline-variant flex items-center justify-center shrink-0">
+            <span class="material-symbols-outlined text-[30px] text-on-surface-variant">{{ a.assetIcon }}</span>
+          </div>
+          <div>
+            <p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-0.5">Asset</p>
+            <p class="font-headline-sm text-headline-sm text-on-surface font-semibold">{{ a.assetName }}</p>
+            <p class="font-body-sm text-body-sm text-on-surface-variant">{{ a.serialNumber }}</p>
+          </div>
+        </div>
+
+        <!-- Divider -->
+        <div class="hidden sm:block w-px bg-outline-variant self-stretch"></div>
+
+        <!-- Employee -->
+        <div class="flex items-center gap-4">
+          <div class="w-14 h-14 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center font-bold text-[22px] shrink-0">
+            {{ a.employeeInitials }}
+          </div>
+          <div>
+            <p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-0.5">Assigned To</p>
+            <p class="font-headline-sm text-headline-sm text-on-surface font-semibold">{{ a.employeeName }}</p>
+            <p class="font-body-sm text-body-sm text-on-surface-variant">{{ a.employeeId }} · {{ a.department }}</p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Right: Actions -->
+      <div class="flex items-center gap-3 shrink-0">
+        <button
+          (click)="onEdit()"
+          class="h-9 px-4 rounded font-label-md text-label-md bg-primary text-on-primary hover:bg-primary/90 transition-colors flex items-center gap-2 shadow-sm"
+        >
+          <span class="material-symbols-outlined text-[18px]">edit</span>
+          Edit
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Tabs + Content -->
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm">
+
+      <app-tab-nav
+        [tabs]="tabs"
+        [activeTab]="activeTab()"
+        (tabChange)="setTab($event)"
+      />
+
+      <div class="p-6">
+
+        <!-- Overview Tab -->
+        @if (activeTab() === 'overview') {
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-6">
+
+            <div>
+              <p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-1">Department</p>
+              <p class="font-body-md text-body-md text-on-surface font-medium">{{ a.department || '—' }}</p>
+            </div>
+
+            <div>
+              <p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-1">Assigned Date</p>
+              <p class="font-body-md text-body-md text-on-surface font-medium">{{ a.assignedDate || '—' }}</p>
+            </div>
+
+            <div>
+              <p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-1">Expected Return</p>
+              <p class="font-body-md text-body-md text-on-surface font-medium">
+                {{ a.expectedReturnDate || '—' }}
+              </p>
+            </div>
+
+            <div>
+              <p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-1">Status</p>
+              <app-status-badge [status]="a.status" />
+            </div>
+
+            @if (a.notes) {
+              <div class="col-span-2 sm:col-span-4 pt-4 border-t border-outline-variant mt-2">
+                <p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-1">Notes</p>
+                <p class="font-body-md text-body-md text-on-surface">{{ a.notes }}</p>
+              </div>
+            }
+
+          </div>
+        }
+
+        <!-- History Tab -->
+        @if (activeTab() === 'history') {
+          @if (assetHistory().length > 0) {
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse">
+                <thead>
+                  <tr class="bg-surface-container-low border-b border-outline-variant">
+                    <th class="px-4 py-3 font-label-sm text-label-sm text-on-surface-variant font-semibold">Employee</th>
+                    <th class="px-4 py-3 font-label-sm text-label-sm text-on-surface-variant font-semibold">Assigned Date</th>
+                    <th class="px-4 py-3 font-label-sm text-label-sm text-on-surface-variant font-semibold">Returned Date</th>
+                    <th class="px-4 py-3 font-label-sm text-label-sm text-on-surface-variant font-semibold">Status</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-outline-variant font-body-sm text-body-sm text-on-surface">
+                  @for (item of assetHistory(); track item.id) {
+                    <tr class="hover:bg-surface-container-low transition-colors">
+                      <td class="px-4 py-3">
+                        <div class="flex items-center gap-2">
+                          <div class="w-6 h-6 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center font-bold text-[10px]">
+                            {{ item.employeeName.charAt(0) }}
+                          </div>
+                          {{ item.employeeName }}
+                        </div>
+                      </td>
+                      <td class="px-4 py-3 text-on-surface-variant">{{ item.assignedDate }}</td>
+                      <td class="px-4 py-3 text-on-surface-variant">{{ item.returnedDate || '—' }}</td>
+                      <td class="px-4 py-3">
+                        @if (item.status === 'Active') {
+                          <span class="bg-primary/10 text-primary px-2 py-0.5 rounded text-[11px] font-semibold">Active</span>
+                        } @else {
+                          <span class="bg-surface-container-high text-on-surface-variant px-2 py-0.5 rounded text-[11px] font-semibold">Returned</span>
+                        }
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          } @else {
+            <div class="flex flex-col items-center justify-center py-12 text-center">
+              <span class="material-symbols-outlined text-[40px] text-on-surface-variant mb-3">history</span>
+              <p class="font-body-md text-body-md text-on-surface-variant">No assignment history available for this asset.</p>
+            </div>
+          }
+        }
+
+      </div>
+    </div>
+
+  </div>
+}

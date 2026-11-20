@@ -1,0 +1,86 @@
+@if (isOpen()) {
+
+  <!-- Full content-area overlay — same pattern as other pages -->
+  <div class="fixed top-[64px] left-0 md:left-[260px] right-0 bottom-0 z-30 bg-background overflow-y-auto">
+    <div class="max-w-[1000px] mx-auto p-gutter sm:p-container-padding py-8">
+
+      <!-- Page-style Header -->
+      <div class="mb-8">
+        <h1 class="font-headline-md text-headline-md text-on-surface font-semibold">{{ title() }}</h1>
+        <p class="font-body-md text-body-md text-on-surface-variant mt-1">
+          @if (category()) {
+            Update the details for this asset category.
+          } @else {
+            Fill in the details below to create a new asset category.
+          }
+        </p>
+      </div>
+
+      <!-- Form -->
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-6">
+
+        <!-- Section: Category Details -->
+        <app-form-section title="Category Details" icon="category">
+          <div class="grid grid-cols-1 gap-y-5">
+
+            <!-- Category Name -->
+            <div>
+              <label for="category_name" class="block font-label-sm text-label-sm text-on-surface font-semibold mb-1.5">
+                Category Name <span class="text-error">*</span>
+              </label>
+              <input
+                id="category_name"
+                type="text"
+                formControlName="name"
+                placeholder="e.g. Laptops, Network Hardware, Office Furniture"
+                class="w-full h-[40px] px-3 font-body-md text-body-md bg-surface-container-lowest text-on-surface border border-outline-variant rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 transition-shadow placeholder:text-on-surface-variant/50"
+                [class.border-error]="form.get('name')?.touched && form.get('name')?.invalid"
+              />
+              @if (form.get('name')?.touched && form.get('name')?.errors?.['required']) {
+                <p class="text-error text-body-sm mt-1.5">Category name is required.</p>
+              }
+              @if (form.get('name')?.touched && form.get('name')?.errors?.['minlength']) {
+                <p class="text-error text-body-sm mt-1.5">Name must be at least 2 characters.</p>
+              }
+            </div>
+
+            <!-- Description -->
+            <div>
+              <label for="category_description" class="block font-label-sm text-label-sm text-on-surface font-semibold mb-1.5">
+                Description <span class="text-on-surface-variant font-normal text-xs">(Optional)</span>
+              </label>
+              <textarea
+                id="category_description"
+                formControlName="description"
+                rows="4"
+                placeholder="Brief description of equipment or devices under this classification..."
+                class="w-full p-3 font-body-md text-body-md bg-surface-container-lowest text-on-surface border border-outline-variant rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 transition-shadow placeholder:text-on-surface-variant/50 resize-y"
+              ></textarea>
+            </div>
+
+          </div>
+        </app-form-section>
+
+        <!-- Actions -->
+        <div class="flex items-center justify-end gap-4 pt-2">
+          <button
+            type="button"
+            (click)="onClose()"
+            class="h-[40px] px-6 rounded-lg border border-outline-variant font-label-md text-label-md text-on-surface hover:bg-surface-container-low transition-all"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            [disabled]="form.invalid"
+            class="h-[40px] px-6 rounded-lg bg-primary text-on-primary font-label-md text-label-md hover:bg-primary/90 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Save Category
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+}

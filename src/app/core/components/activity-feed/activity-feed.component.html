@@ -1,0 +1,23 @@
+<div class="p-5">
+  <ul class="space-y-4 relative before:absolute before:inset-y-4 before:left-[15px] before:w-px before:bg-outline-variant">
+    @for (item of displayedItems(); track $index) {
+      <li class="relative pl-10">
+        <div class="absolute left-[11px] top-1.5 w-2.5 h-2.5 rounded-full bg-primary ring-4 ring-surface-container-lowest"></div>
+        <p class="font-body-md text-body-md text-on-surface" [innerHTML]="item.description"></p>
+        <span class="text-[11px] font-medium text-on-surface-variant mt-0.5 block">{{ item.time }}</span>
+      </li>
+    }
+  </ul>
+
+  @if ((items() || []).length > 7) {
+    <div class="mt-5 pt-3 border-t border-outline-variant/40 flex items-center justify-start">
+      <button
+        (click)="toggleExpanded()"
+        class="text-primary font-label-md text-label-md font-semibold hover:underline cursor-pointer bg-transparent border-0 inline-flex items-center gap-1"
+      >
+        <span>{{ isExpanded() ? 'Show Less' : 'See More' }}</span>
+        <span class="material-symbols-outlined text-[18px] transition-transform duration-200" [class.rotate-180]="isExpanded()">keyboard_arrow_down</span>
+      </button>
+    </div>
+  }
+</div>

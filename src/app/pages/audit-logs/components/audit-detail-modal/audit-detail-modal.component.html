@@ -1,0 +1,145 @@
+<app-modal
+  [isOpen]="isOpen()"
+  [hideHeader]="true"
+  maxWidth="max-w-[1440px]"
+  (close)="onClose()">
+  <div modalBody>
+    @if (log(); as item) {
+    <div class="space-y-5">
+
+      <!-- Sub-header Meta Bar -->
+      <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-outline-variant/60">
+        <div class="flex items-center gap-3">
+          <span class="w-[140px] min-w-[140px] h-7 px-2.5 py-1 rounded-md text-[11px] font-semibold border inline-flex items-center justify-center text-center transition-colors" [ngClass]="getActionBadgeClass(item.action)">
+            {{ formatActionName(item.action) }}
+          </span>
+          <span class="text-body-sm text-on-surface-variant font-medium">Recorded on {{ item.timestamp | date:'medium' }}</span>
+        </div>
+
+        <div class="flex items-center gap-1.5 text-label-xs text-on-surface-variant bg-surface-container-low px-2.5 py-1 rounded-md border border-outline-variant/60 shrink-0">
+          <span class="material-symbols-outlined text-[15px]">verified_user</span>
+          <span>Immutable Audit Entry</span>
+        </div>
+      </div>
+
+      <!-- Actor & Target Asset Meta Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Actor Info -->
+        <div class="bg-surface-container-low p-3.5 rounded-xl border border-outline-variant/60 space-y-2.5">
+          <h4 class="font-label-sm text-label-sm text-on-surface-variant font-medium flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-[16px]">account_circle</span>
+            Actor / Performed By
+          </h4>
+          <div class="space-y-1 pt-0.5">
+            <p class="font-body-sm text-body-sm font-semibold text-on-surface">{{ item.userName || 'System' }}</p>
+            <div class="flex items-center justify-between text-body-xs text-on-surface-variant">
+              <span>Role:</span>
+              <span class="font-medium text-on-surface">{{ item.userRole || 'System' }}</span>
+            </div>
+            @if (item.ipAddress) {
+            <div class="flex items-center justify-between text-body-xs text-on-surface-variant">
+              <span>IP Address:</span>
+              <span class="font-mono text-body-xs bg-surface-container px-2 py-0.5 rounded border border-outline-variant/50">{{ item.ipAddress }}</span>
+            </div>
+            }
+          </div>
+        </div>
+
+        <!-- Target Item Info -->
+        <div class="bg-surface-container-low p-3.5 rounded-xl border border-outline-variant/60 space-y-2.5">
+          <h4 class="font-label-sm text-label-sm text-on-surface-variant font-medium flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-[16px]">inventory_2</span>
+            Target Asset / Entity
+          </h4>
+          <div class="space-y-1 pt-0.5">
+            <p class="font-body-sm text-body-sm font-semibold text-on-surface">{{ item.assetName || 'System Record' }}</p>
+            <div class="flex items-center justify-between text-body-xs text-on-surface-variant">
+              <span>Serial Number:</span>
+              <span class="font-mono font-bold text-primary">{{ item.serialNumber || '—' }}</span>
+            </div>
+            <div class="flex items-center justify-between text-body-xs text-on-surface-variant">
+              <span>Module:</span>
+              <span class="w-[110px] min-w-[110px] h-7 px-2.5 py-1 rounded-md text-[11px] font-semibold bg-slate-500/10 text-slate-800 border border-slate-500/30 inline-flex items-center justify-center text-center uppercase">
+                {{ item.module }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Activity Description -->
+      <div class="bg-surface-container-low p-3.5 rounded-xl border border-outline-variant/60 space-y-1.5">
+        <h4 class="font-label-sm text-label-sm text-on-surface-variant font-medium flex items-center gap-1.5">
+          <span class="material-symbols-outlined text-[16px]">description</span>
+          Description
+        </h4>
+        <p class="font-body-sm text-body-sm text-on-surface leading-relaxed">{{ item.description }}</p>
+      </div>
+
+      <!-- State Changes (Before vs After Diff) -->
+      @if (hasValueEntries(item.oldValue) || hasValueEntries(item.newValue)) {
+      <div class="space-y-2.5">
+        <h4 class="font-label-md text-label-md text-on-surface font-semibold flex items-center gap-1.5">
+          <span class="material-symbols-outlined text-[18px]">difference</span>
+          Historical State Changes
+        </h4>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Previous State -->
+          <div class="bg-rose-500/5 dark:bg-rose-950/20 p-3.5 rounded-xl border border-rose-500/20 space-y-2">
+            <div class="flex items-center gap-1.5 text-rose-700 dark:text-rose-400 font-label-xs text-label-xs font-bold">
+              <span class="material-symbols-outlined text-[16px]">history</span>
+              Previous State (Before)
+            </div>
+            @if (hasValueEntries(item.oldValue)) {
+            <div class="space-y-1.5 font-mono text-body-xs">
+              @for (entry of getObjectEntries(item.oldValue); track entry[0]) {
+              <div class="flex justify-between items-center py-0.5 border-b border-rose-500/10 last:border-0">
+                <span class="text-on-surface-variant capitalize">{{ entry[0].replace('_', ' ') }}:</span>
+                <span class="font-semibold text-rose-800 dark:text-rose-300">{{ entry[1] !== null && entry[1] !== undefined ? entry[1] : '—' }}</span>
+              </div>
+              }
+            </div>
+            } @else {
+            <p class="text-body-xs text-on-surface-variant italic">No previous state recorded (Initial creation)</p>
+            }
+          </div>
+
+          <!-- New State -->
+          <div class="bg-emerald-500/5 dark:bg-emerald-950/20 p-3.5 rounded-xl border border-emerald-500/20 space-y-2">
+            <div class="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400 font-label-xs text-label-xs font-bold">
+              <span class="material-symbols-outlined text-[16px]">update</span>
+              New State (After)
+            </div>
+            @if (hasValueEntries(item.newValue)) {
+            <div class="space-y-1.5 font-mono text-body-xs">
+              @for (entry of getObjectEntries(item.newValue); track entry[0]) {
+              <div class="flex justify-between items-center py-0.5 border-b border-emerald-500/10 last:border-0">
+                <span class="text-on-surface-variant capitalize">{{ entry[0].replace('_', ' ') }}:</span>
+                <span class="font-semibold text-emerald-800 dark:text-emerald-300">{{ entry[1] !== null && entry[1] !== undefined ? entry[1] : '—' }}</span>
+              </div>
+              }
+            </div>
+            } @else {
+            <p class="text-body-xs text-on-surface-variant italic">No new state entries recorded</p>
+            }
+          </div>
+        </div>
+      </div>
+      }
+
+      <!-- Footer Action -->
+      <div class="flex justify-end pt-3 border-t border-outline-variant">
+        <button
+          type="button"
+          (click)="onClose()"
+          class="h-9 px-4 rounded-lg border border-outline-variant font-label-sm text-label-sm text-on-surface hover:bg-surface-container-low transition-colors font-medium cursor-pointer"
+        >
+          Close
+        </button>
+      </div>
+
+    </div>
+    }
+  </div>
+</app-modal>

@@ -1,0 +1,337 @@
+<div class="page-container p-3 sm:p-6 flex flex-col gap-4 sm:gap-6 max-w-[1440px] mx-auto">
+
+  @if (loading()) {
+    <div class="flex items-center justify-center py-20">
+      <div class="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+    </div>
+  }
+
+  @if (supplier(); as s) {
+
+    <!-- Top Header Bar -->
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-4 sm:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm">
+      <div class="flex items-center gap-3 sm:gap-5 min-w-0">
+        <div class="w-12 h-12 sm:w-14 sm:h-14 bg-primary/10 rounded-xl flex items-center justify-center shrink-0 border border-primary/20">
+          <span class="material-symbols-outlined text-[24px] sm:text-[28px] text-primary">store</span>
+        </div>
+        <div class="min-w-0">
+          <div class="flex items-center gap-2">
+            <button
+              (click)="goBack()"
+              class="md:hidden p-1.5 -ml-1.5 rounded-full hover:bg-surface-container-high text-on-surface-variant hover:text-primary transition-colors flex items-center justify-center shrink-0"
+              title="Go back"
+            >
+              <span class="material-symbols-outlined text-[22px]">arrow_back</span>
+            </button>
+            <h1 class="text-title-lg sm:text-headline-md font-bold text-on-surface truncate">{{ s.company }}</h1>
+          </div>
+          <p class="text-body-sm sm:text-body-md text-on-surface-variant mt-0.5 truncate">
+            {{ s.name || 'No Contact Person' }} &middot; {{ s.email || 'No Email' }}
+          </p>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between md:justify-end gap-4 sm:gap-6 w-full md:w-auto border-t md:border-t-0 pt-3 md:pt-0 border-outline-variant">
+        <!-- Outstanding Balance Indicator -->
+        <div class="text-left md:text-right">
+          <div class="text-body-sm text-on-surface-variant">Outstanding Balance</div>
+          <div class="text-title-md sm:text-title-lg font-bold mt-0.5" [class.text-error]="totalOutstanding() > 0" [class.text-primary]="totalOutstanding() === 0">
+            {{ totalOutstanding() | appCurrency }}
+          </div>
+        </div>
+
+        @if (totalOutstanding() > 0) {
+          <button (click)="openPayModal()" class="bg-primary text-on-primary hover:bg-primary/90 px-4 py-2 rounded-md font-semibold text-body-sm flex items-center gap-1.5 transition-colors shadow-sm">
+            <span class="material-symbols-outlined text-[18px]">credit_card</span>
+            Pay
+          </button>
+        } @else {
+          <button (click)="goBack()" class="border border-outline text-on-surface-variant hover:bg-surface-container-low px-4 py-2 rounded-md font-semibold text-body-sm flex items-center gap-1.5 transition-colors">
+            <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+            Back
+          </button>
+        }
+      </div>
+    </div>
+
+    <!-- Full-Width Payment History & Ledger -->
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden shadow-sm">
+      <div class="border-b border-outline-variant px-4 sm:px-6 py-3.5 sm:py-4 flex justify-between items-center">
+        <h3 class="font-title-sm text-title-sm text-on-surface flex items-center gap-2 font-semibold">
+          <span class="material-symbols-outlined text-[20px] text-on-surface-variant">history</span>
+          Payment History & Ledger
+        </h3>
+        <span class="bg-primary/10 text-primary text-[11px] font-semibold px-2.5 py-0.5 rounded-full">
+          {{ paymentHistory().length }} Transaction(s)
+        </span>
+      </div>
+
+      @if (historyLoading()) {
+        <div class="p-8 text-center text-on-surface-variant flex items-center justify-center gap-2 font-body-md">
+          <span class="material-symbols-outlined animate-spin">sync</span> Loading payment history...
+        </div>
+      } @else if (paymentHistory().length === 0) {
+        <div class="p-12 text-center text-on-surface-variant flex flex-col items-center gap-2">
+          <span class="material-symbols-outlined text-[48px]">receipt_long</span>
+          <p class="font-title-md text-title-md font-semibold">No Payments Recorded</p>
+          <p class="font-body-md text-body-md max-w-md">Payments made to this supplier will appear here as a transaction ledger.</p>
+        </div>
+      } @else {
+        <div class="overflow-x-auto w-full">
+          <table class="w-full min-w-[900px] text-left border-collapse table-auto">
+            <thead>
+              <tr class="bg-surface-container-low border-b border-outline-variant h-11">
+                <th class="px-5 py-2.5 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold whitespace-nowrap w-[15%]">Invoice #</th>
+                <th class="px-3 py-2.5 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold whitespace-nowrap w-[11%]">Payment Date</th>
+                <th class="px-3 py-2.5 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold whitespace-nowrap w-[13%]">Payment Method</th>
+                <th class="px-3 py-2.5 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold whitespace-nowrap w-[12%]">Total Amount</th>
+                <th class="px-3 py-2.5 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold whitespace-nowrap w-[12%]">Paid Amount</th>
+                <th class="px-3 py-2.5 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold whitespace-nowrap w-[13%]">Remaining Amount</th>
+                <th class="px-3 py-2.5 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold whitespace-nowrap w-[10%]">Reference</th>
+                <th class="px-3 py-2.5 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold whitespace-nowrap w-[9%]">Notes</th>
+                <th class="px-4 py-2.5 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold whitespace-nowrap text-right w-[5%]">Invoice</th>
+              </tr>
+            </thead>
+            <tbody class="font-body-sm text-body-sm text-on-surface divide-y divide-outline-variant">
+              @for (pay of paymentHistory(); track pay.id) {
+                <tr class="hover:bg-surface-container-low/60 transition-colors align-middle">
+                  <td class="px-5 py-2.5 font-semibold text-primary whitespace-nowrap">
+                    {{ pay.invoiceNumber || '—' }}
+                    @if (pay.purchaseNumber) {
+                      <div class="text-[11px] text-on-surface-variant font-mono font-normal">{{ pay.purchaseNumber }}</div>
+                    }
+                  </td>
+                  <td class="px-3 py-2.5 text-on-surface whitespace-nowrap">{{ pay.paymentDate }}</td>
+                  <td class="px-3 py-2.5 text-on-surface whitespace-nowrap">
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-surface-container-high text-on-surface">
+                      {{ formatMethod(pay) }}
+                    </span>
+                    @if (pay.paymentMethodDetail || pay.payment_method_detail) {
+                      <div class="text-[11px] text-on-surface-variant font-mono mt-0.5 max-w-[160px] truncate" [title]="pay.paymentMethodDetail || pay.payment_method_detail">
+                        {{ pay.paymentMethodDetail || pay.payment_method_detail }}
+                      </div>
+                    }
+                  </td>
+                  <td class="px-3 py-2.5 text-on-surface font-semibold whitespace-nowrap">{{ pay.totalAmount | appCurrency }}</td>
+                  <td class="px-3 py-2.5 text-primary font-bold whitespace-nowrap">{{ pay.paidAmount | appCurrency }}</td>
+                  <td class="px-3 py-2.5 font-semibold whitespace-nowrap" [ngClass]="pay.remainingAmount > 0 ? 'text-error' : 'text-on-surface-variant'">
+                    {{ pay.remainingAmount | appCurrency }}
+                  </td>
+                  <td class="px-3 py-2.5 text-on-surface-variant whitespace-nowrap">{{ pay.reference || '—' }}</td>
+                  <td class="px-3 py-2.5 text-on-surface-variant max-w-[160px] truncate">{{ pay.notes || '—' }}</td>
+                  <td class="px-4 py-2.5 text-right whitespace-nowrap">
+                    @if (pay.invoiceNumber || pay.id) {
+                      <button (click)="viewInvoicePDF(pay)" title="View Invoice"
+                        class="p-1.5 text-on-surface-variant hover:text-primary hover:bg-surface-container rounded-full transition-colors focus:outline-none">
+                        <span class="material-symbols-outlined text-[20px]">file_open</span>
+                      </button>
+                    } @else {
+                      <span class="text-on-surface-variant/40 text-[12px]">—</span>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+
+  }
+</div>
+
+<!-- ========================================== -->
+<!-- PAY MODAL                                  -->
+<!-- ========================================== -->
+@if (isPayModalOpen()) {
+  <div class="fixed inset-0 bg-black/60 flex items-center justify-center z-[2000] p-4">
+    <div class="bg-surface-container-lowest w-full max-w-md border border-outline-variant rounded-xl shadow-2xl p-6 relative animate-scale-in">
+
+      <div class="border-b border-outline-variant pb-3 mb-4">
+        <h3 class="text-headline-sm font-headline-sm text-on-surface">Record Payment</h3>
+      </div>
+
+      <!-- Supplier info + balance -->
+      <div class="mb-4 p-3 bg-surface-container-low rounded-lg flex items-center justify-between">
+        <div>
+          <p class="font-semibold text-on-surface text-body-md">{{ supplier()?.company }}</p>
+          <p class="text-body-sm text-on-surface-variant mt-0.5">{{ supplier()?.name || '' }}</p>
+        </div>
+        <div class="text-right">
+          <p class="text-body-sm text-on-surface-variant">Outstanding</p>
+          <p class="font-bold text-error text-title-sm">{{ totalOutstanding() | appCurrency }}</p>
+        </div>
+      </div>
+
+      <form [formGroup]="paymentForm" (ngSubmit)="onSubmitPayment()" class="flex flex-col gap-4">
+
+        <div class="flex flex-col gap-1.5">
+          <label class="font-label-md text-label-md text-on-surface-variant">Payment Amount <span class="text-error">*</span></label>
+          <input type="number" formControlName="amount" placeholder="0.00" step="0.01"
+            class="bg-surface-container-low border border-outline rounded-md px-3.5 py-2 text-body-md text-on-surface outline-none focus:border-primary" />
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div class="flex flex-col gap-1.5">
+            <label class="font-label-md text-label-md text-on-surface-variant">Payment Date <span class="text-error">*</span></label>
+            <input type="date" formControlName="paymentDate" min="1900-01-01" max="9999-12-31"
+              class="bg-surface-container-low border border-outline rounded-md px-3.5 py-2 text-body-md text-on-surface outline-none focus:border-primary" />
+          </div>
+          <div class="flex flex-col gap-1.5">
+            <label class="font-label-md text-label-md text-on-surface-variant">Payment Method <span class="text-error">*</span></label>
+            <app-select
+              [options]="paymentMethodOptions"
+              [value]="paymentForm.get('method')?.value"
+              (selectionChange)="onPaymentMethodSelect($event)"
+              placeholder="Select Payment Method" />
+          </div>
+        </div>
+
+        <!-- Bank Transfer Details -->
+        @if (paymentForm.get('method')?.value === 'BANK_TRANSFER') {
+          <div class="border border-outline-variant rounded-lg p-4 bg-surface-container-low space-y-3">
+            <p class="font-label-sm text-label-sm text-on-surface-variant font-semibold flex items-center gap-1.5">
+              <span class="material-symbols-outlined text-[16px] text-primary">account_balance</span>
+              Bank Transfer Details
+            </p>
+            <div class="grid grid-cols-2 gap-3">
+              <div class="flex flex-col gap-1">
+                <label class="font-label-sm text-[12px] text-on-surface-variant font-semibold">Bank Name <span class="text-error">*</span></label>
+                <input type="text" formControlName="bankName" placeholder="e.g. Meezan Bank, HBL, UBL"
+                  class="bg-surface-container-lowest border border-outline-variant rounded-lg px-3 h-9 text-body-sm text-on-surface outline-none focus:ring-2 focus:ring-primary" />
+              </div>
+              <div class="flex flex-col gap-1">
+                <label class="font-label-sm text-[12px] text-on-surface-variant font-semibold">Account / IBAN <span class="text-error">*</span></label>
+                <input type="text" formControlName="accountNumber" placeholder="e.g. PK36MEZN0001234567890101" maxlength="24"
+                  class="bg-surface-container-lowest border border-outline-variant rounded-lg px-3 h-9 text-body-sm text-on-surface outline-none focus:ring-2 focus:ring-primary font-mono uppercase" />
+              </div>
+            </div>
+            <div class="flex flex-col gap-1">
+              <label class="font-label-sm text-[12px] text-on-surface-variant font-semibold">Transaction Reference <span class="text-error">*</span></label>
+              <input type="text" formControlName="transactionReference" placeholder="e.g. FT260115009841" maxlength="50"
+                class="bg-surface-container-lowest border border-outline-variant rounded-lg px-3 h-9 text-body-sm text-on-surface outline-none focus:ring-2 focus:ring-primary font-mono" />
+            </div>
+          </div>
+        }
+
+        <!-- Cheque Details -->
+        @if (paymentForm.get('method')?.value === 'CHEQUE') {
+          <div class="border border-outline-variant rounded-lg p-4 bg-surface-container-low space-y-3">
+            <p class="font-label-sm text-label-sm text-on-surface-variant font-semibold flex items-center gap-1.5">
+              <span class="material-symbols-outlined text-[16px] text-primary">payments</span>
+              Cheque Details
+            </p>
+            <div class="grid grid-cols-2 gap-3">
+              <div class="flex flex-col gap-1">
+                <label class="font-label-sm text-[12px] text-on-surface-variant font-semibold">Bank Name <span class="text-error">*</span></label>
+                <input type="text" formControlName="bankName" placeholder="e.g. Meezan Bank, Allied Bank"
+                  class="bg-surface-container-lowest border border-outline-variant rounded-lg px-3 h-9 text-body-sm text-on-surface outline-none focus:ring-2 focus:ring-primary" />
+              </div>
+              <div class="flex flex-col gap-1">
+                <label class="font-label-sm text-[12px] text-on-surface-variant font-semibold">Cheque Number <span class="text-error">*</span></label>
+                <input type="text" formControlName="chequeNumber" placeholder="e.g. 00492817" maxlength="30"
+                  class="bg-surface-container-lowest border border-outline-variant rounded-lg px-3 h-9 text-body-sm text-on-surface outline-none focus:ring-2 focus:ring-primary font-mono" />
+              </div>
+            </div>
+            <div class="flex flex-col gap-1">
+              <label class="font-label-sm text-[12px] text-on-surface-variant font-semibold">Cheque Date <span class="text-error">*</span></label>
+              <input type="date" formControlName="chequeDate" min="1900-01-01" max="9999-12-31"
+                class="bg-surface-container-lowest border border-outline-variant rounded-lg px-3 h-9 text-body-sm text-on-surface outline-none focus:ring-2 focus:ring-primary" />
+            </div>
+          </div>
+        }
+
+        <!-- Mobile Wallet Details -->
+        @if (paymentForm.get('method')?.value === 'MOBILE_WALLET') {
+          <div class="border border-outline-variant rounded-lg p-4 bg-surface-container-low space-y-3">
+            <p class="font-label-sm text-label-sm text-on-surface-variant font-semibold flex items-center gap-1.5">
+              <span class="material-symbols-outlined text-[16px] text-primary">phone_android</span>
+              Mobile Wallet Details
+            </p>
+            <div class="grid grid-cols-2 gap-2">
+              <button type="button" (click)="paymentForm.patchValue({ walletProvider: 'JazzCash' })"
+                class="h-9 rounded-lg border flex items-center justify-center gap-1.5 font-semibold text-xs transition-all"
+                [ngClass]="paymentForm.get('walletProvider')?.value === 'JazzCash'
+                  ? 'border-primary bg-primary/10 text-primary ring-2 ring-primary/20'
+                  : 'border-outline-variant text-on-surface hover:bg-surface-container'">
+                <span class="w-2 h-2 rounded-full" [ngClass]="paymentForm.get('walletProvider')?.value === 'JazzCash' ? 'bg-primary' : 'bg-outline-variant'"></span>
+                JazzCash
+              </button>
+              <button type="button" (click)="paymentForm.patchValue({ walletProvider: 'Easypaisa' })"
+                class="h-9 rounded-lg border flex items-center justify-center gap-1.5 font-semibold text-xs transition-all"
+                [ngClass]="paymentForm.get('walletProvider')?.value === 'Easypaisa'
+                  ? 'border-primary bg-primary/10 text-primary ring-2 ring-primary/20'
+                  : 'border-outline-variant text-on-surface hover:bg-surface-container'">
+                <span class="w-2 h-2 rounded-full" [ngClass]="paymentForm.get('walletProvider')?.value === 'Easypaisa' ? 'bg-primary' : 'bg-outline-variant'"></span>
+                Easypaisa
+              </button>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div class="flex flex-col gap-1">
+                <label class="font-label-sm text-[12px] text-on-surface-variant font-semibold">Mobile Number <span class="text-error">*</span></label>
+                <input type="tel" formControlName="mobileNumber" placeholder="03001234567" maxlength="11"
+                  class="bg-surface-container-lowest border border-outline-variant rounded-lg px-3 h-9 text-body-sm text-on-surface outline-none focus:ring-2 focus:ring-primary font-mono" />
+              </div>
+              <div class="flex flex-col gap-1">
+                <label class="font-label-sm text-[12px] text-on-surface-variant font-semibold">Account Holder <span class="font-normal text-on-surface-variant">(Optional)</span></label>
+                <input type="text" formControlName="accountHolderName" placeholder="e.g. Muhammad Ali"
+                  class="bg-surface-container-lowest border border-outline-variant rounded-lg px-3 h-9 text-body-sm text-on-surface outline-none focus:ring-2 focus:ring-primary" />
+              </div>
+            </div>
+            <div class="flex flex-col gap-1">
+              <label class="font-label-sm text-[12px] text-on-surface-variant font-semibold">Transaction ID <span class="text-error">*</span></label>
+              <input type="text" formControlName="transactionId" placeholder="e.g. TID-982410842"
+                class="bg-surface-container-lowest border border-outline-variant rounded-lg px-3 h-9 text-body-sm text-on-surface outline-none focus:ring-2 focus:ring-primary font-mono" />
+            </div>
+          </div>
+        }
+
+        <div class="flex justify-end gap-2.5 mt-2 border-t border-outline-variant pt-4">
+          <button type="button" (click)="closePayModal()"
+            class="px-4 py-2 border border-outline text-on-surface-variant hover:bg-surface-container-low rounded-md font-semibold text-body-md focus:outline-none">
+            Cancel
+          </button>
+          <button type="submit" [disabled]="paymentForm.invalid || isSubmitting()"
+            class="px-5 py-2 bg-primary text-on-primary hover:bg-primary/90 disabled:opacity-50 rounded-md font-semibold text-body-md flex items-center gap-1.5 focus:outline-none">
+            @if (isSubmitting()) {
+              <span class="material-symbols-outlined animate-spin text-[18px]">sync</span>
+            } @else {
+              <span class="material-symbols-outlined text-[18px]">check</span>
+            }
+            Record Payment
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+}
+
+<!-- ========================================== -->
+<!-- PDF INVOICE VIEWER                          -->
+<!-- ========================================== -->
+@if (invoicePdfBlobUrl()) {
+  <div class="fixed inset-0 bg-black/75 flex items-center justify-center z-[3000] p-4">
+    <div class="bg-surface-container-lowest w-full max-w-4xl h-[90vh] border border-outline-variant rounded-xl shadow-2xl flex flex-col overflow-hidden relative animate-scale-in">
+
+      <div class="flex justify-between items-center border-b border-outline-variant p-4 bg-surface-container-low">
+        <h3 class="font-title-md text-title-md text-on-surface flex items-center gap-2">
+          <span class="material-symbols-outlined text-primary">description</span>
+          Payment Invoice
+        </h3>
+        <div class="flex items-center gap-2">
+          <button (click)="downloadInvoiceFile()" class="bg-primary text-on-primary hover:bg-primary/90 px-4 py-2 rounded-md font-semibold text-body-sm flex items-center gap-1.5 focus:outline-none transition-colors">
+            <span class="material-symbols-outlined text-[18px]">download</span> Download
+          </button>
+          <button (click)="closeInvoicePDF()" class="text-on-surface-variant hover:text-on-surface p-1.5 rounded-full hover:bg-surface-container-high focus:outline-none">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="flex-1 bg-surface-container-high">
+        <iframe [src]="invoicePdfBlobUrlSafe()" class="w-full h-full border-none"></iframe>
+      </div>
+    </div>
+  </div>
+}

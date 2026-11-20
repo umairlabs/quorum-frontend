@@ -1,0 +1,316 @@
+<div class="max-w-[1100px] mx-auto p-gutter sm:p-container-padding space-y-6">
+
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-outline-variant">
+    <div class="flex items-center gap-3">
+      <button (click)="onCancel()" class="p-2 hover:bg-surface-container-high rounded-full transition-colors" title="Back to Maintenance List">
+        <span class="material-symbols-outlined text-[24px] text-on-surface-variant">arrow_back</span>
+      </button>
+      <div>
+        <h1 class="font-headline-md text-headline-md text-on-surface font-semibold">Maintenance Work Update</h1>
+        <p class="font-body-md text-body-md text-on-surface-variant">
+          Report result, diagnostic findings, and completion status for ticket
+          <span class="font-mono font-medium text-primary">{{ request()?.requestId }}</span>
+        </p>
+      </div>
+    </div>
+
+    @if (request()?.status) {
+      <div class="flex items-center gap-2">
+        <span class="font-label-sm text-on-surface-variant">Current Status:</span>
+        <app-status-badge [status]="request()!.status" />
+      </div>
+    }
+  </div>
+
+  <!-- Loading State -->
+  @if (loading()) {
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-12 flex flex-col items-center justify-center gap-3 shadow-sm">
+      <div class="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+      <p class="font-body-md text-on-surface-variant">Loading ticket details...</p>
+    </div>
+  }
+
+  <!-- Error State -->
+  @if (!loading() && errorMessage()) {
+    <div class="bg-error-container/20 border border-error/30 rounded-xl p-6 flex flex-col items-start gap-4">
+      <div class="flex items-center gap-3">
+        <span class="material-symbols-outlined text-error text-[24px]">error</span>
+        <h3 class="font-title-md font-semibold text-error">Unable to Load Ticket</h3>
+      </div>
+      <p class="font-body-md text-error">{{ errorMessage() }}</p>
+      <button (click)="onCancel()" class="px-4 py-2 bg-surface-container-high hover:bg-surface-container text-on-surface font-label-md rounded-lg transition-colors">
+        Return to Maintenance List
+      </button>
+    </div>
+  }
+
+  @if (!loading() && request()) {
+    
+    <!-- Closed Ticket Read-Only Notice -->
+    @if (isClosed()) {
+      <div class="bg-tertiary-fixed-dim/20 border border-tertiary-fixed/40 rounded-xl p-4 flex items-center gap-3">
+        <span class="material-symbols-outlined text-on-tertiary-fixed-variant text-[24px]">lock</span>
+        <div>
+          <h4 class="font-title-sm font-semibold text-on-tertiary-fixed-variant">Closed Ticket (Read-Only)</h4>
+          <p class="font-body-sm text-on-tertiary-fixed-variant/90">
+            This maintenance request is currently marked as <strong class="uppercase">{{ request()?.status }}</strong> and cannot receive further status updates.
+          </p>
+        </div>
+      </div>
+    }
+
+    <!-- 1. Read-Only Ticket Summary Header Card -->
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 shadow-sm space-y-4">
+      <div class="flex items-center justify-between border-b border-outline-variant/60 pb-3">
+        <div class="flex items-center gap-2">
+          <span class="material-symbols-outlined text-primary text-[20px]">assignment</span>
+          <h2 class="font-title-md font-semibold text-on-surface">Ticket Summary</h2>
+          <span class="text-[11px] font-mono px-2 py-0.5 rounded bg-surface-container text-on-surface-variant">READ ONLY</span>
+        </div>
+        <span class="font-body-sm text-on-surface-variant">Created: {{ request()?.createdAt | date:'mediumDate' }}</span>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 pt-1">
+        
+        <!-- Ticket ID -->
+        <div class="bg-surface-container-low/60 rounded-lg p-3 border border-outline-variant/40">
+          <div class="font-label-sm text-on-surface-variant mb-1">Ticket ID</div>
+          <div class="font-title-sm font-semibold text-primary font-mono">{{ request()?.requestId }}</div>
+        </div>
+
+        <!-- Asset Name & SN -->
+        <div class="bg-surface-container-low/60 rounded-lg p-3 border border-outline-variant/40">
+          <div class="font-label-sm text-on-surface-variant mb-1">Asset Unit</div>
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-[20px] text-on-surface-variant">{{ request()?.assetIcon || 'devices' }}</span>
+            <div>
+              <div class="font-title-sm font-semibold text-on-surface truncate">{{ request()?.assetName }}</div>
+              <div class="font-mono text-[12px] font-semibold text-primary">
+                SN: {{ request()?.serialNumber || 'SN-' + (request()?.requestId || 'N/A') }}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Assigned Employee / Custodian -->
+        <div class="bg-surface-container-low/60 rounded-lg p-3 border border-outline-variant/40">
+          <div class="font-label-sm text-on-surface-variant mb-1">Assigned Employee</div>
+          <div class="flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-[18px] text-on-surface-variant">person</span>
+            <div class="min-w-0">
+              <div class="font-title-sm font-medium text-on-surface truncate">
+                {{ request()?.assignedEmployee || request()?.requestedByName || 'Unassigned' }}
+              </div>
+              @if (request()?.department || request()?.assignedEmployeeDepartment) {
+                <div class="text-[11px] text-on-surface-variant truncate">
+                  {{ request()?.assignedEmployeeDepartment || request()?.department }}
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+
+        <!-- Issue Category -->
+        <div class="bg-surface-container-low/60 rounded-lg p-3 border border-outline-variant/40">
+          <div class="font-label-sm text-on-surface-variant mb-1">Issue / Category</div>
+          <div class="font-title-sm font-medium text-on-surface truncate" [title]="request()?.componentOrIssueType">
+            {{ request()?.componentOrIssueType }}
+          </div>
+        </div>
+
+        <!-- Priority & Technician -->
+        <div class="bg-surface-container-low/60 rounded-lg p-3 border border-outline-variant/40 flex flex-col justify-between">
+          <div>
+            <div class="font-label-sm text-on-surface-variant mb-1">Priority</div>
+            <app-status-badge [status]="request()?.priority" />
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Description -->
+      <div class="bg-surface-container-low/30 rounded-lg p-3 border border-outline-variant/30 text-body-sm text-on-surface-variant">
+        <strong class="font-medium text-on-surface">Original Issue Description:</strong>
+        <p class="mt-1 whitespace-pre-wrap font-body-sm">{{ request()?.issueDescription }}</p>
+      </div>
+    </div>
+
+    <!-- 2. Technician Work Update Form Card -->
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 shadow-sm space-y-6">
+      
+      <div class="border-b border-outline-variant/60 pb-3 flex items-center justify-between">
+        <div>
+          <h2 class="font-title-md font-semibold text-on-surface">Technician Work Report</h2>
+          <p class="font-body-sm text-on-surface-variant">Select current work status and document diagnostic findings or repair results.</p>
+        </div>
+        <span class="material-symbols-outlined text-primary text-[24px]">construction</span>
+      </div>
+
+      <!-- WORK STATUS SELECTION (5 Options in 1 Line) -->
+      <div class="space-y-3">
+        <label class="block font-title-sm font-medium text-on-surface">
+          WORK STATUS <span class="text-error">*</span>
+        </label>
+        
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2">
+          @for (option of statusOptions; track option.value) {
+            <button
+              type="button"
+              (click)="selectStatus(option.value)"
+              [disabled]="isClosed()"
+              class="p-2.5 rounded-lg border text-left transition-all relative flex flex-col justify-between h-full group"
+              [ngClass]="{
+                'border-primary bg-primary/5 ring-2 ring-primary/20 shadow-sm': selectedWorkStatus() === option.value,
+                'border-outline-variant hover:border-outline bg-surface-container-lowest': selectedWorkStatus() !== option.value,
+                'opacity-60 cursor-not-allowed': isClosed()
+              }"
+            >
+              <div class="flex items-center justify-between mb-1.5">
+                <span class="inline-flex items-center justify-center p-1.5 rounded-md" [ngClass]="option.badgeClass">
+                  <span class="material-symbols-outlined text-[16px]">{{ option.icon }}</span>
+                </span>
+                <span class="w-3.5 h-3.5 rounded-full border flex items-center justify-center"
+                      [ngClass]="selectedWorkStatus() === option.value ? 'border-primary bg-primary' : 'border-outline-variant'">
+                  @if (selectedWorkStatus() === option.value) {
+                    <span class="w-1 h-1 rounded-full bg-on-primary"></span>
+                  }
+                </span>
+              </div>
+              <div>
+                <h3 class="text-[12px] font-semibold text-on-surface group-hover:text-primary transition-colors leading-tight">
+                  {{ option.title }}
+                </h3>
+                <p class="text-[10px] text-on-surface-variant mt-0.5 leading-snug">
+                  {{ option.subtitle }}
+                </p>
+              </div>
+            </button>
+          }
+        </div>
+      </div>
+
+      <!-- WORK DONE / FINDINGS TEXTAREA -->
+      <div class="space-y-2 pt-2">
+        <div class="flex items-center justify-between">
+          <label for="workDoneInput" class="block font-title-sm font-medium text-on-surface">
+            Work Done / Findings <span class="text-error">*</span>
+          </label>
+          <span class="font-label-sm text-on-surface-variant">Required</span>
+        </div>
+
+        <textarea
+          id="workDoneInput"
+          rows="4"
+          [value]="workDone()"
+          (input)="onWorkDoneInput($event)"
+          [disabled]="isClosed()"
+          placeholder="Explain what repair work was done, diagnostics performed, or technical reason if asset cannot be repaired..."
+          class="w-full bg-surface-container-lowest text-on-surface border border-outline-variant rounded-lg p-3 text-body-md font-body-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+        ></textarea>
+
+        <!-- Dynamic example helper -->
+        <div class="bg-surface-container-low/50 rounded-lg p-3 border border-outline-variant/30 text-body-xs text-on-surface-variant flex items-start gap-2">
+          <span class="material-symbols-outlined text-[16px] text-primary shrink-0 mt-0.5">info</span>
+          <div>
+            @if (selectedWorkStatus() === 'TODO') {
+              <span><strong>Example for To Do:</strong> "Diagnostic scheduled for battery and display assessment."</span>
+            } @else if (selectedWorkStatus() === 'IN_PROGRESS') {
+              <span><strong>Example for In Progress:</strong> "Device is being diagnosed. Motherboard issue is still under investigation."</span>
+            } @else if (selectedWorkStatus() === 'REVIEW') {
+              <span><strong>Example for Under Review:</strong> "Component replaced and stress-tested. Under final review before sign-off."</span>
+            } @else if (selectedWorkStatus() === 'RESOLVED') {
+              <span><strong>Example for Resolved:</strong> "Screen replaced successfully and laptop tested. Device is working normally."</span>
+            } @else {
+              <span><strong>Example for Not Repairable:</strong> "Motherboard is severely damaged and replacement is not economical. Device cannot be repaired."</span>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- VALIDATION ERROR ALERT -->
+      @if (validationError()) {
+        <div class="bg-error-container/20 border border-error/40 rounded-lg p-3 flex items-center gap-2 text-error text-body-sm animate-fade-in">
+          <span class="material-symbols-outlined text-[18px]">error</span>
+          <span>{{ validationError() }}</span>
+        </div>
+      }
+
+      <!-- FORM ACTIONS -->
+      <div class="pt-4 border-t border-outline-variant/60 flex items-center justify-end gap-3">
+        <button
+          type="button"
+          (click)="onCancel()"
+          class="px-5 py-2.5 bg-surface-container-high hover:bg-surface-container text-on-surface font-label-md font-medium rounded-lg transition-colors"
+        >
+          Cancel
+        </button>
+
+        <button
+          type="button"
+          (click)="onSubmitUpdate()"
+          [disabled]="submitting() || isClosed()"
+          class="px-6 py-2.5 bg-primary hover:bg-primary/90 text-on-primary font-label-md font-medium rounded-lg shadow-sm transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          @if (submitting()) {
+            <span class="w-4 h-4 border-2 border-on-primary border-t-transparent rounded-full animate-spin"></span>
+            <span>Submitting...</span>
+          } @else {
+            <span class="material-symbols-outlined text-[18px]">send</span>
+            <span>Submit Update</span>
+          }
+        </button>
+      </div>
+
+    </div>
+
+    <!-- 3. Status History & Timeline Card -->
+    @if (request()?.timeline && request()!.timeline!.length > 0) {
+      <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 shadow-sm space-y-4">
+        <div class="flex items-center gap-2 border-b border-outline-variant/60 pb-3">
+          <span class="material-symbols-outlined text-primary text-[20px]">history</span>
+          <h2 class="font-title-md font-semibold text-on-surface">Maintenance Status History</h2>
+        </div>
+
+        <div class="relative pl-6 border-l-2 border-outline-variant/60 space-y-6 my-2">
+          @for (entry of request()!.timeline; track entry.id) {
+            <div class="relative group">
+              <div class="absolute -left-[31px] top-0.5 w-4 h-4 rounded-full border-2 border-surface-container-lowest bg-primary"></div>
+              
+              <div class="bg-surface-container-low/40 rounded-lg p-4 border border-outline-variant/30 space-y-2">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                  <div class="flex items-center gap-2">
+                    <app-status-badge [status]="entry.status" />
+                    <span class="font-title-sm font-medium text-on-surface">{{ entry.label }}</span>
+                  </div>
+                  <span class="font-mono text-[11px] text-on-surface-variant">{{ entry.timestamp | date:'medium' }}</span>
+                </div>
+
+                @if (entry.workDone) {
+                  <div class="text-body-sm text-on-surface bg-surface-container-lowest rounded p-2 border border-outline-variant/30">
+                    <strong class="font-medium text-primary">Findings / Work Done:</strong> {{ entry.workDone }}
+                  </div>
+                }
+
+                @if (entry.note) {
+                  <div class="text-body-sm text-on-surface-variant italic">
+                    Note: {{ entry.note }}
+                  </div>
+                }
+
+                @if (entry.completedBy) {
+                  <div class="text-label-sm text-on-surface-variant flex items-center gap-1">
+                    <span class="material-symbols-outlined text-[14px]">person</span>
+                    Updated by: {{ entry.completedBy }}
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+  }
+
+</div>

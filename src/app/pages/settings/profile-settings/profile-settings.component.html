@@ -1,0 +1,149 @@
+<div class="p-gutter sm:p-container-padding py-6 max-w-[1400px] mx-auto space-y-6">
+
+  <!-- Page Header -->
+  <app-page-header
+    title="Profile Settings"
+    subtitle="View and manage your profile information."
+  />
+
+  <!-- Main Card -->
+  <div class="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-xs max-w-[1440px]">
+
+    <!-- ─── PROFILE IMAGE ─────────────────────────────────────────── -->
+    <div class="p-6 flex flex-col sm:flex-row items-start sm:items-center gap-6">
+
+      <!-- Avatar -->
+      <div class="relative shrink-0">
+        @if (avatarPreview()) {
+          <img
+            [src]="avatarPreview()"
+            alt="Profile"
+            class="w-24 h-24 rounded-full object-cover border border-outline-variant" />
+        } @else {
+          <div class="w-24 h-24 rounded-full bg-secondary-container text-on-secondary-container border border-outline-variant flex items-center justify-center font-bold text-[28px] select-none">
+            {{ avatarInitials }}
+          </div>
+        }
+        <!-- Camera badge -->
+        <button
+          type="button"
+          (click)="onAvatarButtonClick()"
+          class="absolute bottom-0.5 right-0.5 w-7 h-7 rounded-full bg-primary text-on-primary flex items-center justify-center shadow-md hover:bg-primary/90 transition-colors"
+          title="Change profile image">
+          <span class="material-symbols-outlined text-[14px]">photo_camera</span>
+        </button>
+      </div>
+
+      <!-- Upload controls -->
+      <div class="flex flex-col gap-2">
+        <button
+          type="button"
+          (click)="onAvatarButtonClick()"
+          class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-primary text-primary font-label-md hover:bg-primary/10 transition-colors self-start">
+          <span class="material-symbols-outlined text-[18px]">upload</span>
+          Change Profile Image
+        </button>
+      </div>
+
+      <!-- Hidden file input -->
+      <input
+        #fileInput
+        type="file"
+        accept="image/jpeg,image/png"
+        class="hidden"
+        (change)="onFileSelected($event)" />
+    </div>
+
+    <div class="border-b border-outline-variant/60 mx-6"></div>
+
+    <!-- ─── NAME ──────────────────────────────────────────────────── -->
+    <div class="p-6 space-y-2">
+      <div class="flex items-center gap-2 mb-3">
+        <span class="material-symbols-outlined text-[20px] text-on-surface-variant">person</span>
+        <span class="font-label-md text-label-md text-on-surface font-semibold">Name</span>
+      </div>
+      <div class="flex flex-col sm:flex-row gap-3">
+        <input
+          type="text"
+          [(ngModel)]="nameValueModel"
+          placeholder="Enter your full name"
+          class="flex-1 h-10 px-3 rounded-lg border border-outline-variant bg-surface-container-lowest text-on-surface font-body-md focus:outline-none focus:border-primary transition-colors placeholder:text-on-surface-variant/50" />
+        <button
+          type="button"
+          (click)="onSaveName()"
+          [disabled]="!nameChanged || isSavingName()"
+          class="h-10 px-5 rounded-lg bg-primary text-on-primary font-label-md flex items-center gap-2 hover:bg-primary/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed shrink-0">
+          <span class="material-symbols-outlined text-[16px]">save</span>
+          Save
+        </button>
+      </div>
+    </div>
+
+    <div class="border-b border-outline-variant/60 mx-6"></div>
+
+    <!-- ─── EMAIL (read-only) ──────────────────────────────────────── -->
+    <div class="p-6 space-y-2">
+      <div class="flex items-center gap-2 mb-3">
+        <span class="material-symbols-outlined text-[20px] text-on-surface-variant">mail</span>
+        <span class="font-label-md text-label-md text-on-surface font-semibold">Email</span>
+      </div>
+      <input
+        type="email"
+        [value]="displayEmail"
+        readonly
+        class="w-full h-10 px-3 rounded-lg border border-outline-variant bg-surface-container-high text-on-surface-variant font-body-md cursor-not-allowed select-none" />
+    </div>
+
+    <div class="border-b border-outline-variant/60 mx-6"></div>
+
+    <!-- ─── ROLE (read-only) ───────────────────────────────────────── -->
+    <div class="p-6 space-y-2">
+      <div class="flex items-center gap-2 mb-3">
+        <span class="material-symbols-outlined text-[20px] text-on-surface-variant">verified_user</span>
+        <span class="font-label-md text-label-md text-on-surface font-semibold">Role</span>
+      </div>
+      <input
+        type="text"
+        [value]="displayRole"
+        readonly
+        class="w-full h-10 px-3 rounded-lg border border-outline-variant bg-surface-container-high text-on-surface-variant font-body-md cursor-not-allowed select-none uppercase tracking-wide" />
+    </div>
+
+    <div class="border-b border-outline-variant/60 mx-6"></div>
+
+    <!-- ─── ACCOUNT STATUS (read-only) ────────────────────────────── -->
+    <div class="p-6 space-y-2">
+      <div class="flex items-center gap-2 mb-3">
+        <span class="material-symbols-outlined text-[20px] text-on-surface-variant">account_circle</span>
+        <span class="font-label-md text-label-md text-on-surface font-semibold">Account Status</span>
+      </div>
+      <div class="w-full h-10 px-3 rounded-lg border border-outline-variant bg-surface-container-high flex items-center">
+        @if (isActive) {
+          <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-green-50 text-green-700 border border-green-200 font-label-sm font-semibold text-label-sm">
+            <span class="w-1.5 h-1.5 rounded-full bg-green-500 inline-block"></span>
+            ACTIVE
+          </span>
+        } @else {
+          <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container-high text-on-surface-variant border border-outline-variant font-label-sm font-semibold text-label-sm">
+            <span class="w-1.5 h-1.5 rounded-full bg-on-surface-variant inline-block"></span>
+            INACTIVE
+          </span>
+        }
+      </div>
+    </div>
+
+    <div class="border-b border-outline-variant/60 mx-6"></div>
+
+    <!-- ─── INFO NOTE ─────────────────────────────────────────────── -->
+    <div class="p-6">
+      <div class="flex items-start gap-3 bg-primary/5 border border-primary/20 rounded-lg p-4">
+        <span class="material-symbols-outlined text-primary text-[20px] shrink-0 mt-0.5">info</span>
+        <p class="font-body-md text-body-md text-on-surface-variant">
+          To change your password, please use the secure password reset option provided during login.
+        </p>
+      </div>
+    </div>
+
+  </div>
+
+</div>

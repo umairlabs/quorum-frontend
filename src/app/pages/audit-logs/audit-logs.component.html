@@ -1,0 +1,274 @@
+<div class="max-w-[1400px] mx-auto pt-6 px-6 sm:pt-8 sm:px-8 space-y-6 pb-12">
+  <!-- Page Header -->
+  <app-page-header [showBack]="false" title="Audit Logs" subtitle="Track and review important system activity and asset history.">
+    <div pageActions
+      class="flex items-center gap-1.5 text-label-xs text-on-surface-variant bg-surface-container-low px-3 py-1.5 rounded-lg border border-outline-variant/60 shadow-sm shrink-0">
+      <span class="material-symbols-outlined text-[16px]">verified_user</span>
+      <span class="font-medium">Immutable Activity Ledger</span>
+    </div>
+  </app-page-header>
+
+  <!-- Metric Summary Cards (Compact Height) -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+    <!-- Card 1: Total -->
+    <div class="bg-surface-container-lowest p-3.5 rounded-xl border border-outline-variant shadow-sm space-y-1">
+      <div class="flex items-center justify-between">
+        <span class="font-label-sm text-label-sm text-on-surface-variant font-medium">Total Audit Events</span>
+        <div class="w-7 h-7 rounded-lg bg-[#091426]/10 text-[#091426] flex items-center justify-center">
+          <span class="material-symbols-outlined text-[18px]">history_edu</span>
+        </div>
+      </div>
+      <p class="font-title-lg text-title-lg font-bold text-on-surface leading-none pt-1">{{
+        auditLogsService.stats().total }}</p>
+      <p class="text-[11px] text-on-surface-variant">Permanent record entries</p>
+    </div>
+
+    <!-- Card 2: Assets -->
+    <div class="bg-surface-container-lowest p-3.5 rounded-xl border border-outline-variant shadow-sm space-y-1">
+      <div class="flex items-center justify-between">
+        <span class="font-label-sm text-label-sm text-on-surface-variant font-medium">Asset Events</span>
+        <div class="w-7 h-7 rounded-lg bg-[#091426]/10 text-[#091426] flex items-center justify-center">
+          <span class="material-symbols-outlined text-[18px]">inventory_2</span>
+        </div>
+      </div>
+      <p class="font-title-lg text-title-lg font-bold text-on-surface leading-none pt-1">{{
+        auditLogsService.stats().assets }}</p>
+      <p class="text-[11px] text-on-surface-variant">Created, updated, purchased</p>
+    </div>
+
+    <!-- Card 3: Assignments -->
+    <div class="bg-surface-container-lowest p-3.5 rounded-xl border border-outline-variant shadow-sm space-y-1">
+      <div class="flex items-center justify-between">
+        <span class="font-label-sm text-label-sm text-on-surface-variant font-medium">Assignment Actions</span>
+        <div class="w-7 h-7 rounded-lg bg-[#091426]/10 text-[#091426] flex items-center justify-center">
+          <span class="material-symbols-outlined text-[18px]">assignment_ind</span>
+        </div>
+      </div>
+      <p class="font-title-lg text-title-lg font-bold text-on-surface leading-none pt-1">{{
+        auditLogsService.stats().assignments }}</p>
+      <p class="text-[11px] text-on-surface-variant">Assigned, transferred, returned</p>
+    </div>
+
+    <!-- Card 4: Maintenance -->
+    <div class="bg-surface-container-lowest p-3.5 rounded-xl border border-outline-variant shadow-sm space-y-1">
+      <div class="flex items-center justify-between">
+        <span class="font-label-sm text-label-sm text-on-surface-variant font-medium">Maintenance Actions</span>
+        <div class="w-7 h-7 rounded-lg bg-[#091426]/10 text-[#091426] flex items-center justify-center">
+          <span class="material-symbols-outlined text-[18px]">build</span>
+        </div>
+      </div>
+      <p class="font-title-lg text-title-lg font-bold text-on-surface leading-none pt-1">{{
+        auditLogsService.stats().maintenance }}</p>
+      <p class="text-[11px] text-on-surface-variant">Tickets, repairs, resolution</p>
+    </div>
+  </div>
+
+  <!-- Search & Filter Controls Card -->
+  <div class="bg-surface-container-lowest p-3.5 rounded-xl border border-outline-variant shadow-sm space-y-3">
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <!-- Search Input -->
+      <div class="relative">
+        <span
+          class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">
+          search
+        </span>
+        <input type="text" [value]="auditLogsService.searchQuery()" (input)="onSearchInput($event)"
+          placeholder="Search ID, user, asset, serial..."
+          class="w-full h-9 pl-9 pr-3 rounded-lg bg-surface-container-low border border-outline-variant font-body-sm text-body-sm text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none focus:border-primary transition-colors" />
+      </div>
+
+      <!-- Action Filter -->
+      <div>
+        <app-select
+          [options]="actionOptions"
+          [value]="auditLogsService.selectedAction()"
+          placeholder="All Actions"
+          (selectionChange)="onActionSelect($event)"
+        />
+      </div>
+
+      <!-- Module Filter -->
+      <div>
+        <app-select
+          [options]="moduleOptions"
+          [value]="auditLogsService.selectedModule()"
+          placeholder="All Modules"
+          (selectionChange)="onModuleSelect($event)"
+        />
+      </div>
+    </div>
+  </div>
+
+  <!-- Audit Log Table Container -->
+  <div class="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm overflow-hidden">
+    <!-- Loading State -->
+    @if (auditLogsService.loading()) {
+    <div class="p-10 text-center space-y-3">
+      <div class="w-8 h-8 border-3 border-primary/20 border-t-primary rounded-full animate-spin mx-auto"></div>
+      <p class="font-body-sm text-body-sm text-on-surface-variant font-medium">Loading audit logs...</p>
+    </div>
+    } @else if (auditLogsService.errorMessage()) {
+    <!-- Error State -->
+    <div class="p-10 text-center space-y-3">
+      <div
+        class="w-10 h-10 rounded-full bg-error-container text-on-error-container flex items-center justify-center mx-auto">
+        <span class="material-symbols-outlined text-[20px]">error</span>
+      </div>
+      <div class="space-y-0.5">
+        <h3 class="font-title-sm text-title-sm font-semibold text-on-surface">Unable to load audit logs</h3>
+        <p class="font-body-sm text-body-sm text-on-surface-variant">{{ auditLogsService.errorMessage() }}</p>
+      </div>
+      <button type="button" (click)="auditLogsService.loadAuditLogs()"
+        class="h-9 px-4 rounded-lg bg-primary text-on-primary font-label-sm text-label-sm hover:bg-primary/90 transition-colors inline-flex items-center gap-1.5 font-medium cursor-pointer">
+        <span class="material-symbols-outlined text-[16px]">refresh</span>
+        Try Again
+      </button>
+    </div>
+    } @else if (auditLogsService.paginatedLogs().length === 0) {
+    <!-- Empty State -->
+    <div class="p-10 text-center space-y-3">
+      <div
+        class="w-12 h-12 rounded-full bg-surface-container-high text-on-surface-variant flex items-center justify-center mx-auto">
+        <span class="material-symbols-outlined text-[26px]">manage_search</span>
+      </div>
+      <div class="space-y-0.5">
+        <h3 class="font-title-sm text-title-sm font-semibold text-on-surface">No audit logs found</h3>
+        <p class="font-body-sm text-body-sm text-on-surface-variant">
+          No audit history matches your selected search criteria or filters.
+        </p>
+      </div>
+      @if (auditLogsService.searchQuery() || auditLogsService.selectedAction() !== 'ALL' ||
+      auditLogsService.selectedModule() !== 'ALL') {
+      <button type="button" (click)="onClearFilters()"
+        class="h-8 px-3.5 rounded-lg border border-outline-variant font-label-xs text-label-xs text-primary hover:bg-primary/5 transition-colors font-medium cursor-pointer">
+        Clear Filters
+      </button>
+      }
+    </div>
+    } @else {
+    <!-- Audit Log Data Table -->
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr
+            class="bg-surface-container-low border-b border-outline-variant text-[12px] font-semibold text-on-surface-variant">
+            <th class="py-2.5 px-3.5 font-mono whitespace-nowrap">ID</th>
+            <th class="py-2.5 px-3.5 whitespace-nowrap">Date & Time</th>
+            <th class="py-2.5 px-3.5 whitespace-nowrap">User / Actor</th>
+            <th class="py-2.5 px-3.5 whitespace-nowrap">Action</th>
+            <th class="py-2.5 px-3.5 whitespace-nowrap">Module</th>
+            <th class="py-2.5 px-3.5 whitespace-nowrap">Asset</th>
+            <th class="py-2.5 px-3.5 whitespace-nowrap">Description</th>
+            <th class="py-2.5 px-3.5 text-right whitespace-nowrap">Details</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-outline-variant/60 text-[13px]">
+          @for (log of auditLogsService.paginatedLogs(); track log.id) {
+          <tr class="hover:bg-surface-container-low/50 transition-colors cursor-pointer" (click)="onViewDetail(log)">
+            <!-- Audit ID -->
+            <td class="py-2.5 px-3.5 font-mono font-bold text-primary whitespace-nowrap">
+              {{ log.auditId }}
+            </td>
+
+            <!-- Date & Time -->
+            <td class="py-2.5 px-3.5 text-on-surface-variant whitespace-nowrap">
+              {{ log.timestamp | date:'medium' }}
+            </td>
+
+            <!-- User / Actor -->
+            <td class="py-2.5 px-3.5">
+              <div class="font-medium text-on-surface whitespace-nowrap">{{ log.userName || 'System' }}</div>
+              <div class="text-[11px] text-on-surface-variant whitespace-nowrap">{{ log.userRole || 'System
+                Administrator' }}</div>
+            </td>
+
+            <!-- Action Badge -->
+            <td class="py-2.5 px-3.5 whitespace-nowrap">
+              <span
+                class="w-[140px] min-w-[140px] h-7 px-2.5 py-1 rounded-md text-[11px] font-semibold border inline-flex items-center justify-center text-center transition-colors"
+                [ngClass]="getActionBadgeClass(log.action)">
+                {{ formatActionName(log.action) }}
+              </span>
+            </td>
+
+            <!-- Module -->
+            <td class="py-2.5 px-3.5 whitespace-nowrap">
+              <span
+                class="w-[110px] min-w-[110px] h-7 px-2.5 py-1 rounded-md text-[11px] font-semibold bg-slate-500/10 text-slate-800 border border-slate-500/30 inline-flex items-center justify-center text-center uppercase">
+                {{ log.module }}
+              </span>
+            </td>
+
+            <!-- Asset & Serial -->
+            <td class="py-2.5 px-3.5">
+              @if (log.assetName) {
+              <div class="font-medium text-on-surface truncate max-w-[160px]">{{ log.assetName }}</div>
+              <div class="font-mono text-[11px] text-primary font-bold">{{ log.serialNumber || '—' }}</div>
+              } @else {
+              <span class="text-on-surface-variant font-mono">—</span>
+              }
+            </td>
+
+            <!-- Description -->
+            <td class="py-2.5 px-3.5 text-on-surface-variant max-w-[240px] truncate">
+              {{ log.description }}
+            </td>
+
+            <!-- Detail Action Button -->
+            <td class="py-2.5 px-3.5 text-right whitespace-nowrap" (click)="$event.stopPropagation()">
+              <button type="button" (click)="onViewDetail(log)"
+                class="h-7 px-2.5 rounded-md border border-outline-variant/80 hover:border-primary text-[12px] font-medium text-primary hover:bg-primary/5 transition-colors inline-flex items-center gap-1 cursor-pointer">
+                <span class="material-symbols-outlined text-[15px]">visibility</span>
+                View
+              </button>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Table Pagination Bar -->
+    @if (auditLogsService.totalPages() > 1) {
+    <div
+      class="p-4 bg-surface-container-low border-t border-outline-variant flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <p class="font-body-sm text-body-sm text-on-surface-variant">
+        Showing page <span class="font-semibold text-on-surface">{{ auditLogsService.currentPage() }}</span> of
+        <span class="font-semibold text-on-surface">{{ auditLogsService.totalPages() }}</span> ({{
+        auditLogsService.totalCount() }} entries)
+      </p>
+
+      <div class="flex items-center gap-1.5 self-center sm:self-auto">
+        <!-- Prev Page -->
+        <button type="button" [disabled]="auditLogsService.currentPage() === 1"
+          (click)="onPageChange(auditLogsService.currentPage() - 1)"
+          class="h-8 px-3 rounded border border-outline-variant font-label-sm text-label-sm text-on-surface disabled:opacity-40 disabled:cursor-not-allowed hover:bg-surface-container transition-colors flex items-center gap-1 font-medium cursor-pointer">
+          <span class="material-symbols-outlined text-[16px]">chevron_left</span>
+          Prev
+        </button>
+
+        <!-- Page Numbers -->
+        @for (page of pagesArray; track page) {
+        <button type="button" (click)="onPageChange(page)"
+          [class]="page === auditLogsService.currentPage() ? 'bg-primary text-on-primary font-bold' : 'bg-surface-container-lowest border border-outline-variant text-on-surface hover:bg-surface-container'"
+          class="h-8 w-8 rounded text-label-sm transition-colors cursor-pointer">
+          {{ page }}
+        </button>
+        }
+
+        <!-- Next Page -->
+        <button type="button" [disabled]="auditLogsService.currentPage() === auditLogsService.totalPages()"
+          (click)="onPageChange(auditLogsService.currentPage() + 1)"
+          class="h-8 px-3 rounded border border-outline-variant font-label-sm text-label-sm text-on-surface disabled:opacity-40 disabled:cursor-not-allowed hover:bg-surface-container transition-colors flex items-center gap-1 font-medium cursor-pointer">
+          Next
+          <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+        </button>
+      </div>
+    </div>
+    }
+    }
+  </div>
+
+  <!-- Detail Modal Component -->
+  <app-audit-detail-modal [isOpen]="isDetailModalOpen()" [log]="selectedLog()" (close)="onCloseDetailModal()" />
+</div>

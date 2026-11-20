@@ -1,0 +1,95 @@
+@if (isOpen()) {
+<div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
+  <div
+    class="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-2xl max-w-lg w-full p-6 space-y-5"
+    (click)="$event.stopPropagation()">
+    <div class="flex items-center justify-between border-b border-outline-variant/50 pb-3">
+      <h3 class="text-title-lg font-title-lg text-on-surface flex items-center gap-2 font-bold">
+        <span class="material-symbols-outlined text-primary">add_task</span>
+        Request New Asset
+      </h3>
+      <button (click)="onCancel()"
+        class="p-1 rounded-lg text-on-surface-variant hover:bg-surface-variant/50 transition-colors">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+
+    <form (ngSubmit)="onSubmit()" class="space-y-4">
+      <!-- Asset Dropdown (Replaces Asset Category) -->
+      <div>
+        <label class="block text-label-md font-label-md text-on-surface mb-1" for="req_asset_select">Asset <span
+            class="text-error">*</span></label>
+        <app-select
+          [options]="assetOptions()"
+          [value]="selectedAssetId()"
+          (selectionChange)="onAssetChange($event)"
+          placeholder="-- Select assets --" />
+        @if (availableAssets().length === 0) {
+        <p class="text-[12px] text-error mt-1">No available assets found in inventory right now.</p>
+        }
+      </div>
+
+      <div>
+        <label class="block text-label-md font-label-md text-on-surface mb-1">Requested Asset / Requirement <span
+            class="text-error">*</span></label>
+        <input type="text" [ngModel]="requestedAsset()" (ngModelChange)="requestedAsset.set($event)"
+          name="requestedAsset" required placeholder="e.g. Development Laptop, Ergonomic Chair, 27-inch Monitor"
+          class="w-full rounded-lg border border-outline-variant bg-surface p-2.5 text-body-md text-on-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none" />
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-label-md font-label-md text-on-surface mb-1">Model</label>
+          <input type="text" [ngModel]="model()" (ngModelChange)="model.set($event)" name="model"
+            placeholder="e.g. Latitude 7420, M2 Max"
+            class="w-full rounded-lg border border-outline-variant bg-surface p-2.5 text-body-md text-on-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none" />
+        </div>
+
+        <div>
+          <label class="block text-label-md font-label-md text-on-surface mb-1">Color</label>
+          <input type="text" [ngModel]="color()" (ngModelChange)="color.set($event)" name="color"
+            placeholder="e.g. Space Gray, Black, Silver"
+            class="w-full rounded-lg border border-outline-variant bg-surface p-2.5 text-body-md text-on-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none" />
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-label-md font-label-md text-on-surface mb-1">Reason for Request <span
+            class="text-error">*</span></label>
+        <textarea [ngModel]="reason()" (ngModelChange)="reason.set($event)" name="reason" required rows="3"
+          placeholder="Explain why this asset is required..."
+          class="w-full rounded-lg border border-outline-variant bg-surface p-2.5 text-body-md text-on-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none resize-none"></textarea>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-label-md font-label-md text-on-surface mb-1">Priority</label>
+          <app-select
+            [options]="priorityOptions"
+            [value]="priority()"
+            (selectionChange)="onPriorityChange($event)"
+            placeholder="Select Priority" />
+        </div>
+
+        <div>
+          <label class="block text-label-md font-label-md text-on-surface mb-1">Status</label>
+          <input type="text" value="PENDING" disabled
+            class="w-full rounded-lg border border-outline-variant bg-surface-container-low p-2.5 text-body-md text-on-surface-variant font-medium cursor-not-allowed outline-none" />
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-3 pt-3 border-t border-outline-variant/50">
+        <button type="button" (click)="onCancel()"
+          class="h-9 px-4 rounded-lg font-label-md text-label-md border border-outline-variant text-on-surface hover:bg-surface-container-low transition-colors">
+          Cancel
+        </button>
+        <button type="submit" [disabled]="!requestedAsset().trim() || !reason().trim()"
+          class="h-9 px-4 rounded-lg font-label-md text-label-md bg-primary text-on-primary hover:bg-primary/90 disabled:opacity-50 transition-colors flex items-center gap-2">
+          <span class="material-symbols-outlined text-[18px]">send</span>
+          Submit Request
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+}

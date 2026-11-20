@@ -1,0 +1,204 @@
+@if (groups().length > 0) {
+
+  <div class="bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden shadow-sm">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="bg-surface-container-low border-b border-outline-variant h-12">
+            <th class="px-3 sm:px-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold">
+              Asset Details
+            </th>
+            <th class="px-3 sm:px-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold">
+              Category
+            </th>
+            <th class="px-3 sm:px-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold hidden md:table-cell">
+              Brand
+            </th>
+            <th class="px-3 sm:px-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold hidden sm:table-cell">
+              Model
+            </th>
+            <th class="px-2 sm:px-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold text-center w-24 sm:w-auto">
+              Actions
+            </th>
+          </tr>
+        </thead>
+
+        <tbody class="font-body-sm text-body-sm text-on-surface divide-y divide-outline-variant">
+          @for (group of groups(); track group.id) {
+            <tr class="hover:bg-surface-container-lowest/50 h-12 transition-colors">
+
+              <!-- Asset Details -->
+              <td class="px-3 sm:px-4 py-2">
+                <div class="flex items-center gap-2">
+                  <span class="material-symbols-outlined text-[18px] text-on-surface-variant shrink-0">
+                    {{ getCategoryIcon(group.category) }}
+                  </span>
+                  <div class="min-w-0">
+                    <div class="font-label-md font-semibold truncate">{{ group.name }}</div>
+                    <!-- On mobile, show brand/model inline below the name if hidden in table columns -->
+                    <div class="text-[11px] text-on-surface-variant md:hidden truncate">
+                      @if (group.brand || group.model) {
+                        {{ group.brand }}{{ group.brand && group.model ? ' · ' : '' }}{{ group.model }}
+                      }
+                    </div>
+                  </div>
+                </div>
+              </td>
+
+              <!-- Category -->
+              <td class="px-3 sm:px-4 text-body-sm text-on-surface font-medium">
+                {{ getCategoryName(group.category) }}
+              </td>
+
+              <!-- Brand (hidden on mobile, shown inline under name) -->
+              <td class="px-3 sm:px-4 text-body-sm text-on-surface hidden md:table-cell">
+                @if (group.brand) {
+                  {{ group.brand }}
+                } @else {
+                  <span class="text-on-surface-variant">—</span>
+                }
+              </td>
+
+              <!-- Model (hidden on xs screens) -->
+              <td class="px-3 sm:px-4 text-body-sm text-on-surface hidden sm:table-cell">
+                @if (group.model) {
+                  {{ group.model }}
+                } @else {
+                  <span class="text-on-surface-variant">—</span>
+                }
+              </td>
+
+              <!-- Actions -->
+              <td class="px-2 sm:px-4 text-center">
+                <div class="flex items-center justify-center gap-0.5 sm:gap-1">
+                  <button
+                    (click)="viewGroup.emit(group)"
+                    class="p-1 hover:bg-surface-container-high rounded transition-colors"
+                    title="View Details">
+                    <span class="material-symbols-outlined text-[18px]">visibility</span>
+                  </button>
+                  <button
+                    (click)="editGroup.emit(group)"
+                    [disabled]="hasPurchasedStock(group)"
+                    [title]="hasPurchasedStock(group)
+                      ? 'Cannot edit — this asset has purchased units'
+                      : 'Edit Asset'"
+                    class="p-1 rounded transition-colors"
+                    [ngClass]="hasPurchasedStock(group)
+                      ? 'opacity-30 cursor-not-allowed text-on-surface-variant'
+                      : 'hover:bg-surface-container-high'">
+                    <span class="material-symbols-outlined text-[18px]">edit</span>
+                  </button>
+                  <button
+                    (click)="purchaseMore.emit(group)"
+                    title="Purchase Asset"
+                    class="p-1 rounded transition-colors hover:bg-surface-container-high text-on-surface">
+                    <span class="material-symbols-outlined text-[18px]">shopping_cart</span>
+                  </button>
+                  <button
+                    (click)="deleteGroup.emit(group)"
+                    title="Delete Asset"
+                    class="p-1 rounded transition-colors hover:bg-error-container/30 text-error">
+                    <span class="material-symbols-outlined text-[18px]">delete</span>
+                  </button>
+                </div>
+              </td>
+
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="px-4 py-3 border-t border-outline-variant bg-surface-container-low sm:px-6">
+
+      <!-- Mobile -->
+      <div class="flex sm:hidden items-center justify-between">
+        <p class="font-body-sm text-body-sm text-on-surface-variant">
+          Page <span class="font-medium text-on-surface">{{ currentPage() }}</span>
+          of <span class="font-medium text-on-surface">{{ totalPages() }}</span>
+        </p>
+        <div class="flex items-center gap-2">
+          <button
+            (click)="pageChange.emit(currentPage() - 1)"
+            [disabled]="currentPage() === 1"
+            class="inline-flex items-center px-3 py-1.5 rounded-md border border-outline-variant bg-surface-container-lowest font-body-sm text-body-sm font-medium text-on-surface-variant hover:bg-surface-container-high disabled:opacity-50 disabled:cursor-not-allowed">
+            <span class="material-symbols-outlined text-[18px]">chevron_left</span>
+          </button>
+          <button
+            (click)="pageChange.emit(currentPage() + 1)"
+            [disabled]="currentPage() >= totalPages()"
+            class="inline-flex items-center px-3 py-1.5 rounded-md border border-outline-variant bg-surface-container-lowest font-body-sm text-body-sm font-medium text-on-surface-variant hover:bg-surface-container-high disabled:opacity-50 disabled:cursor-not-allowed">
+            <span class="material-symbols-outlined text-[18px]">chevron_right</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Desktop -->
+      <div class="hidden sm:flex sm:items-center sm:justify-between">
+        <p class="font-body-sm text-body-sm text-on-surface-variant">
+          Showing
+          <span class="font-medium text-on-surface">
+            {{ (currentPage() - 1) * assetService.pageSize() + 1 }}
+          </span>
+          to
+          <span class="font-medium text-on-surface">
+            {{ currentPage() * assetService.pageSize() > groups().length
+               ? groups().length
+               : currentPage() * assetService.pageSize() }}
+          </span>
+          of
+          <span class="font-medium text-on-surface">{{ groups().length }}</span>
+          inventory assets
+        </p>
+        <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+          <button
+            (click)="pageChange.emit(currentPage() - 1)"
+            [disabled]="currentPage() === 1"
+            class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-outline-variant bg-surface-container-lowest font-body-sm text-body-sm font-medium text-on-surface-variant hover:bg-surface-container-high disabled:opacity-50 disabled:cursor-not-allowed">
+            <span class="sr-only">Previous</span>
+            <span class="material-symbols-outlined text-[18px]">chevron_left</span>
+          </button>
+          <button
+            (click)="pageChange.emit(1)"
+            [class.bg-primary-fixed]="currentPage() === 1"
+            [class.text-on-primary-fixed]="currentPage() === 1"
+            [class.bg-surface-container-lowest]="currentPage() !== 1"
+            class="relative inline-flex items-center px-4 py-2 border border-outline-variant font-body-sm text-body-sm font-medium">
+            1
+          </button>
+          @if (totalPages() > 1) {
+            <button
+              (click)="pageChange.emit(2)"
+              [class.bg-primary-fixed]="currentPage() === 2"
+              [class.text-on-primary-fixed]="currentPage() === 2"
+              [class.bg-surface-container-lowest]="currentPage() !== 2"
+              class="relative inline-flex items-center px-4 py-2 border border-outline-variant font-body-sm text-body-sm font-medium">
+              2
+            </button>
+          }
+          <button
+            (click)="pageChange.emit(currentPage() + 1)"
+            [disabled]="currentPage() >= totalPages()"
+            class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-outline-variant bg-surface-container-lowest font-body-sm text-body-sm font-medium text-on-surface-variant hover:bg-surface-container-high disabled:opacity-50 disabled:cursor-not-allowed">
+            <span class="sr-only">Next</span>
+            <span class="material-symbols-outlined text-[18px]">chevron_right</span>
+          </button>
+        </nav>
+      </div>
+
+    </div>
+  </div>
+
+} @else {
+  <div class="mt-8">
+    <app-empty-state
+      icon="inventory_2"
+      title="No inventory assets found"
+      description="We couldn't find any inventory assets matching your current filters. Try adjusting your search or add a new asset."
+      actionLabel="Clear Filters"
+      (actionClick)="clearFilters.emit()"
+    />
+  </div>
+}

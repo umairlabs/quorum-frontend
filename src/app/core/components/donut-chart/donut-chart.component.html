@@ -1,0 +1,84 @@
+<div class="relative flex flex-col items-center justify-between p-4 sm:p-5 bg-surface-container-low/60 border border-outline-variant/50 rounded-2xl w-full">
+
+  @if (renderedSegments().length > 0) {
+    <!-- Interactive Swirl Donut Graphic (Center) -->
+    <div class="relative w-full max-w-[210px] aspect-square flex items-center justify-center my-1 sm:my-2">
+      <svg
+        viewBox="0 0 320 320"
+        class="w-full h-full drop-shadow-xs"
+        xmlns="http://www.w3.org/2000/svg"
+        shape-rendering="geometricPrecision"
+      >
+        <!-- Interlocking Curved Segments -->
+        <g>
+          @for (seg of renderedSegments(); track seg.label; let idx = $index) {
+            <path
+              [attr.d]="seg.path"
+              [attr.fill]="seg.hexColor"
+              class="transition-all duration-200 cursor-pointer origin-center hover:brightness-105"
+              [class.opacity-40]="hoveredIndex() !== null && hoveredIndex() !== idx"
+              [class.brightness-110]="hoveredIndex() === idx"
+              (mouseenter)="onSegmentHover(idx)"
+              (mouseleave)="onSegmentLeave()"
+            />
+          }
+        </g>
+      </svg>
+
+      <!-- Center Hole Content: Dynamic on hover or displays centerValue & centerLabel -->
+      <div class="absolute inset-0 flex flex-col items-center justify-center p-2 text-center pointer-events-none select-none">
+        @if (hoveredSegment(); as activeSeg) {
+          <span class="text-2xl sm:text-3xl font-bold tracking-tight text-on-surface leading-tight transition-all duration-150">
+            {{ activeSeg.displayPercentage }}
+          </span>
+          <span class="text-[11px] font-semibold text-on-surface-variant truncate max-w-[90px] px-1 leading-tight mt-0.5">
+            {{ activeSeg.label }}
+          </span>
+        } @else if (centerValue()) {
+          <span class="text-2xl sm:text-3xl font-bold tracking-tight text-on-surface leading-tight">
+            {{ centerValue() }}
+          </span>
+          @if (centerLabel()) {
+            <span class="text-[10px] font-semibold uppercase tracking-wider text-on-surface-variant leading-tight mt-0.5">
+              {{ centerLabel() }}
+            </span>
+          }
+        }
+      </div>
+    </div>
+
+    <!-- Color Palettes / Legend with Percentages (No overlap with chart) -->
+    <div class="w-full mt-3 pt-3 border-t border-outline-variant/40 flex flex-col gap-1.5">
+      @for (seg of renderedSegments(); track seg.label; let idx = $index) {
+        <div
+          class="flex items-center justify-between text-xs py-1.5 px-2 rounded-lg hover:bg-surface-container transition-colors cursor-pointer group select-none"
+          [class.opacity-40]="hoveredIndex() !== null && hoveredIndex() !== idx"
+          (mouseenter)="onSegmentHover(idx)"
+          (mouseleave)="onSegmentLeave()"
+        >
+          <div class="flex items-center gap-2.5 min-w-0">
+            <span
+              class="w-2.5 h-2.5 rounded-full shrink-0 shadow-xs transition-transform duration-150 group-hover:scale-125"
+              [style.backgroundColor]="seg.hexColor"
+            ></span>
+            <span class="font-medium text-on-surface truncate group-hover:text-primary transition-colors">
+              {{ seg.label }}
+            </span>
+          </div>
+          <span class="font-semibold text-on-surface-variant shrink-0 ml-2">
+            {{ seg.displayPercentage }}
+          </span>
+        </div>
+      }
+    </div>
+  } @else {
+    <!-- Empty State -->
+    <div class="flex flex-col items-center justify-center gap-3 p-8 text-on-surface-variant">
+      <div class="w-36 h-36 rounded-full border-8 border-dashed border-outline-variant flex items-center justify-center">
+        <span class="material-symbols-outlined text-[28px] text-on-surface-variant">donut_large</span>
+      </div>
+      <p class="font-body-sm text-body-sm text-center">No distribution data available</p>
+    </div>
+  }
+
+</div>

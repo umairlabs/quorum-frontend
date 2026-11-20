@@ -1,0 +1,192 @@
+<div class="flex flex-col h-[calc(100vh-76px)] max-w-6xl mx-auto px-2 sm:px-4 py-2">
+
+  <!-- Compact Header Bar -->
+  <div class="flex items-center justify-between pb-2.5 mb-1 border-b border-outline-variant/40 shrink-0">
+    <div class="flex items-center gap-2.5">
+      <div class="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center border border-primary/20">
+        <span class="material-symbols-outlined text-[20px]">auto_awesome</span>
+      </div>
+      <div class="flex items-baseline gap-2">
+        <h1 class="font-headline-sm text-title-md font-bold text-on-surface">Astra AI</h1>
+        <span class="hidden sm:inline-block text-body-xs text-on-surface-variant/70">• Ask anything. Manage everything.</span>
+      </div>
+    </div>
+
+    @if (messages().length > 0) {
+      <button
+        type="button"
+        (click)="onClearChat()"
+        class="px-2.5 py-1 rounded-lg bg-surface-container-low hover:bg-surface-container-high text-on-surface-variant border border-outline-variant/60 font-label-xs text-label-xs flex items-center gap-1.5 transition-colors cursor-pointer"
+        title="Clear chat history"
+      >
+        <span class="material-symbols-outlined text-[16px]">delete_sweep</span>
+        <span class="hidden sm:inline">Clear Chat</span>
+      </button>
+    }
+  </div>
+
+  <!-- Main Conversation Scroll Stream -->
+  <div #scrollContainer (scroll)="onScrollContainer()" class="flex-1 overflow-y-auto px-1 sm:px-2 py-2 space-y-3 min-h-0 custom-scrollbar">
+
+    <!-- Messages List -->
+    @for (msg of messages(); track msg.id) {
+      <div class="flex gap-2 max-w-full sm:max-w-3xl" [ngClass]="msg.sender === 'user' ? 'ml-auto flex-row-reverse' : ''">
+
+        <!-- Avatar -->
+        <div class="w-7 h-7 rounded-full flex items-center justify-center shrink-0 text-body-sm font-bold shadow-2xs mt-1"
+             [ngClass]="msg.sender === 'user' ? 'bg-primary text-on-primary' : 'bg-surface-container-high text-primary border border-outline-variant'">
+          @if (msg.sender === 'user') {
+            <span class="material-symbols-outlined text-[16px]">person</span>
+          } @else {
+            <span class="material-symbols-outlined text-[16px]">auto_awesome</span>
+          }
+        </div>
+
+        <!-- Bubble Container -->
+        <div class="flex flex-col min-w-0" [ngClass]="msg.sender === 'user' ? 'items-end max-w-[78%]' : 'items-start max-w-[85%]'">
+
+          <!-- Sender label & time -->
+          <div class="flex items-center gap-1.5 mb-1 px-1" [class.justify-end]="msg.sender === 'user'">
+            <span class="text-label-xs font-bold text-on-surface-variant">
+              {{ msg.sender === 'user' ? 'You' : 'Astra AI' }}
+            </span>
+            <span class="text-[10px] text-on-surface-variant/70">
+              {{ msg.timestamp | date:'shortTime' }}
+            </span>
+          </div>
+
+          <!-- Content Card -->
+          <div class="px-3.5 py-2.5 rounded-2xl text-body-md font-body-md leading-relaxed shadow-2xs inline-block"
+               [ngClass]="msg.sender === 'user' ? 'bg-primary text-on-primary rounded-tr-xs' : 'bg-surface-container-low text-on-surface border border-outline-variant rounded-tl-xs'">
+
+            <div [innerHTML]="formatMarkdown(msg.text)" class="whitespace-pre-line break-words"></div>
+
+            <!-- Action Proposal or Result Card -->
+            @if (msg.sender === 'ai' && (msg.actionProposal || msg.actionResult)) {
+              <app-ai-action-card
+                [action]="msg.actionProposal || null"
+                [result]="msg.actionResult || null"
+                [isExecuting]="msg.isExecutingAction || false"
+                (confirm)="onConfirmAction(msg, $event)"
+                (cancel)="onCancelAction(msg)"
+              ></app-ai-action-card>
+            }
+          </div>
+
+        </div>
+
+      </div>
+    }
+
+    <!-- Loading Thinking State -->
+    @if (isLoading()) {
+      <div class="flex gap-2.5 max-w-md">
+        <div class="w-7 h-7 rounded-full bg-surface-container-high border border-outline-variant text-primary flex items-center justify-center shrink-0">
+          <span class="material-symbols-outlined text-[16px] animate-spin">auto_awesome</span>
+        </div>
+        <div class="p-3 rounded-2xl bg-surface-container-low border border-outline-variant text-on-surface-variant flex items-center gap-2 rounded-tl-xs">
+          <span class="w-2 h-2 rounded-full bg-primary animate-bounce"></span>
+          <span class="w-2 h-2 rounded-full bg-primary animate-bounce [animation-delay:0.2s]"></span>
+          <span class="w-2 h-2 rounded-full bg-primary animate-bounce [animation-delay:0.4s]"></span>
+          <span class="text-body-sm font-medium ml-1">Thinking...</span>
+        </div>
+      </div>
+    }
+
+  </div>
+
+  <!-- Compact Input Area with Horizontal Prompt Chips -->
+  <div class="mt-1 pt-1.5 border-t border-outline-variant/40 shrink-0 space-y-1.5">
+
+    <!-- Suggested Quick Chips Ribbon (ONLY shown when chat is new / no messages) -->
+    @if (messages().length === 0 && !isLoading() && suggestedChips().length > 0) {
+      <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
+        <span class="text-[11px] text-on-surface-variant/80 shrink-0 font-medium mr-1">Suggestions:</span>
+        @for (chip of suggestedChips(); track chip) {
+          <button
+            type="button"
+            (click)="onChipClick(chip)"
+            class="px-2.5 py-1 rounded-full bg-surface-container-high hover:bg-primary/10 hover:text-primary hover:border-primary/30 text-on-surface-variant text-[12px] whitespace-nowrap transition-all border border-outline-variant/60 cursor-pointer shrink-0"
+          >
+            {{ chip }}
+          </button>
+        }
+      </div>
+    }
+
+    <!-- Docked Input Field -->
+    <div class="flex items-center gap-2 p-1 bg-surface-container-low rounded-xl border border-outline-variant focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all shadow-xs">
+
+      <input
+        type="text"
+        [ngModel]="inputText()"
+        (ngModelChange)="inputText.set($event)"
+        (keydown)="onKeyDown($event)"
+        placeholder="Speak, and I'll take care of it..."
+        class="flex-1 bg-transparent px-3 py-1.5 text-body-md font-body-md text-on-surface focus:outline-none placeholder:text-on-surface-variant/60"
+        [disabled]="isLoading()"
+      />
+
+      <div class="flex items-center gap-1.5 shrink-0 pr-1">
+        <!-- Voice Dictation (Mic) Button -->
+        @if (isSpeechSupported()) {
+          <button
+            type="button"
+            (click)="toggleSpeechRecognition()"
+            [disabled]="isLoading() || isVoiceModeActive()"
+            [class.bg-primary]="isListening() && !isVoiceModeActive()"
+            [class.text-on-primary]="isListening() && !isVoiceModeActive()"
+            [class.mic-active-glow]="isListening() && !isVoiceModeActive()"
+            [class.text-on-surface-variant]="!isListening() || isVoiceModeActive()"
+            [class.hover:text-on-surface]="!isListening() && !isVoiceModeActive()"
+            [class.hover:bg-surface-container-high]="!isListening() && !isVoiceModeActive()"
+            class="w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed shrink-0"
+            [title]="isListening() && !isVoiceModeActive() ? 'Listening... Click to pause' : 'Dictate (speech to text)'"
+          >
+            <span class="material-symbols-outlined text-[22px]">
+              {{ isListening() && !isVoiceModeActive() ? 'pause' : 'mic' }}
+            </span>
+          </button>
+        }
+
+        <!-- Dynamic Action: Voice Mode (Waveform) when empty, Send button when text exists -->
+        @if (!inputText().trim()) {
+          <!-- Voice Mode Toggle (ChatGPT-style circular waveform) -->
+          @if (isSpeechSupported()) {
+            <button
+              type="button"
+              (click)="toggleVoiceMode()"
+              [disabled]="isLoading()"
+              [class.bg-primary]="true"
+              [class.text-on-primary]="true"
+              [class.voice-mode-active]="isVoiceModeActive()"
+              class="w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shadow-sm hover:opacity-95 shrink-0"
+              [title]="isVoiceModeActive() ? (isSpeaking() ? 'AI is speaking... Click to exit voice mode' : 'Listening... Click to exit voice mode') : 'Start voice conversation'"
+            >
+              @if (isSpeaking()) {
+                <span class="material-symbols-outlined text-[20px] animate-pulse">volume_up</span>
+              } @else if (isVoiceModeActive()) {
+                <span class="material-symbols-outlined text-[20px]">graphic_eq</span>
+              } @else {
+                <span class="material-symbols-outlined text-[20px]">graphic_eq</span>
+              }
+            </button>
+          }
+        } @else {
+          <!-- Send Button (Active when text typed) -->
+          <button
+            type="button"
+            (click)="onSendMessage()"
+            [disabled]="isLoading()"
+            class="w-9 h-9 rounded-full bg-primary hover:bg-primary/90 text-on-primary flex items-center justify-center transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shadow-2xs shrink-0"
+            title="Send message"
+          >
+            <span class="material-symbols-outlined text-[18px]">arrow_upward</span>
+          </button>
+        }
+      </div>
+
+    </div>
+  </div>
+
+</div>

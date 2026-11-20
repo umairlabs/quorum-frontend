@@ -1,0 +1,112 @@
+<div class="p-gutter sm:p-container-padding py-6 max-w-[1440px] mx-auto space-y-6">
+
+  <!-- Top Navigation & Page Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <app-page-header
+      title="Notification Sound"
+      subtitle="Choose the sound played when a new notification arrives."
+    />
+
+    <button
+      type="button"
+      (click)="goBack()"
+      class="h-10 px-4 rounded-lg border border-outline-variant bg-surface-container-lowest text-on-surface font-label-md hover:bg-surface-container-low transition-colors flex items-center gap-2 self-start sm:self-auto shrink-0 shadow-xs"
+    >
+      <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+      <span>Back to Settings</span>
+    </button>
+  </div>
+
+  <!-- Sound Selection Panel -->
+  <div class="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-xs overflow-hidden">
+    
+    <!-- Section Header -->
+    <div class="p-6 border-b border-outline-variant/60 bg-surface-container-lowest flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+        <span class="material-symbols-outlined text-[22px]">volume_up</span>
+      </div>
+      <div>
+        <h2 class="font-headline-sm text-headline-sm text-on-surface font-semibold">Available Sound Tones</h2>
+        <p class="font-body-sm text-body-sm text-on-surface-variant">Click any row to select your preferred notification tone, or use Play to preview.</p>
+      </div>
+    </div>
+
+    <!-- Sound Options List -->
+    <div class="divide-y divide-outline-variant/40">
+      @for (sound of soundOptions; track sound.id) {
+        <div
+          (click)="selectSound(sound)"
+          [class.bg-primary/5]="isSelected(sound)"
+          class="p-5 flex items-center justify-between gap-4 hover:bg-surface-container-low/60 transition-colors cursor-pointer group"
+        >
+          <!-- Left: Selection indicator + Music Icon + Name & Description -->
+          <div class="flex items-center gap-4 min-w-0">
+
+            <!-- Selection Radio/Check Indicator -->
+            <div
+              class="w-6 h-6 rounded-full border flex items-center justify-center transition-all shrink-0"
+              [class.border-primary]="isSelected(sound)"
+              [class.bg-primary]="isSelected(sound)"
+              [class.border-outline-variant]="!isSelected(sound)"
+              [class.bg-surface-container-lowest]="!isSelected(sound)"
+            >
+              @if (isSelected(sound)) {
+                <span class="material-symbols-outlined text-on-primary text-[16px] font-bold">check</span>
+              }
+            </div>
+
+            <!-- Music Note Icon Box -->
+            <div
+              class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors"
+              [class.bg-primary/10]="isSelected(sound)"
+              [class.text-primary]="isSelected(sound)"
+              [class.bg-surface-container-high]="!isSelected(sound)"
+              [class.text-on-surface-variant]="!isSelected(sound)"
+              [class.group-hover:bg-primary/10]="!isSelected(sound)"
+              [class.group-hover:text-primary]="!isSelected(sound)"
+            >
+              <span class="material-symbols-outlined text-[20px]">music_note</span>
+            </div>
+
+            <!-- Sound Metadata -->
+            <div class="min-w-0">
+              <div class="flex items-center gap-2">
+                <p
+                  class="font-title-sm text-title-sm font-semibold transition-colors truncate"
+                  [class.text-primary]="isSelected(sound)"
+                  [class.text-on-surface]="!isSelected(sound)"
+                >
+                  {{ sound.name }}
+                </p>
+
+                @if (isSelected(sound)) {
+                  <span class="inline-flex items-center px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[11px] font-semibold tracking-wide border border-primary/20 shrink-0">
+                    Active Sound
+                  </span>
+                }
+              </div>
+
+              <p class="font-body-sm text-body-sm text-on-surface-variant truncate mt-0.5">
+                {{ sound.description }}
+              </p>
+            </div>
+
+          </div>
+
+          <!-- Right: Preview Button -->
+          <button
+            type="button"
+            (click)="previewSound($event, sound)"
+            class="h-9 px-3.5 rounded-lg border border-outline-variant bg-surface-container-lowest hover:bg-primary/10 hover:border-primary/50 hover:text-primary text-on-surface font-label-sm text-label-sm font-medium transition-all flex items-center gap-1.5 shrink-0 shadow-2xs"
+            title="Preview sound"
+          >
+            <span class="material-symbols-outlined text-[18px]">play_arrow</span>
+            <span>Play</span>
+          </button>
+        </div>
+      }
+    </div>
+
+  </div>
+
+</div>

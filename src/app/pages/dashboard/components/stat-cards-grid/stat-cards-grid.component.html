@@ -1,0 +1,30 @@
+<div class="grid gap-4 {{ gridColsClass() }}">
+  @for (card of cards(); track card.label) {
+    <div
+      (click)="onCardClick(card)"
+      [class.cursor-pointer]="!!card.route"
+      [class.hover:shadow-md]="!!card.route"
+      [class.hover:-translate-y-0.5]="!!card.route"
+      [class.active:scale-[0.99]]="!!card.route"
+      [class.cursor-default]="!card.route"
+      class="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 flex flex-col justify-between h-full min-h-[120px] relative overflow-hidden hover:border-primary transition-all duration-150 shadow-xs select-none"
+    >
+      <!-- Top Row: Title + Icon -->
+      <div class="flex justify-between items-start">
+        <span class="font-label-sm text-label-sm text-on-surface-variant font-medium">{{ card.label }}</span>
+        <span class="material-symbols-outlined text-[20px] {{ card.iconColor }}">{{ card.icon }}</span>
+      </div>
+
+      <!-- Middle: Value Number -->
+      <div class="font-title-lg text-title-lg text-on-surface font-bold my-1 tracking-tight">{{ card.value }}</div>
+
+      <!-- Bottom Row: Subtitle text with icon -->
+      <div class="flex items-center gap-1 font-label-xs text-label-xs text-on-surface-variant min-w-0 overflow-hidden">
+        @if (card.metaIcon) {
+          <span class="material-symbols-outlined text-[13px] {{ card.metaIconColor }} shrink-0">{{ card.metaIcon }}</span>
+        }
+        <span class="truncate">{{ card.meta }}</span>
+      </div>
+    </div>
+  }
+</div>

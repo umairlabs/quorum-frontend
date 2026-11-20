@@ -1,0 +1,190 @@
+<app-modal
+  [isOpen]="isOpen()"
+  [hideHeader]="true"
+  maxWidth="max-w-[1440px]"
+  (close)="onCancel()">
+
+  <div modalBody class="space-y-6">
+
+    @if (user(); as u) {
+    <!-- User Profile Header -->
+    <div class="bg-surface-container-low p-4 rounded-xl border border-outline-variant/70 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div class="flex items-center gap-3.5">
+        <div class="w-11 h-11 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm shrink-0 border border-primary/20">
+          {{ u.avatarInitials || (u.firstName ? u.firstName.charAt(0) : 'U') }}
+        </div>
+        <div>
+          <div class="flex items-center gap-2.5 flex-wrap">
+            <h3 class="font-title-medium text-title-medium font-bold text-on-surface">
+              {{ u.fullName || (u.firstName + ' ' + u.lastName) }}
+            </h3>
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs {{ getRoleBadgeClass(u.role) }}">
+              {{ getRoleDisplayName(u.role) }}
+            </span>
+          </div>
+          <p class="font-body-sm text-body-sm text-on-surface-variant font-normal mt-0.5">
+            {{ u.email }}
+          </p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3 shrink-0 self-end sm:self-center">
+        <div class="flex items-center gap-2 bg-surface-container-lowest px-3 py-1.5 rounded-lg border border-outline-variant">
+          <span class="material-symbols-outlined text-[18px] text-primary">key</span>
+          <span class="font-label-md text-label-md font-semibold text-on-surface">
+            {{ selectedCount() }} / {{ totalCount }} Facilities
+          </span>
+        </div>
+
+        <button
+          type="button"
+          (click)="onCancel()"
+          class="p-1.5 rounded-lg hover:bg-surface-container-high transition-colors text-on-surface-variant flex items-center justify-center cursor-pointer border border-outline-variant/60"
+          title="Close">
+          <span class="material-symbols-outlined text-[20px]">close</span>
+        </button>
+      </div>
+    </div>
+    }
+
+    <!-- Toolbar: Search & Global Actions -->
+    <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-surface-container-lowest p-3 rounded-lg border border-outline-variant">
+      <!-- Search Input -->
+      <div class="relative flex-1">
+        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">search</span>
+        <input
+          type="text"
+          [value]="searchQuery()"
+          (input)="searchQuery.set($any($event.target).value)"
+          placeholder="Filter facilities by name or code..."
+          class="w-full h-9 pl-9 pr-3 text-body-sm bg-surface-container-low border border-outline-variant rounded-md text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none focus:border-primary transition-colors" />
+      </div>
+
+      <!-- Quick Action Buttons -->
+      <div class="flex items-center gap-2 shrink-0 justify-end">
+        <button
+          type="button"
+          (click)="selectAllGlobal()"
+          class="h-9 px-3 rounded text-label-sm font-label-sm font-medium border border-outline-variant bg-surface-container-lowest text-on-surface hover:bg-surface-container-low transition-colors flex items-center gap-1.5 cursor-pointer">
+          <span class="material-symbols-outlined text-[16px]">select_all</span>
+          Select All
+        </button>
+        <button
+          type="button"
+          (click)="clearAllGlobal()"
+          class="h-9 px-3 rounded text-label-sm font-label-sm font-medium border border-outline-variant bg-surface-container-lowest text-on-surface-variant hover:text-error hover:border-error/30 transition-colors flex items-center gap-1.5 cursor-pointer">
+          <span class="material-symbols-outlined text-[16px]">deselect</span>
+          Clear All
+        </button>
+      </div>
+    </div>
+
+    <!-- Loading Spinner -->
+    @if (loading()) {
+    <div class="py-12 text-center text-on-surface-variant flex flex-col items-center justify-center gap-3">
+      <span class="material-symbols-outlined animate-spin text-[32px] text-primary">sync</span>
+      <p class="font-body-md">Loading user facilities...</p>
+    </div>
+    } @else {
+
+    <!-- Permission Groups List -->
+    <div class="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
+      @for (group of filteredGroups(); track group.name) {
+      <div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-xs">
+        
+        <!-- Group Header -->
+        <div class="bg-surface-container-low/80 px-4 py-3 border-b border-outline-variant flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <input
+              type="checkbox"
+              [checked]="isGroupAllSelected(group)"
+              [indeterminate]="isGroupSomeSelected(group)"
+              (change)="toggleGroup(group)"
+              class="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary/20 cursor-pointer" />
+            <h4 class="font-title-sm text-title-sm font-bold text-on-surface tracking-wide uppercase">
+              {{ group.label }}
+            </h4>
+          </div>
+
+          <button
+            type="button"
+            (click)="toggleGroup(group)"
+            class="text-label-sm font-label-sm text-primary hover:underline font-medium cursor-pointer">
+            {{ isGroupAllSelected(group) ? 'Deselect Category' : 'Select Category' }}
+          </button>
+        </div>
+
+        <!-- Group Items Grid -->
+        <div class="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          @for (item of group.items; track item.code) {
+          <label
+            class="flex items-start gap-3 p-3 rounded-lg border transition-all cursor-pointer select-none"
+            [ngClass]="isSelected(item.code) ? 'bg-primary/5 border-primary/40 shadow-2xs' : 'bg-surface-container-lowest border-outline-variant/60 hover:bg-surface-container-low/50'">
+            <input
+              type="checkbox"
+              [checked]="isSelected(item.code)"
+              (change)="togglePermission(item.code)"
+              class="w-4 h-4 mt-0.5 rounded border-outline-variant text-primary focus:ring-primary/20 shrink-0 cursor-pointer" />
+
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between gap-2">
+                <span class="font-label-md text-label-md font-semibold text-on-surface">
+                  {{ item.name }}
+                </span>
+                <span class="font-mono text-[10px] text-on-surface-variant/70 px-1.5 py-0.5 rounded bg-surface-container-high shrink-0">
+                  {{ item.code }}
+                </span>
+              </div>
+              <p class="font-body-xs text-body-xs text-on-surface-variant font-normal mt-0.5 line-clamp-2">
+                {{ item.description }}
+              </p>
+            </div>
+          </label>
+          }
+        </div>
+      </div>
+      } @empty {
+      <div class="py-10 text-center text-on-surface-variant bg-surface-container-low rounded-xl border border-outline-variant/60">
+        <span class="material-symbols-outlined text-[36px] text-on-surface-variant/40 mb-2">search_off</span>
+        <p class="font-body-md font-medium">No facilities matching "{{ searchQuery() }}"</p>
+        <button type="button" (click)="searchQuery.set('')" class="text-primary font-label-md hover:underline mt-2 inline-block cursor-pointer">Clear Search</button>
+      </div>
+      }
+    </div>
+    }
+
+  </div>
+
+  <div modalFooter>
+    <div class="flex items-center justify-between gap-3 px-6 py-4 border-t border-outline-variant bg-surface-container-lowest">
+      <div class="text-label-sm text-on-surface-variant font-medium hidden sm:block">
+        <span class="font-semibold text-on-surface">{{ selectedCount() }}</span> facilities selected
+      </div>
+
+      <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
+        <button
+          type="button"
+          (click)="onCancel()"
+          [disabled]="saving()"
+          class="h-10 px-5 rounded-lg border border-outline-variant font-label-md text-label-md text-on-surface hover:bg-surface-container-low transition-colors font-medium cursor-pointer disabled:opacity-50">
+          Cancel
+        </button>
+
+        <button
+          type="button"
+          (click)="onSave()"
+          [disabled]="saving() || loading()"
+          class="h-10 px-6 rounded-lg bg-primary text-on-primary font-label-md text-label-md hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 font-medium cursor-pointer shadow-sm disabled:opacity-50">
+          @if (saving()) {
+          <span class="material-symbols-outlined animate-spin text-[18px]">sync</span>
+          Saving...
+          } @else {
+          <span class="material-symbols-outlined text-[18px]">save</span>
+          Save Permissions
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+
+</app-modal>

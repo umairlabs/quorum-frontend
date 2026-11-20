@@ -1,0 +1,13 @@
+<div class="flex border-b border-outline-variant overflow-x-auto hide-scrollbar">
+  @for (tab of tabs(); track tab.key) {
+    <button
+      (click)="onTabClick(tab.key)"
+      [ngClass]="activeTab() === tab.key
+        ? 'text-primary font-bold border-b-2 border-primary bg-secondary-container/20'
+        : 'text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface border-b-2 border-transparent'"
+      class="px-6 py-3 font-label-md text-label-md whitespace-nowrap transition-all -mb-px"
+    >
+      {{ tab.label }}
+    </button>
+  }
+</div>

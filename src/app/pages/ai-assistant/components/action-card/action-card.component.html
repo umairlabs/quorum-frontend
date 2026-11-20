@@ -1,0 +1,413 @@
+<!-- ═══════════════════════════════════════════════════════════════════
+     ACTION PROPOSAL CARD
+════════════════════════════════════════════════════════════════════ -->
+@if (action()) {
+  <div class="my-3 rounded-xl border border-primary/30 bg-primary/5 text-on-surface shadow-xs overflow-hidden">
+
+    <!-- Header -->
+    <div class="flex items-center gap-2 px-4 pt-4 pb-2">
+      <span class="material-symbols-outlined text-primary text-[20px]">smart_toy</span>
+      <span class="font-label-md text-label-md text-primary font-bold tracking-wide uppercase">Action Proposal</span>
+    </div>
+
+    <!-- Summary -->
+    <p class="px-4 pb-3 font-body-md text-body-md text-on-surface">{{ action()?.summary }}</p>
+
+    <!-- ════════════════════════════════════════════════════════════════
+         ADD_ASSET — interactive form
+    ═══════════════════════════════════════════════════════════════ -->
+    @if (isAddAssetAction()) {
+      <div class="px-4 pb-4 space-y-3">
+
+        <div class="flex items-center gap-2 rounded-lg bg-surface-container-low border border-outline-variant/60 px-3 py-2 text-body-sm text-on-surface-variant">
+          <span class="material-symbols-outlined text-[16px] text-primary shrink-0">info</span>
+          <span>Fill in the required fields, then confirm to create the asset.</span>
+        </div>
+
+        <!-- VIEW mode -->
+        @if (!editMode()) {
+          <div class="rounded-lg border border-outline-variant bg-surface/80 divide-y divide-outline-variant/40 text-body-sm">
+            @for (row of [
+              { label: 'Asset Name', val: addAssetData.name,          req: true  },
+              { label: 'Category',   val: addAssetData.category_name, req: true  },
+              { label: 'Brand',      val: addAssetData.brand,         req: true  },
+              { label: 'Model',      val: addAssetData.model,         req: true  },
+              { label: 'Color',      val: addAssetData.color,         req: false }
+            ]; track row.label) {
+              <div class="flex items-center justify-between px-3 py-2.5 gap-3">
+                <span class="text-on-surface-variant font-semibold shrink-0 flex items-center gap-0.5">
+                  {{ row.label }}
+                  @if (row.req) { <span class="text-error text-[13px]">*</span> }
+                  @if (!row.req) { <span class="text-[11px] font-normal text-on-surface-variant/60 ml-1">(opt)</span> }
+                </span>
+                @if (row.val) {
+                  <span class="text-on-surface font-medium text-right">{{ row.val }}</span>
+                } @else if (row.req) {
+                  <span class="text-error text-right flex items-center gap-1 text-[12px]">
+                    <span class="material-symbols-outlined text-[14px]">error</span>Required
+                  </span>
+                } @else {
+                  <span class="text-on-surface-variant/50 text-right">—</span>
+                }
+              </div>
+            }
+          </div>
+
+          @if (submitAttempted() && !addAssetValid) {
+            <div class="flex items-start gap-2 rounded-lg bg-error/10 border border-error/30 px-3 py-2.5 text-body-sm text-error">
+              <span class="material-symbols-outlined text-[18px] shrink-0 mt-0.5">warning</span>
+              <div>
+                <p class="font-semibold mb-1">Fill in all required fields before confirming:</p>
+                <ul class="list-disc list-inside space-y-0.5">
+                  @if (nameError)     { <li>{{ nameError }}</li>     }
+                  @if (categoryError) { <li>{{ categoryError }}</li> }
+                  @if (brandError)    { <li>{{ brandError }}</li>    }
+                  @if (modelError)    { <li>{{ modelError }}</li>    }
+                </ul>
+              </div>
+            </div>
+          }
+
+          <div class="flex items-center justify-end gap-2">
+            <button type="button" (click)="onCancel()" [disabled]="isExecuting()"
+              class="px-3 py-1.5 rounded-lg font-label-sm text-label-sm bg-surface-container-high hover:bg-surface-container-highest text-on-surface-variant transition-colors disabled:opacity-50">
+              Cancel
+            </button>
+            <button type="button" (click)="onEdit()" [disabled]="isExecuting()"
+              class="px-3 py-1.5 rounded-lg font-label-sm text-label-sm border border-outline-variant bg-surface hover:bg-surface-container-low text-on-surface flex items-center gap-1.5 transition-colors disabled:opacity-50">
+              <span class="material-symbols-outlined text-[15px]">edit</span>Edit
+            </button>
+            <button type="button" (click)="onConfirm()" [disabled]="isExecuting()"
+              class="px-4 py-1.5 rounded-lg font-label-sm text-label-sm bg-primary text-on-primary hover:bg-primary/90 flex items-center gap-1.5 transition-colors disabled:opacity-50 shadow-sm">
+              @if (isExecuting()) {
+                <span class="material-symbols-outlined animate-spin text-[15px]">progress_activity</span>Executing...
+              } @else {
+                <span class="material-symbols-outlined text-[15px]">check</span>Confirm & Execute
+              }
+            </button>
+          </div>
+        }
+
+        <!-- EDIT mode -->
+        @if (editMode()) {
+          <div class="space-y-3 rounded-lg border border-primary/30 bg-surface p-4">
+            <p class="font-label-md text-label-md text-primary font-semibold flex items-center gap-1.5">
+              <span class="material-symbols-outlined text-[17px]">edit</span>Edit Asset Details
+            </p>
+
+            <!-- Asset Name -->
+            <div class="space-y-1">
+              <label class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1">
+                Asset Name <span class="text-error">*</span>
+              </label>
+              <input id="aName" type="text" name="aName" [(ngModel)]="addAssetData.name"
+                placeholder="e.g. Dell Latitude 5520"
+                class="w-full h-9 px-3 rounded-lg border text-body-md bg-surface-container-lowest text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/40 transition-shadow placeholder:text-on-surface-variant/50"
+                [class.border-error]="submitAttempted() && !addAssetData.name.trim()"
+                [class.border-outline-variant]="!(submitAttempted() && !addAssetData.name.trim())" />
+              @if (nameError) { <p class="text-error text-[12px] flex items-center gap-1"><span class="material-symbols-outlined text-[13px]">error</span>{{ nameError }}</p> }
+            </div>
+
+            <!-- Category -->
+            <div class="space-y-1">
+              <label class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1">
+                Category <span class="text-error">*</span>
+              </label>
+              <input id="aCat" type="text" name="aCat" [(ngModel)]="addAssetData.category_name"
+                placeholder="e.g. Laptops, Printers, Networking"
+                class="w-full h-9 px-3 rounded-lg border text-body-md bg-surface-container-lowest text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/40 transition-shadow placeholder:text-on-surface-variant/50"
+                [class.border-error]="submitAttempted() && !addAssetData.category_name.trim()"
+                [class.border-outline-variant]="!(submitAttempted() && !addAssetData.category_name.trim())" />
+              @if (categoryError) { <p class="text-error text-[12px] flex items-center gap-1"><span class="material-symbols-outlined text-[13px]">error</span>{{ categoryError }}</p> }
+            </div>
+
+            <!-- Brand -->
+            <div class="space-y-1">
+              <label class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1">
+                Brand <span class="text-error">*</span>
+              </label>
+              <input id="aBrand" type="text" name="aBrand" [(ngModel)]="addAssetData.brand"
+                placeholder="e.g. Dell, HP, Lenovo"
+                class="w-full h-9 px-3 rounded-lg border text-body-md bg-surface-container-lowest text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/40 transition-shadow placeholder:text-on-surface-variant/50"
+                [class.border-error]="submitAttempted() && !addAssetData.brand.trim()"
+                [class.border-outline-variant]="!(submitAttempted() && !addAssetData.brand.trim())" />
+              @if (brandError) { <p class="text-error text-[12px] flex items-center gap-1"><span class="material-symbols-outlined text-[13px]">error</span>{{ brandError }}</p> }
+            </div>
+
+            <!-- Model -->
+            <div class="space-y-1">
+              <label class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1">
+                Model <span class="text-error">*</span>
+              </label>
+              <input id="aModel" type="text" name="aModel" [(ngModel)]="addAssetData.model"
+                placeholder="e.g. Latitude 5520, LaserJet Pro"
+                class="w-full h-9 px-3 rounded-lg border text-body-md bg-surface-container-lowest text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/40 transition-shadow placeholder:text-on-surface-variant/50"
+                [class.border-error]="submitAttempted() && !addAssetData.model.trim()"
+                [class.border-outline-variant]="!(submitAttempted() && !addAssetData.model.trim())" />
+              @if (modelError) { <p class="text-error text-[12px] flex items-center gap-1"><span class="material-symbols-outlined text-[13px]">error</span>{{ modelError }}</p> }
+            </div>
+
+            <!-- Color -->
+            <div class="space-y-1">
+              <label class="font-label-sm text-label-sm text-on-surface-variant">
+                Color <span class="text-[11px] font-normal text-on-surface-variant/60 ml-1">(optional)</span>
+              </label>
+              <input id="aColor" type="text" name="aColor" [(ngModel)]="addAssetData.color"
+                placeholder="e.g. Black, Silver, Space Gray"
+                class="w-full h-9 px-3 rounded-lg border border-outline-variant text-body-md bg-surface-container-lowest text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/40 transition-shadow placeholder:text-on-surface-variant/50" />
+            </div>
+
+            <div class="flex justify-end gap-2 pt-1">
+              <button type="button" (click)="onCancelEdit()"
+                class="px-3 py-1.5 rounded-lg font-label-sm text-label-sm bg-surface-container-high hover:bg-surface-container-highest text-on-surface-variant transition-colors">
+                Cancel Edit
+              </button>
+              <button type="button" (click)="onSaveEdit()"
+                class="px-4 py-1.5 rounded-lg font-label-sm text-label-sm bg-secondary text-on-secondary hover:bg-secondary/90 flex items-center gap-1.5 transition-colors shadow-sm">
+                <span class="material-symbols-outlined text-[15px]">check</span>Save
+              </button>
+            </div>
+          </div>
+        }
+
+      </div>
+    }
+
+    <!-- ════════════════════════════════════════════════════════════════
+         CREATE_PURCHASE — interactive form
+    ═══════════════════════════════════════════════════════════════ -->
+    @else if (isCreatePurchase()) {
+      <div class="px-4 pb-4 space-y-3">
+
+        <div class="flex items-center gap-2 rounded-lg bg-surface-container-low border border-outline-variant/60 px-3 py-2 text-body-sm text-on-surface-variant">
+          <span class="material-symbols-outlined text-[16px] text-primary shrink-0">shopping_cart</span>
+          <span>Review the purchase details below. Edit if needed, then confirm.</span>
+        </div>
+
+        <!-- VIEW mode -->
+        @if (!editMode()) {
+          <div class="rounded-lg border border-outline-variant bg-surface/80 divide-y divide-outline-variant/40 text-body-sm">
+
+            <div class="flex items-center justify-between px-3 py-2.5 gap-3">
+              <span class="text-on-surface-variant font-semibold shrink-0">Asset</span>
+              @if (purchaseData.asset_name) {
+                <span class="text-on-surface font-medium text-right">{{ purchaseData.asset_name }}</span>
+              } @else {
+                <span class="text-error text-right flex items-center gap-1 text-[12px]">
+                  <span class="material-symbols-outlined text-[14px]">error</span>Required
+                </span>
+              }
+            </div>
+
+            <div class="flex items-center justify-between px-3 py-2.5 gap-3">
+              <span class="text-on-surface-variant font-semibold shrink-0">Supplier</span>
+              <span class="text-on-surface font-medium text-right">{{ purchaseData.supplier_name || '—' }}</span>
+            </div>
+
+            <div class="flex items-center justify-between px-3 py-2.5 gap-3">
+              <span class="text-on-surface-variant font-semibold shrink-0">Quantity <span class="text-error text-[13px]">*</span></span>
+              @if (purchaseData.quantity >= 1) {
+                <span class="text-on-surface font-medium">{{ purchaseData.quantity }}</span>
+              } @else {
+                <span class="text-error flex items-center gap-1 text-[12px]">
+                  <span class="material-symbols-outlined text-[14px]">error</span>Required
+                </span>
+              }
+            </div>
+
+            <div class="flex items-center justify-between px-3 py-2.5 gap-3">
+              <span class="text-on-surface-variant font-semibold shrink-0">Unit Price <span class="text-error text-[13px]">*</span></span>
+              @if (purchaseData.unit_price > 0) {
+                <span class="text-on-surface font-medium">Rs. {{ purchaseData.unit_price | number:'1.0-2' }}</span>
+              } @else {
+                <span class="text-error flex items-center gap-1 text-[12px]">
+                  <span class="material-symbols-outlined text-[14px]">error</span>Required
+                </span>
+              }
+            </div>
+
+            <div class="flex items-center justify-between px-3 py-2.5 gap-3 bg-primary/5">
+              <span class="text-on-surface font-bold shrink-0">Total Amount</span>
+              <span class="text-primary font-bold">Rs. {{ computedTotal | number:'1.0-2' }}</span>
+            </div>
+
+          </div>
+
+          @if (submitAttempted() && !purchaseValid) {
+            <div class="flex items-start gap-2 rounded-lg bg-error/10 border border-error/30 px-3 py-2.5 text-body-sm text-error">
+              <span class="material-symbols-outlined text-[18px] shrink-0 mt-0.5">warning</span>
+              <div>
+                <p class="font-semibold mb-1">Please fix the following before confirming:</p>
+                <ul class="list-disc list-inside space-y-0.5">
+                  @if (purchaseAssetError) { <li>{{ purchaseAssetError }}</li> }
+                  @if (purchaseQtyError)   { <li>{{ purchaseQtyError }}</li>   }
+                  @if (purchasePriceError) { <li>{{ purchasePriceError }}</li> }
+                </ul>
+              </div>
+            </div>
+          }
+
+          <div class="flex items-center justify-end gap-2">
+            <button type="button" (click)="onCancel()" [disabled]="isExecuting()"
+              class="px-3 py-1.5 rounded-lg font-label-sm text-label-sm bg-surface-container-high hover:bg-surface-container-highest text-on-surface-variant transition-colors disabled:opacity-50">
+              Cancel
+            </button>
+            <button type="button" (click)="onEdit()" [disabled]="isExecuting()"
+              class="px-3 py-1.5 rounded-lg font-label-sm text-label-sm border border-outline-variant bg-surface hover:bg-surface-container-low text-on-surface flex items-center gap-1.5 transition-colors disabled:opacity-50">
+              <span class="material-symbols-outlined text-[15px]">edit</span>Edit
+            </button>
+            <button type="button" (click)="onConfirm()" [disabled]="isExecuting()"
+              class="px-4 py-1.5 rounded-lg font-label-sm text-label-sm bg-primary text-on-primary hover:bg-primary/90 flex items-center gap-1.5 transition-colors disabled:opacity-50 shadow-sm">
+              @if (isExecuting()) {
+                <span class="material-symbols-outlined animate-spin text-[15px]">progress_activity</span>Executing...
+              } @else {
+                <span class="material-symbols-outlined text-[15px]">check</span>Confirm & Execute
+              }
+            </button>
+          </div>
+        }
+
+        <!-- EDIT mode -->
+        @if (editMode()) {
+          <div class="space-y-3 rounded-lg border border-primary/30 bg-surface p-4">
+            <p class="font-label-md text-label-md text-primary font-semibold flex items-center gap-1.5">
+              <span class="material-symbols-outlined text-[17px]">edit</span>Edit Purchase Details
+            </p>
+
+            <!-- Asset Name -->
+            <div class="space-y-1">
+              <label class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1">
+                Asset Name <span class="text-error">*</span>
+              </label>
+              <input type="text" name="pAsset" [(ngModel)]="purchaseData.asset_name"
+                placeholder="e.g. Laptop, Printer"
+                class="w-full h-9 px-3 rounded-lg border text-body-md bg-surface-container-lowest text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/40 transition-shadow placeholder:text-on-surface-variant/50"
+                [class.border-error]="submitAttempted() && !purchaseData.asset_name.trim()"
+                [class.border-outline-variant]="!(submitAttempted() && !purchaseData.asset_name.trim())" />
+              @if (purchaseAssetError) {
+                <p class="text-error text-[12px] flex items-center gap-1">
+                  <span class="material-symbols-outlined text-[13px]">error</span>{{ purchaseAssetError }}
+                </p>
+              }
+            </div>
+
+            <!-- Supplier -->
+            <div class="space-y-1">
+              <label class="font-label-sm text-label-sm text-on-surface-variant">
+                Supplier <span class="text-[11px] font-normal text-on-surface-variant/60 ml-1">(optional)</span>
+              </label>
+              <input type="text" name="pSupplier" [(ngModel)]="purchaseData.supplier_name"
+                placeholder="e.g. Ali Electronics"
+                class="w-full h-9 px-3 rounded-lg border border-outline-variant text-body-md bg-surface-container-lowest text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/40 transition-shadow placeholder:text-on-surface-variant/50" />
+            </div>
+
+            <!-- Quantity -->
+            <div class="space-y-1">
+              <label class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1">
+                Quantity <span class="text-error">*</span>
+              </label>
+              <input type="number" name="pQty" [(ngModel)]="purchaseData.quantity" min="1"
+                (ngModelChange)="onPurchaseQtyOrPriceChange()"
+                placeholder="e.g. 1"
+                class="w-full h-9 px-3 rounded-lg border text-body-md bg-surface-container-lowest text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/40 transition-shadow"
+                [class.border-error]="submitAttempted() && purchaseData.quantity < 1"
+                [class.border-outline-variant]="!(submitAttempted() && purchaseData.quantity < 1)" />
+              @if (purchaseQtyError) {
+                <p class="text-error text-[12px] flex items-center gap-1">
+                  <span class="material-symbols-outlined text-[13px]">error</span>{{ purchaseQtyError }}
+                </p>
+              }
+            </div>
+
+            <!-- Unit Price -->
+            <div class="space-y-1">
+              <label class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1">
+                Unit Price (Rs.) <span class="text-error">*</span>
+              </label>
+              <input type="number" name="pPrice" [(ngModel)]="purchaseData.unit_price" min="0"
+                (ngModelChange)="onPurchaseQtyOrPriceChange()"
+                placeholder="e.g. 20000"
+                class="w-full h-9 px-3 rounded-lg border text-body-md bg-surface-container-lowest text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/40 transition-shadow"
+                [class.border-error]="submitAttempted() && purchaseData.unit_price <= 0"
+                [class.border-outline-variant]="!(submitAttempted() && purchaseData.unit_price <= 0)" />
+              @if (purchasePriceError) {
+                <p class="text-error text-[12px] flex items-center gap-1">
+                  <span class="material-symbols-outlined text-[13px]">error</span>{{ purchasePriceError }}
+                </p>
+              }
+            </div>
+
+            <!-- Computed Total -->
+            <div class="flex items-center justify-between px-3 py-2 rounded-lg bg-primary/5 border border-primary/20 text-body-sm">
+              <span class="font-semibold text-on-surface">Total Amount</span>
+              <span class="font-bold text-primary">Rs. {{ computedTotal | number:'1.0-2' }}</span>
+            </div>
+
+            <div class="flex justify-end gap-2 pt-1">
+              <button type="button" (click)="onCancelEdit()"
+                class="px-3 py-1.5 rounded-lg font-label-sm text-label-sm bg-surface-container-high hover:bg-surface-container-highest text-on-surface-variant transition-colors">
+                Cancel Edit
+              </button>
+              <button type="button" (click)="onSaveEdit()"
+                class="px-4 py-1.5 rounded-lg font-label-sm text-label-sm bg-secondary text-on-secondary hover:bg-secondary/90 flex items-center gap-1.5 transition-colors shadow-sm">
+                <span class="material-symbols-outlined text-[15px]">check</span>Save
+              </button>
+            </div>
+          </div>
+        }
+
+      </div>
+    }
+
+    <!-- ════════════════════════════════════════════════════════════════
+         Generic action — raw params table
+    ═══════════════════════════════════════════════════════════════ -->
+    @else {
+      @if (genericParams().length > 0) {
+        <div class="mx-4 mb-3 bg-surface/80 p-3 rounded-lg border border-outline-variant text-body-sm font-mono space-y-1">
+          @for (item of genericParams(); track item.key) {
+            <div class="flex justify-between gap-2">
+              <span class="text-on-surface-variant font-semibold">{{ formatParamKey(item.key) }}:</span>
+              <span class="text-on-surface text-right">{{ item.value }}</span>
+            </div>
+          }
+        </div>
+      }
+      <div class="flex items-center justify-end gap-2 px-4 pb-4">
+        <button (click)="onCancel()" [disabled]="isExecuting()"
+          class="px-3 py-1.5 rounded-lg font-label-sm text-label-sm bg-surface-container-high hover:bg-surface-container-highest text-on-surface-variant transition-colors disabled:opacity-50">
+          Cancel
+        </button>
+        <button (click)="onConfirm()" [disabled]="isExecuting()"
+          class="px-4 py-1.5 rounded-lg font-label-sm text-label-sm bg-primary text-on-primary hover:bg-primary/90 flex items-center gap-1.5 transition-colors disabled:opacity-50 shadow-sm">
+          @if (isExecuting()) {
+            <span class="material-symbols-outlined animate-spin text-[15px]">progress_activity</span>Executing...
+          } @else {
+            <span class="material-symbols-outlined text-[15px]">check</span>Confirm & Execute
+          }
+        </button>
+      </div>
+    }
+
+  </div>
+}
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     RESULT CARD
+════════════════════════════════════════════════════════════════════ -->
+@if (result()) {
+  <div class="my-3 p-4 rounded-xl border text-on-surface shadow-xs"
+       [ngClass]="result()?.success ? 'border-success/30 bg-success/5' : 'border-error/30 bg-error/5'">
+    <div class="flex items-center gap-2 mb-1">
+      <span class="material-symbols-outlined text-[20px]"
+            [ngClass]="result()?.success ? 'text-success' : 'text-error'">
+        {{ result()?.success ? 'check_circle' : 'error' }}
+      </span>
+      <span class="font-label-md text-label-md font-bold"
+            [ngClass]="result()?.success ? 'text-success' : 'text-error'">
+        {{ result()?.success ? 'Action Executed Successfully' : 'Action Failed' }}
+      </span>
+    </div>
+    <p class="font-body-md text-body-md text-on-surface whitespace-pre-line">{{ result()?.message }}</p>
+  </div>
+}

@@ -1,0 +1,383 @@
+<div class="max-w-[1440px] mx-auto p-gutter sm:p-container-padding space-y-6">
+
+  <!-- Page Header -->
+  <app-page-header
+    [showBack]="false"
+    title="Depreciation Management"
+    subtitle="Track asset book value reductions, salvage baselines, and yearly straight-line accounting schedules."
+  />
+
+  <!-- 4 Uniform Aggregate Stats Cards -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <!-- Total Tracked Assets -->
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-xs p-3 flex flex-col gap-1">
+      <div class="flex items-center justify-between">
+        <span class="font-label-md text-label-md text-on-surface-variant">Tracked Assets</span>
+        <div class="w-9 h-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+          <span class="material-symbols-outlined text-[20px]">inventory_2</span>
+        </div>
+      </div>
+      <span class="font-headline-sm text-xl text-on-surface font-bold">
+        {{ totalAssetsCount() }}
+      </span>
+      <span class="font-label-sm text-label-sm text-on-surface-variant">Total physical units</span>
+    </div>
+
+    <!-- Total Purchase Value -->
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-xs p-3 flex flex-col gap-1">
+      <div class="flex items-center justify-between">
+        <span class="font-label-md text-label-md text-on-surface-variant">Total Purchase Cost</span>
+        <div class="w-9 h-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+          <span class="material-symbols-outlined text-[20px]">shopping_bag</span>
+        </div>
+      </div>
+      <span class="font-headline-sm text-xl text-on-surface font-bold font-mono">
+        {{ totalPurchaseValue() | appCurrency }}
+      </span>
+      <span class="font-label-sm text-label-sm text-on-surface-variant">Original capital cost</span>
+    </div>
+
+    <!-- Total Accumulated Depreciation -->
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-xs p-3 flex flex-col gap-1">
+      <div class="flex items-center justify-between">
+        <span class="font-label-md text-label-md text-on-surface-variant">Accumulated Deprec.</span>
+        <div class="w-9 h-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+          <span class="material-symbols-outlined text-[20px]">trending_down</span>
+        </div>
+      </div>
+      <span class="font-headline-sm text-xl text-on-surface font-bold font-mono">
+        {{ totalAccumulatedDepreciation() | appCurrency }}
+      </span>
+      <span class="font-label-sm text-label-sm text-on-surface-variant">Total amortized amount</span>
+    </div>
+
+    <!-- Total Current Book Value -->
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-xs p-3 flex flex-col gap-1">
+      <div class="flex items-center justify-between">
+        <span class="font-label-md text-label-md text-on-surface-variant">Total Book Value</span>
+        <div class="w-9 h-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+          <span class="material-symbols-outlined text-[20px]">account_balance_wallet</span>
+        </div>
+      </div>
+      <span class="font-headline-sm text-xl text-on-surface font-bold font-mono">
+        {{ totalCurrentBookValue() | appCurrency }}
+      </span>
+      <span class="font-label-sm text-label-sm text-on-surface-variant">Current net asset value</span>
+    </div>
+  </div>
+
+  <!-- Search and Filters Bar -->
+  <div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-4 shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between">
+    <div class="w-full md:w-80 lg:w-96">
+      <app-search-input
+        [value]="searchQuery()"
+        placeholder="Search by name, serial number, ID..."
+        (valueChange)="searchQuery.set($event); currentPage.set(1)"
+      />
+    </div>
+  </div>
+
+  <!-- Main Table Card -->
+  <div class="bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden shadow-sm">
+    @if (paginatedRows().length === 0) {
+      <div class="p-8">
+        <app-empty-state
+          title="No assets found"
+          message="No depreciation records match the current filter criteria."
+          icon="trending_down"
+        />
+      </div>
+    } @else {
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="bg-surface-container-low border-b border-outline-variant text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">
+              <th class="py-3.5 px-4">Asset Details</th>
+              <th class="py-3.5 px-4 text-right">Purchase Price</th>
+              <th class="py-3.5 px-4 text-right">Salvage Value</th>
+              <th class="py-3.5 px-4 text-center">Useful Life</th>
+              <th class="py-3.5 px-4 text-right">Annual Deprec.</th>
+              <th class="py-3.5 px-4">Current Book Value</th>
+              <th class="py-3.5 px-4 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-outline-variant/40 text-xs">
+            @for (row of paginatedRows(); track row.asset.id) {
+              <tr class="hover:bg-surface-container-low/40 transition-colors group">
+                <!-- Asset Info -->
+                <td class="py-3.5 px-4">
+                  <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                      <span class="material-symbols-outlined text-[20px]">
+                        {{ getCategoryIcon(row.asset.category) }}
+                      </span>
+                    </div>
+                    <div>
+                      <div class="font-semibold text-on-surface hover:text-primary cursor-pointer" (click)="onOpenSchedule(row)">
+                        {{ row.asset.name }}
+                      </div>
+                      <div class="text-[11px] text-on-surface-variant flex items-center gap-1.5 mt-0.5">
+                        <span class="font-mono">{{ row.asset.serialNumber || row.asset.assetId || '—' }}</span>
+                        @if (row.asset.brand) {
+                          <span>•</span>
+                          <span>{{ row.asset.brand }} {{ row.asset.model || '' }}</span>
+                        }
+                      </div>
+                    </div>
+                  </div>
+                </td>
+
+                <!-- Purchase Price -->
+                <td class="py-3.5 px-4 text-right font-mono font-medium text-on-surface">
+                  {{ row.depreciation.purchasePrice | appCurrency }}
+                </td>
+
+                <!-- Salvage Value -->
+                <td class="py-3.5 px-4 text-right font-mono text-on-surface-variant">
+                  {{ row.depreciation.salvageValue | appCurrency }}
+                </td>
+
+                <!-- Useful Life -->
+                <td class="py-3.5 px-4 text-center font-medium text-on-surface">
+                  @if (row.depreciation.usefulLifeYears > 0) {
+                    <span>{{ row.depreciation.usefulLifeYears }} yrs</span>
+                  } @else {
+                    <span class="text-on-surface-variant/60">—</span>
+                  }
+                </td>
+
+                <!-- Annual Depreciation -->
+                <td class="py-3.5 px-4 text-right font-mono text-on-surface font-medium">
+                  @if (row.depreciation.annualDepreciation > 0) {
+                    <span>{{ row.depreciation.annualDepreciation | appCurrency }}/yr</span>
+                  } @else {
+                    <span class="text-on-surface-variant/60">—</span>
+                  }
+                </td>
+
+                <!-- Current Book Value & Progress -->
+                <td class="py-3.5 px-4">
+                  <div class="w-44">
+                    <div class="flex items-center justify-between text-[11px] mb-1">
+                      <span class="font-mono font-bold text-on-surface">
+                        {{ row.depreciation.currentBookValue | appCurrency }}
+                      </span>
+                      <span class="text-on-surface-variant text-[10px]">
+                        {{ row.percentDepreciated }}%
+                      </span>
+                    </div>
+                    <div class="w-full bg-surface-container-highest h-1.5 rounded-full overflow-hidden">
+                      <div
+                        class="bg-primary h-full rounded-full transition-all duration-300"
+                        [style.width.%]="row.percentDepreciated"
+                      ></div>
+                    </div>
+                  </div>
+                </td>
+
+                <!-- Actions -->
+                <td class="py-3.5 px-4 text-right">
+                  <div class="flex items-center justify-end gap-1">
+                    <button
+                      type="button"
+                      (click)="onOpenSchedule(row)"
+                      title="View Yearly Depreciation Schedule"
+                      class="w-8 h-8 rounded-lg flex items-center justify-center text-on-surface-variant hover:text-primary hover:bg-surface-container transition-colors"
+                    >
+                      <span class="material-symbols-outlined text-[18px]">calendar_month</span>
+                    </button>
+                    @if (canManageDepreciation()) {
+                      <button
+                        type="button"
+                        (click)="onEditDepreciation(row.asset)"
+                        title="Configure Depreciation"
+                        class="w-8 h-8 rounded-lg flex items-center justify-center text-on-surface-variant hover:text-primary hover:bg-surface-container transition-colors"
+                      >
+                        <span class="material-symbols-outlined text-[18px]">tune</span>
+                      </button>
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination Footer -->
+      <div class="px-5 py-3.5 bg-surface-container-low/50 border-t border-outline-variant flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-on-surface-variant">
+        <span>
+          Showing {{ paginatedRows().length }} of {{ filteredRows().length }} assets
+        </span>
+
+        <div class="flex items-center gap-1">
+          <button
+            type="button"
+            (click)="onPageChange(currentPage() - 1)"
+            [disabled]="currentPage() === 1"
+            class="px-2.5 py-1 rounded-lg border border-outline-variant hover:bg-surface-container disabled:opacity-40 disabled:pointer-events-none transition-colors"
+          >
+            Previous
+          </button>
+
+          <span class="px-3 py-1 font-medium text-on-surface">
+            Page {{ currentPage() }} of {{ totalPages() }}
+          </span>
+
+          <button
+            type="button"
+            (click)="onPageChange(currentPage() + 1)"
+            [disabled]="currentPage() === totalPages()"
+            class="px-2.5 py-1 rounded-lg border border-outline-variant hover:bg-surface-container disabled:opacity-40 disabled:pointer-events-none transition-colors"
+          >
+            Next
+          </button>
+        </div>
+      </div>
+    }
+  </div>
+
+</div>
+
+<!-- ─── FULL-PAGE YEARLY SCHEDULE MODAL ────────────────────────────────────── -->
+<app-modal
+  [isOpen]="isScheduleModalOpen()"
+  [hideHeader]="true"
+  maxWidth="max-w-[1440px]"
+  (close)="isScheduleModalOpen.set(false)"
+>
+  <div modalBody>
+    @if (selectedRowForSchedule(); as r) {
+      <div class="bg-surface-container-lowest p-6 sm:p-8 rounded-xl border border-outline-variant shadow-sm space-y-6">
+        
+        <!-- Header Section -->
+        <div class="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-outline-variant/60">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+              <span class="material-symbols-outlined text-[22px]">calendar_month</span>
+            </div>
+            <div>
+              <h2 class="font-headline-sm text-lg font-bold text-on-surface">
+                {{ r.asset.name }} — Yearly Depreciation Schedule
+              </h2>
+              <p class="font-body-sm text-xs text-on-surface-variant">
+                Straight-line book value amortization over {{ r.depreciation.usefulLifeYears }} years
+              </p>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <span class="px-2.5 py-1 rounded-md text-xs font-mono bg-surface-container text-on-surface border border-outline-variant/50">
+              {{ r.asset.displayId || r.asset.serialNumber || r.asset.assetId || r.asset.id || 'AST-N/A' }}
+            </span>
+            @if (r.asset.brand) {
+              <span class="px-2.5 py-1 rounded-md text-xs bg-surface-container text-on-surface-variant border border-outline-variant/50">
+                {{ r.asset.brand }} {{ r.asset.model || '' }}
+              </span>
+            }
+          </div>
+        </div>
+
+        <!-- 4 Key Metrics Cards Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="bg-surface-container-low border border-outline-variant/50 rounded-xl p-4">
+            <span class="text-xs font-medium text-on-surface-variant uppercase tracking-wider block">Purchase Price</span>
+            <span class="font-headline-sm font-bold text-on-surface text-lg font-mono block mt-1">
+              {{ r.depreciation.purchasePrice | appCurrency }}
+            </span>
+            <span class="text-[10px] text-on-surface-variant block mt-0.5">Original purchase cost</span>
+          </div>
+
+          <div class="bg-surface-container-low border border-outline-variant/50 rounded-xl p-4">
+            <span class="text-xs font-medium text-on-surface-variant uppercase tracking-wider block">Salvage Value</span>
+            <span class="font-headline-sm font-bold text-on-surface text-lg font-mono block mt-1">
+              {{ r.depreciation.salvageValue | appCurrency }}
+            </span>
+            <span class="text-[10px] text-on-surface-variant block mt-0.5">Residual baseline value</span>
+          </div>
+
+          <div class="bg-surface-container-low border border-outline-variant/50 rounded-xl p-4">
+            <span class="text-xs font-medium text-on-surface-variant uppercase tracking-wider block">Useful Life</span>
+            <span class="font-headline-sm font-bold text-on-surface text-lg block mt-1">
+              {{ r.depreciation.usefulLifeYears }} Years
+            </span>
+            <span class="text-[10px] text-on-surface-variant block mt-0.5">Operational lifecycle</span>
+          </div>
+
+          <div class="bg-surface-container-low border border-outline-variant/50 rounded-xl p-4">
+            <span class="text-xs font-medium text-on-surface-variant uppercase tracking-wider block">Annual Depreciation</span>
+            <span class="font-headline-sm font-bold text-on-surface text-lg font-mono block mt-1">
+              -{{ r.depreciation.annualDepreciation | appCurrency }}/yr
+            </span>
+            <span class="text-[10px] text-on-surface-variant block mt-0.5">{{ r.depreciation.monthlyDepreciation | appCurrency }}/mo</span>
+          </div>
+        </div>
+
+        <!-- Yearly Depreciation Table -->
+        <div class="border border-outline-variant rounded-xl overflow-hidden shadow-xs">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="bg-surface-container-low border-b border-outline-variant font-semibold text-on-surface-variant uppercase text-[11px] tracking-wider">
+                <th class="py-3.5 px-4">Period</th>
+                <th class="py-3.5 px-4 text-right">Opening Book Value</th>
+                <th class="py-3.5 px-4 text-right">Yearly Depreciation</th>
+                <th class="py-3.5 px-4 text-right">Accumulated Deprec.</th>
+                <th class="py-3.5 px-4 text-right font-bold text-on-surface bg-surface-container">Closing Book Value</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-outline-variant/40">
+              @for (row of r.depreciation.depreciationSchedule; track row.year) {
+                <tr class="hover:bg-surface-container-low/40 transition-colors">
+                  <td class="py-3.5 px-4 font-semibold text-on-surface">
+                    {{ row.yearLabel }}
+                  </td>
+                  <td class="py-3.5 px-4 text-right font-mono text-on-surface-variant">
+                    {{ row.openingBookValue | appCurrency }}
+                  </td>
+                  <td class="py-3.5 px-4 text-right font-mono font-medium text-on-surface">
+                    -{{ row.depreciationExpense | appCurrency }}
+                  </td>
+                  <td class="py-3.5 px-4 text-right font-mono text-on-surface-variant">
+                    {{ row.accumulatedDepreciation | appCurrency }}
+                  </td>
+                  <td class="py-3.5 px-4 text-right font-mono font-bold text-on-surface bg-surface-container-lowest">
+                    {{ row.closingBookValue | appCurrency }}
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Footer Actions Bar -->
+        <div class="flex items-center justify-between pt-4 border-t border-outline-variant/60">
+          <button
+            type="button"
+            (click)="onViewAsset(r.asset)"
+            class="h-10 px-5 rounded-lg border border-outline-variant text-on-surface hover:bg-surface-container font-medium text-xs flex items-center gap-1.5 transition-colors"
+          >
+            <span class="material-symbols-outlined text-[18px]">open_in_new</span>
+            <span>Open Full Asset Details</span>
+          </button>
+
+          <button
+            type="button"
+            (click)="isScheduleModalOpen.set(false)"
+            class="h-10 px-6 rounded-lg bg-primary text-on-primary hover:bg-primary/90 font-medium text-xs transition-colors"
+          >
+            Close
+          </button>
+        </div>
+
+      </div>
+    }
+  </div>
+</app-modal>
+
+<!-- Edit Depreciation Modal -->
+<app-edit-depreciation-modal
+  [isOpen]="isEditModalOpen()"
+  [asset]="selectedAssetForEdit()"
+  (close)="isEditModalOpen.set(false)"
+  (saved)="onDepreciationSaved($event)"
+/>
