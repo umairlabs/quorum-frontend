@@ -2,12 +2,12 @@ importScripts('https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js'
 importScripts('https://www.gstatic.com/firebasejs/10.7.0/firebase-messaging-compat.js');
 
 firebase.initializeApp({
-    apiKey: "AIzaSyBN9Zf3Fg5CXBBoAsWNfRcsNDPO24JpH3k",
-    authDomain: "asset-flow-a9f4a.firebaseapp.com",
-    projectId: "asset-flow-a9f4a",
-    storageBucket: "asset-flow-a9f4a.firebasestorage.app",
-    messagingSenderId: "460237501964",
-    appId: "1:460237501964:web:6429fc76a39279365d2029"
+    apiKey: (typeof self !== 'undefined' && self.env) ? self.env.NG_APP_FIREBASE_API_KEY : "",
+    authDomain: (typeof self !== 'undefined' && self.env) ? self.env.NG_APP_FIREBASE_AUTH_DOMAIN : "",
+    projectId: (typeof self !== 'undefined' && self.env) ? self.env.NG_APP_FIREBASE_PROJECT_ID : "",
+    storageBucket: (typeof self !== 'undefined' && self.env) ? self.env.NG_APP_FIREBASE_STORAGE_BUCKET : "",
+    messagingSenderId: (typeof self !== 'undefined' && self.env) ? self.env.NG_APP_FIREBASE_MESSAGING_SENDER_ID : "",
+    appId: (typeof self !== 'undefined' && self.env) ? self.env.NG_APP_FIREBASE_APP_ID : ""
 });
 
 const messaging = firebase.messaging();
