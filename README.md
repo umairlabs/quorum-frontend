@@ -1,265 +1,421 @@
-# Astra - Asset Management System
+# Quorum Frontend
 
-Astra is an enterprise Asset Management application built with Angular 18, Ionic Standalone, and Tailwind CSS, following the **ShipSanitor Reference Architecture**.
+A modern Angular/Ionic web application for comprehensive enterprise asset management with real-time notifications, AI-powered insights, and responsive design.
 
----
+## 🎨 Features
 
-## 📋 Architectural Overview
+### Asset Management Dashboard
+- **Asset Inventory**: View all assets with advanced filtering and search
+- **Asset Details**: Comprehensive asset information including depreciation and assignment history
+- **Asset Creation**: Add new assets with automatic category and unit detection
+- **Asset Editing**: Update asset information and metadata
+- **Asset Assignment**: Assign assets to employees with tracking
+- **Serial Number Tracking**: Monitor individual asset units with barcode support
 
-Astra uses a modular, scalable architecture structured identically to the **ShipSanitor** reference standard. All core functionality, shared UI elements, state management helpers, data interfaces, and API services are centralized in `src/app/core/`, while domain features are organized as page modules in `src/app/pages/`. Layout routing is managed centrally in `src/app/layouts/`.
+### Financial Management
+- **Purchase Tracking**: View all purchases with payment status
+- **Supplier Management**: Track supplier information and payment history
+- **Payment Recording**: Record multiple payment methods (bank transfer, cheque, mobile wallet)
+- **Invoice Viewing**: Download and review purchase invoices
+- **Multi-Currency Support**: Real-time currency conversion
 
----
+### Maintenance Operations
+- **Maintenance Requests**: Create and track maintenance tickets
+- **Request Management**: Approve/reject maintenance requests
+- **Technician Assignment**: Assign maintenance work to technicians
+- **Work Updates**: Real-time status updates from technicians
+- **Issue Descriptions**: AI-generated maintenance descriptions
 
-## 🔄 Summary of Architectural Alignment Changes
+### AI Assistant
+- **Smart Insights**: AI-powered asset and maintenance recommendations
+- **Voice Mode**: Hands-free voice commands for asset requests
+- **Natural Language**: Describe issues in plain English
+- **Action Cards**: Quick-action suggestions for common tasks
 
-* **`pages/` (formerly `features/`)**: Feature modules moved to `src/app/pages/` (e.g., `pages/assets`, `pages/assignments`, `pages/maintenance`, `pages/auth`, etc.). Path alias `@pages/*` configured in `tsconfig.json`.
-* **`layouts/` (formerly `layout/`)**: Pluralized layout directory `src/app/layouts/`. Includes central `layout.component.ts` and `layout.routes.ts`. Path alias `@layouts/*` configured.
-* **`core/interfaces/` (formerly `core/models/`)**: Data contracts use TypeScript interfaces with `.interface.ts` file extensions.
-* **`core/services/Api's/` Layer**: API HTTP communication refactored into service classes inside `src/app/core/services/Api's/` extending `BaseApiCallService`.
-* **`core/` Shared UI**: Reusable components, directives, pipes, and menus moved into `core/components/`, `core/directives/`, `core/pipes/`, and `core/menus/`. Top-level `shared/` directory removed.
-* **`core/interceptors/`**: Renamed to `auth.interceptor.ts` exporting `authInterceptor`.
-* **`core/Types/`**: Capitalized type definitions folder containing `types.ts`.
-* **Assets & SCSS**: Structured `src/assets/` into `icons/svgs/`, `icons/`, and `scss/` (`_base.scss`, `_icons.scss`, `_maxin.scss`, `fonts.css`) imported into `global.scss`.
-* **Tailwind CSS & Sass Modernization**: Retained `tailwind.config.js` and `@tailwind` directives. Modernized `global.scss` using Dart Sass `@use` syntax to eliminate Sass deprecation warnings.
-* **Angular 20 & Ionic 8 Best Practices**: Utilizes functional guards (`CanActivateFn`), functional HTTP interceptors (`HttpInterceptorFn`), `inject()` dependency injection, Angular Signals (`signal()`), standalone components, and Ionic 8 standalone providers (`provideIonicAngular`).
+### User Management
+- **Employee Directory**: View all employees with roles and departments
+- **Permission Management**: View and configure user permissions
+- **Department Organization**: Organize users by departments
+- **Profile Management**: Update personal and employee information
 
----
+### Notifications
+- **Push Notifications**: Real-time alerts for important events
+- **Notification Preferences**: Configure notification settings
+- **Notification Types**: Maintenance alerts, purchase updates, assignments
+- **Notification Center**: Centralized notification history
 
-## 📁 Current Folder Structure
+### Reporting & Analytics
+- **Dashboard Analytics**: Key metrics and statistics
+- **Depreciation Schedules**: Asset depreciation tracking
+- **Activity Audit Logs**: Complete audit trail of system activities
+- **Export Reports**: Generate and download reports
 
-```text
-d:/projects/astra/
-├── angular.json
-├── capacitor.config.ts
-├── ionic.config.json
-├── karma.conf.js
-├── package.json
-├── tailwind.config.js
-├── tsconfig.app.json
-├── tsconfig.json
-├── tsconfig.spec.json
-└── src/
-    ├── main.ts
-    ├── global.scss
-    ├── index.html
-    ├── polyfills.ts
-    ├── test.ts
-    ├── zone-flags.ts
-    ├── environments/
-    │   ├── environment.ts
-    │   └── environment.prod.ts
-    ├── theme/
-    │   └── variables.scss
-    ├── assets/
-    │   ├── icons/
-    │   │   ├── favicon.png
-    │   │   └── svgs/
-    │   │       └── shapes.svg
-    │   ├── javascript/
-    │   └── scss/
-    │       ├── _base.scss
-    │       ├── _icons.scss
-    │       ├── _maxin.scss
-    │       └── fonts.css
-    └── app/
-        ├── app.component.html
-        ├── app.component.scss
-        ├── app.component.ts
-        ├── app.config.ts
-        ├── app.routes.ts
-        ├── core/
-        │   ├── components/
-        │   │   ├── not-found/
-        │   │   └── unauthorized/
-        │   ├── constants/
-        │   ├── directives/
-        │   ├── enums/
-        │   ├── guards/
-        │   │   └── auth.guard.ts
-        │   ├── interceptors/
-        │   │   └── auth.interceptor.ts
-        │   ├── interfaces/
-        │   │   ├── api-response.interface.ts
-        │   │   ├── asset.interface.ts
-        │   │   ├── asset-category.interface.ts
-        │   │   ├── assignment.interface.ts
-        │   │   ├── attachment.interface.ts
-        │   │   ├── audit-log.interface.ts
-        │   │   ├── auth.interface.ts
-        │   │   ├── depreciation.interface.ts
-        │   │   ├── maintenance.interface.ts
-        │   │   ├── notification.interface.ts
-        │   │   ├── role.interface.ts
-        │   │   └── user.interface.ts
-        │   ├── menus/
-        │   ├── pipes/
-        │   ├── services/
-        │   │   ├── Api's/
-        │   │   │   ├── baseApiCall.service.ts
-        │   │   │   └── auth-apis.service.ts
-        │   │   ├── Database/
-        │   │   ├── alert.service.ts
-        │   │   ├── local-storage.service.ts
-        │   │   ├── toast.service.ts
-        │   │   └── utility.service.ts
-        │   └── Types/
-        │       └── types.ts
-        ├── layouts/
-        │   ├── layout.component.html
-        │   ├── layout.component.ts
-        │   ├── layout.routes.ts
-        │   ├── components/
-        │   ├── footer/
-        │   └── header/
-        └── pages/
-            ├── ai-assistant/
-            ├── assets/
-            ├── assignments/
-            ├── audit-logs/
-            ├── auth/
-            ├── dashboard/
-            ├── depreciation/
-            ├── maintenance/
-            ├── notifications/
-            ├── reports/
-            ├── settings/
-            └── users/
-```
+## 🛠️ Tech Stack
 
----
+- **Angular 18+**: Modern TypeScript framework
+- **Ionic**: Cross-platform mobile/web UI components
+- **TypeScript**: Strongly-typed JavaScript
+- **Tailwind CSS**: Utility-first CSS framework
+- **RxJS**: Reactive programming
+- **Firebase**: Push notifications and messaging
+- **Angular HTTP Client**: API communication
 
-## 🏛 Core Architecture (`src/app/core/`)
+## 📋 Requirements
 
-The `core/` module is the central backbone of the application:
+- Node.js 18+ LTS
+- npm 10+ or yarn 4+
+- Modern web browser (Chrome, Firefox, Safari, Edge)
 
-* **`interfaces/`**: TypeScript interface definitions (`*.interface.ts`) representing API responses and business entities.
-* **`Types/`**: Global TypeScript custom types declared in `types.ts`.
-* **`constants/`**: Application-wide constants.
-* **`enums/`**: Core enumeration types.
-* **`guards/`**: Route activation guards including `auth.guard.ts`.
-* **`interceptors/`**: HTTP interceptors including `auth.interceptor.ts` which appends bearer tokens and handles `401 Unauthorized` responses.
-* **`components/`, `directives/`, `pipes/`, `menus/`**: App-wide reusable UI components (`not-found`, `unauthorized`), custom directives, custom pipes, and popover menus.
+## 🚀 Installation
 
----
-
-## 🔌 Services and API Layer (`src/app/core/services/`)
-
-The API and service layer follows a structured inheritance model matching ShipSanitor:
-
-### 1. API Services (`core/services/Api's/`)
-* **`BaseApiCallService` (`baseApiCall.service.ts`)**: Base HTTP client providing `get()`, `post()`, `put()`, `patch()`, and `delete()` methods, base URL resolution, and common HTTP headers.
-* **`AuthApisService` (`auth-apis.service.ts`)**: Extends `BaseApiCallService` to handle authentication, session storage, signals (`currentUser`, `isAuthenticated`), and login/logout state.
-* **Domain API Services**: Additional domain services (e.g. `assets-apis.service.ts`) extend `BaseApiCallService`.
-
-### 2. Core Helper Services (`core/services/`)
-* **`UtilityService` (`utility.service.ts`)**: Holds global application signals such as `isMobileView`.
-* **`ToastService` (`toast.service.ts`)**: Utility wrapper for Ionic Toast controller.
-* **`AlertService` (`alert.service.ts`)**: Utility wrapper for Ionic Alert controller.
-* **`LocalStorageService` (`local-storage.service.ts`)**: Typed wrapper for browser LocalStorage operations.
-
----
-
-## 📐 Layout Architecture (`src/app/layouts/`)
-
-Authenticated application pages render within `LayoutComponent`:
-
-* **`LayoutComponent` (`layouts/layout.component.ts` & `layout.component.html`)**: Host shell component rendering `<ion-router-outlet>`.
-* **`LayoutRoutes` (`layouts/layout.routes.ts`)**: Aggregates all authenticated child page routes (`dashboard`, `assets`, `assignments`, `maintenance`, `reports`, `users`, `settings`, `depreciation`, `notifications`, `ai-assistant`).
-
----
-
-## 📄 Pages & Modules (`src/app/pages/`)
-
-Domain features are organized into standalone page directories under `src/app/pages/`:
-
-| Page Directory | Description |
-| :--- | :--- |
-| `pages/auth/` | Authentication pages (Login, Signup, Password reset, Verification) |
-| `pages/dashboard/` | Analytics & system overview dashboard |
-| `pages/assets/` | Asset catalog, asset creation, asset detail management |
-| `pages/assignments/` | Asset issuance and check-in/check-out tracking |
-| `pages/maintenance/` | Maintenance schedule, work orders, service logs |
-| `pages/depreciation/` | Asset depreciation calculations and financial tracking |
-| `pages/audit-logs/` | System audit trail & user activity history |
-| `pages/reports/` | Reporting and export module |
-| `pages/notifications/`| User alerts & notification center |
-| `pages/ai-assistant/` | AI-assisted search and query module |
-| `pages/users/` | User management & role permissions |
-| `pages/settings/` | System configuration & application settings |
-
----
-
-## 🔀 Routing Structure
-
-Routing is split between root path definitions and central layout route tables:
-
-### 1. Root Routes (`src/app/app.routes.ts`)
-```typescript
-import { Routes } from '@angular/router';
-import { authGuard } from './core/guards/auth.guard';
-import { LayoutComponent } from './layouts/layout.component';
-import { LayoutRoutes } from './layouts/layout.routes';
-
-export const routes: Routes = [
-  {
-    path: '',
-    component: LayoutComponent,
-    canActivate: [authGuard],
-    children: LayoutRoutes
-  },
-  {
-    path: 'auth',
-    loadChildren: () => import('./pages/auth/auth.routes').then((m) => m.AUTH_ROUTES)
-  },
-  {
-    path: '**',
-    redirectTo: 'dashboard'
-  }
-];
-```
-
-### 2. Layout Child Routes (`src/app/layouts/layout.routes.ts`)
-Child routes map all protected pages (`dashboard`, `assets`, `assignments`, `maintenance`, etc.) within the main layout wrapper.
-
----
-
-## 🎨 Tailwind CSS & Ionic Setup
-
-* **Tailwind CSS**: Configured via `tailwind.config.js` and imported at the top of `src/global.scss`:
-  ```scss
-  @tailwind base;
-  @tailwind components;
-  @tailwind utilities;
-  ```
-* **Ionic Standalone**: Configured in `src/app/app.config.ts` via `provideIonicAngular({})`.
-* **SCSS Assets**: Custom styling modules stored in `src/assets/scss/` (`_base.scss`, `_icons.scss`, `_maxin.scss`, `fonts.css`) and imported directly into `global.scss`.
-
----
-
-## ⚙️ Environment Configuration
-
-Environments are configured in `src/environments/`:
-
-```typescript
-// src/environments/environment.ts
-export const environment = {
-  production: false,
-  apiUrl: 'http://localhost:8000/api/v1'
-};
-```
-
----
-
-## 🛠 Build Verification
-
-The application compiles cleanly with Angular Angular CLI / Ionic CLI:
-
+### 1. Clone the Repository
 ```bash
-# Development server
-npm run start
-
-# Production build verification
-npm run build
+git clone https://github.com/umairlabs/quorum-frontend.git
+cd quorum-frontend
 ```
 
-**Build Status**: Verified and compiling cleanly.
+### 2. Install Dependencies
+```bash
+npm install
+# or
+yarn install
+```
+
+### 3. Configure Environment Variables
+```bash
+cp .env.example .env
+# Edit .env with your configuration
+```
+
+**Required environment variables:**
+```
+NG_APP_API_URL=http://localhost:8000/api
+NG_APP_FIREBASE_API_KEY=your-firebase-api-key
+NG_APP_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
+NG_APP_FIREBASE_PROJECT_ID=your-project-id
+NG_APP_FIREBASE_STORAGE_BUCKET=your-project.appspot.com
+NG_APP_FIREBASE_MESSAGING_SENDER_ID=your-sender-id
+NG_APP_FIREBASE_APP_ID=your-app-id
+NG_APP_FIREBASE_MEASUREMENT_ID=your-measurement-id
+NG_APP_FIREBASE_VAPID_KEY=your-vapid-key
+```
+
+## 🚀 Running the Application
+
+### Development Server
+```bash
+npm start
+# or
+ng serve
+```
+
+The application will be available at `http://localhost:4200`
+
+### Production Build
+```bash
+npm run build
+# or
+ng build --configuration production
+```
+
+Built files will be in the `dist/` directory
+
+### Development with Hot Reload
+```bash
+ng serve --poll 2000
+```
+
+## 📁 Project Structure
+
+```
+src/
+├── app/
+│   ├── core/                 # Core services and utilities
+│   │   ├── services/         # HTTP services and API calls
+│   │   ├── guards/           # Route guards (auth, role-based)
+│   │   ├── interceptors/     # HTTP interceptors (auth, camel-case)
+│   │   ├── interfaces/       # TypeScript interfaces
+│   │   └── components/       # Reusable core components
+│   ├── layouts/              # Application layouts
+│   │   ├── main-layout/      # Main app layout
+│   │   ├── auth-layout/      # Auth pages layout
+│   │   └── components/       # Layout sub-components
+│   ├── pages/                # Feature pages/modules
+│   │   ├── auth/             # Authentication (login)
+│   │   ├── dashboard/        # Dashboard page
+│   │   ├── assets/           # Asset management
+│   │   ├── assignments/      # Asset assignments
+│   │   ├── maintenance/      # Maintenance requests
+│   │   ├── purchases/        # Purchase management
+│   │   ├── users/            # User management
+│   │   ├── notifications/    # Notifications
+│   │   ├── audit-logs/       # Audit trail
+│   │   ├── depreciation/     # Depreciation schedules
+│   │   ├── settings/         # Settings and configuration
+│   │   └── ai-assistant/     # AI assistant
+│   └── app.routes.ts         # Main routing configuration
+├── environments/             # Environment configurations
+├── assets/                   # Static assets (images, icons, sounds)
+├── styles/                   # Global styles
+└── main.ts                   # Application entry point
+```
+
+## 🔑 Key Components
+
+### Services
+- **AuthService**: Authentication and JWT token management
+- **AssetService**: Asset CRUD operations and state
+- **UserService**: User management and profiles
+- **PurchaseService**: Purchase tracking and payments
+- **MaintenanceService**: Maintenance request management
+- **NotificationService**: Push notification handling
+- **DepartmentService**: Department management
+- **CategoryService**: Asset category management
+
+### Core Components
+- **DataTable**: Reusable data table with sorting/filtering
+- **Modal**: Reusable modal component
+- **Toast**: Toast notifications
+- **StatusBadge**: Status display component
+- **LineChart**: Chart visualization
+- **EmptyState**: Empty state placeholder
+
+### Pages
+- **Dashboard**: Key metrics and activity feed
+- **Asset Management**: Inventory and assignment
+- **Maintenance Tracking**: Request management
+- **Purchase Management**: Financial tracking
+- **User Management**: Employee directory
+- **Settings**: Configuration and preferences
+
+## 🔐 Security
+
+- JWT token-based authentication
+- Secure token storage (no localStorage for sensitive data)
+- Role-based route guards
+- CORS configured for backend
+- Environment variables for all secrets (no hardcoded credentials)
+- Firebase credentials injected at runtime
+- XSS protection via Angular sanitization
+- CSRF protection with HTTP-only cookies
+
+**Important**: Configure environment variables before deployment:
+1. Set correct API URL for your environment
+2. Use production Firebase credentials
+3. Disable debug logging in production
+4. Enable HTTPS only
+5. Set proper CORS origin
+
+See `SECURITY_FIX_COMPLETION_REPORT.md` for security details.
+
+## 🧪 Testing
+
+### Unit Tests
+```bash
+npm run test
+# or
+ng test
+```
+
+### E2E Tests
+```bash
+npm run e2e
+# or
+ng e2e
+```
+
+### Coverage Report
+```bash
+ng test --code-coverage
+```
+
+## 🚀 Deployment
+
+### Deploy to Netlify
+```bash
+# Install Netlify CLI
+npm install -g netlify-cli
+
+# Deploy
+netlify deploy --prod
+```
+
+### Deploy to Vercel
+```bash
+# Install Vercel CLI
+npm install -g vercel
+
+# Deploy
+vercel --prod
+```
+
+### Deploy to GitHub Pages
+```bash
+npm run build -- --base-href=/quorum-frontend/
+# Push dist/ to gh-pages branch
+```
+
+### Docker Deployment
+```bash
+docker build -t quorum-frontend .
+docker run -p 80:80 quorum-frontend
+```
+
+### Environment-Specific Deployment
+- **Development**: `ng serve` with local .env
+- **Staging**: `ng build --configuration staging` with staging credentials
+- **Production**: `ng build --configuration production` with production credentials
+
+## 📚 API Integration
+
+All API calls go through the `BaseApiCallService`:
+
+```typescript
+// Example: Get assets
+this.assetService.getAllAssets().subscribe(
+  (assets) => console.log(assets),
+  (error) => console.error(error)
+);
+
+// Example: Create asset
+this.assetService.createAsset(assetData).subscribe(
+  (asset) => console.log('Created:', asset),
+  (error) => console.error(error)
+);
+```
+
+### Interceptors
+- **Auth Interceptor**: Automatically adds JWT token to requests
+- **Camel-Case Interceptor**: Converts snake_case API responses to camelCase
+
+## 🎯 Authentication Flow
+
+1. User submits login credentials
+2. Backend returns JWT token
+3. Token stored in memory (not localStorage)
+4. Token automatically added to API requests
+5. Routes protected by auth guard
+6. Unauthorized access redirects to login
+
+## 🔄 State Management
+
+The application uses Angular services with RxJS Observables for state management:
+
+```typescript
+// Example: Subscribe to asset updates
+this.assetService.assets$.subscribe(
+  (assets) => this.displayAssets(assets)
+);
+
+// Example: Update state
+this.assetService.updateAsset(id, data).subscribe(
+  () => this.assetService.refreshAssets()
+);
+```
+
+## 📱 Responsive Design
+
+- Mobile-first design approach
+- Tailwind CSS responsive breakpoints
+- Ionic components for mobile UI
+- Adaptive layouts for all screen sizes
+- Touch-friendly interactions
+
+## 🌐 Internationalization (i18n)
+
+The application is ready for internationalization:
+- Service for language switching
+- Translated strings in component templates
+- Locale-specific formatting (dates, currency)
+
+## 🆘 Troubleshooting
+
+### API Connection Issues
+- Verify `NG_APP_API_URL` is correct
+- Check backend is running
+- Verify CORS is enabled
+- Check browser console for errors
+
+### Firebase Notifications Not Working
+- Verify Firebase credentials in .env
+- Check VAPID key is correct
+- Enable push notifications in browser
+- Check browser console for Firebase errors
+
+### Build Issues
+- Clear node_modules: `rm -rf node_modules && npm install`
+- Clear Angular cache: `ng cache clean`
+- Update Angular CLI: `npm install -g @angular/cli@latest`
+
+### Permission/Access Errors
+- Verify JWT token is valid
+- Check user role has required permissions
+- Verify backend permission configuration
+- Check CORS settings
+
+## 🔍 Performance Optimization
+
+- Lazy loading of feature modules
+- OnPush change detection strategy
+- Virtual scrolling for large lists
+- Code splitting by route
+- Minification and bundling
+
+## 📊 Browser Support
+
+- Chrome (latest)
+- Firefox (latest)
+- Safari (latest)
+- Edge (latest)
+- Mobile browsers (iOS Safari, Chrome Mobile)
+
+## 📝 Environment Variables Reference
+
+See `.env.example` for complete list. All variables use `NG_APP_` prefix for Angular.
+
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `NG_APP_API_URL` | Backend API base URL | Yes |
+| `NG_APP_FIREBASE_API_KEY` | Firebase API key | Yes |
+| `NG_APP_FIREBASE_PROJECT_ID` | Firebase project ID | Yes |
+| `NG_APP_FIREBASE_VAPID_KEY` | FCM VAPID key for push | Yes |
+
+## 🆘 Getting Help
+
+### Documentation
+- [Security Fix Report](./SECURITY_FIX_COMPLETION_REPORT.md)
+- [Security Audit Report](./SECURITY_AUDIT_REPORT.md)
+- [Angular Documentation](https://angular.io/docs)
+- [Ionic Documentation](https://ionicframework.com/docs)
+
+### Issues
+Create an issue on GitHub with:
+- Description of the problem
+- Steps to reproduce
+- Browser and OS
+- Console errors
+
+## 🤝 Contributing
+
+1. Create a feature branch from `main`
+2. Make your changes
+3. Test thoroughly
+4. Create a pull request with description
+
+## 📄 License
+
+This project is proprietary software. All rights reserved.
+
+## 👨‍💻 Author
+
+Umair Zafar - [GitHub](https://github.com/umairlabs)
+
+## 📧 Support
+
+For issues, questions, or feedback, please create an issue on GitHub.
+
+---
+
+**Version**: 1.0.0  
+**Last Updated**: November 2026  
+**Status**: Ready for Production
