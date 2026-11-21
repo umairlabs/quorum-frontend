@@ -655,10 +655,8 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ## Support
 
 For issues, questions, or contributions:
-- 📧 Email: [support email]
-- 🐛 Issues: [GitHub Issues Link]
-- 💬 Discussions: [GitHub Discussions Link]
-- 📖 Documentation: [Docs Link]
+- 📧 Email: fareumair7@gmail.com
+- 🐛 GitHub: [github.com/umairlabs](https://github.com/umairlabs)
 
 ---
 
