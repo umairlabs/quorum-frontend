@@ -2,11 +2,11 @@
 trigger: always_on
 ---
 
-# Astra Frontend Development Rules
+# Quorum Frontend Development Rules
 
 ## Purpose
 
-This document defines the development standards and coding conventions for the Astra Frontend project. Every developer must follow these rules to maintain consistency, readability, scalability, and code quality throughout the application.
+This document defines the development standards and coding conventions for the Quorum Frontend project. Every developer must follow these rules to maintain consistency, readability, scalability, and code quality throughout the application.
 
 ---
 

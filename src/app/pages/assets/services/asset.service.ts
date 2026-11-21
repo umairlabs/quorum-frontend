@@ -38,7 +38,7 @@ export class AssetService {
   // ─── LocalStorage ─────────────────────────────────────────────────────────
   private loadFromLocalStorage(): Asset[] {
     try {
-      const stored = localStorage.getItem('astra_assets');
+      const stored = localStorage.getItem('quorum_assets');
       if (stored) {
         const parsed = JSON.parse(stored) as Asset[];
         if (Array.isArray(parsed) && parsed.length > 0) {
@@ -58,7 +58,7 @@ export class AssetService {
 
   public saveToLocalStorage(assets: Asset[]): void {
     try {
-      localStorage.setItem('astra_assets', JSON.stringify(assets));
+      localStorage.setItem('quorum_assets', JSON.stringify(assets));
     } catch { /* ignore */ }
   }
 

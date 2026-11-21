@@ -2,7 +2,7 @@
 trigger: always_on
 ---
 
-# Astra — Application Flow & Domain Model
+# Quorum — Application Flow & Domain Model
 
 ## Purpose
 
@@ -12,7 +12,7 @@ This document describes the business domain, the relationship between all module
 
 ## Application Overview
 
-Astra is an **Enterprise Asset Management** system. It allows organisations to track physical assets — from the moment they are defined in the catalogue, through purchasing, assignment to employees, maintenance, and eventual retirement or sale.
+Quorum is an **Enterprise Asset Management** system. It allows organisations to track physical assets — from the moment they are defined in the catalogue, through purchasing, assignment to employees, maintenance, and eventual retirement or sale.
 
 ---
 

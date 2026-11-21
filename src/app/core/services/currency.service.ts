@@ -20,9 +20,9 @@ export const SUPPORTED_CURRENCIES: CurrencyConfig[] = [
   { code: 'SAR', symbol: 'SAR ', name: 'Saudi Riyal', flag: '🇸🇦', decimals: 2 },
 ];
 
-const STORAGE_KEY_CURRENCY = 'astra_preferred_currency';
-const STORAGE_KEY_RATES = 'astra_exchange_rates';
-const STORAGE_KEY_RATES_TS = 'astra_exchange_rates_ts';
+const STORAGE_KEY_CURRENCY = 'quorum_preferred_currency';
+const STORAGE_KEY_RATES = 'quorum_exchange_rates';
+const STORAGE_KEY_RATES_TS = 'quorum_exchange_rates_ts';
 const CACHE_DURATION_MS = 60 * 60 * 1000; // 1 Hour
 
 // Fallback rates relative to 1 PKR

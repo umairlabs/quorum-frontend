@@ -7,7 +7,7 @@ The responsive web and mobile client for Quorum, an enterprise asset management 
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.9.0-3178C6?style=flat-square&logo=typescript)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-3.4.17-06B6D4?style=flat-square&logo=tailwind-css)
 ![Capacitor](https://img.shields.io/badge/Capacitor-8.4.2-57C2FF?style=flat-square&logo=capacitor)
-![License](https://img.shields.io/badge/License-MIT-blue?style=flat-square)
+
 
 ## Table of Contents
 
@@ -28,7 +28,6 @@ The responsive web and mobile client for Quorum, an enterprise asset management 
 - [Building for Production](#building-for-production)
 - [Testing](#testing)
 - [Contributing](#contributing)
-- [License](#license)
 
 ## Features
 
@@ -149,7 +148,7 @@ Before you begin, ensure you have the following installed:
 
 1. **Clone the repository**:
 ```bash
-git clone https://github.com/yourusername/quorum.git
+git clone https://github.com/umairlabs/quorum.git
 cd quorum/quorum-frontend
 ```
 
@@ -499,8 +498,8 @@ export const environment = {
 // src/environments/environment.prod.ts
 export const environment = {
   production: true,
-  apiUrl: 'https://api.quorum.app/api',
-  wsUrl: 'wss://api.quorum.app',
+  apiUrl: 'https://your-api-domain.com/api',
+  wsUrl: 'wss://your-api-domain.com',
   firebase: { /* config */ }
 };
 ```
@@ -647,10 +646,6 @@ Contributions are welcome! Please follow these guidelines:
 3. **Write tests** for new features
 4. **Update documentation** as needed
 5. **Submit a Pull Request** with clear description
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## Support
 
